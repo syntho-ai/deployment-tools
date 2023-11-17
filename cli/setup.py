@@ -30,7 +30,8 @@ setup(
                           "scripts/utils.sh", "scripts/cleanup-kubernetes.sh",
                           "scripts/get-k8s-cluster-context-name.sh",
                           "scripts/configuration-questions.sh",
-                          "scripts/download-syntho-charts-release.sh"]},
+                          "scripts/download-syntho-charts-release.sh",
+                          "scripts/major-pre-deployment-operations.sh"]},
     include_package_data=True,
     install_requires=[
         "click==8.1.7",

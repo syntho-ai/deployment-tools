@@ -80,7 +80,6 @@ def k8s_deployment(
             "Deployment is successful. See helpful commands below.\n\n"
             f"Deployment status: syntho-cli k8s-deployment-status --deployment-id {result.deployment_id}\n"
             f"Destroy deployment: syntho-cli k8s-deployment-destroy --deployment-id {result.deployment_id}\n"
-            f"Get active deployment: syntho-cli k8s-deployment-active\n"
         )
     else:
         click.echo(f"Error deploying to kubernetes: {result.error}", err=True)

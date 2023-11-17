@@ -1,6 +1,7 @@
 #!/bin/bash
 
 DEPLOYMENT_DIR="$DEPLOYMENT_DIR"
+source $DEPLOYMENT_DIR/.env --source-only
 
 
 read -p $'\t- Do you want to use an existing volume (should be RWX supported)? (N/y): ' USE_EXISTING_VOLUMES
@@ -132,7 +133,7 @@ PV_LABEL_KEY=$PV_LABEL_KEY
 TLS_ENABLED=$TLS_ENABLED
 DOMAIN=$DOMAIN
 PROTOCOL=$PROTOCOL
-INGRESS_CONTROLLER=$INGRESS_CONTROLLER
+INGRESS_CONTROLLER=$INGRESS_CLASS_NAME
 EOF
 
 cat << EOF > "$DEPLOYMENT_DIR/.resources.env"

@@ -121,7 +121,7 @@ def start(scripts_dir: str,
             succeeded=False,
             deployment_id=deployment_id,
             error=("Pre deployment operations failed - Configuration"),
-            deployment_status=DeploymentStatus.SYNTHO_UI_DEPLOYMENT_FAILED,
+            deployment_status=DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED,
         )
 
     succeeded = download_syntho_charts_release(scripts_dir, deployment_id)
@@ -130,7 +130,16 @@ def start(scripts_dir: str,
             succeeded=False,
             deployment_id=deployment_id,
             error=("Pre deployment operations failed - Downloading syntho-charts release"),
-            deployment_status=DeploymentStatus.SYNTHO_UI_DEPLOYMENT_FAILED,
+            deployment_status=DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED,
+        )
+
+    succeeded = major_predeployment_operations(scripts_dir, deployment_id)
+    if not succeeded:
+        return DeploymentResult(
+            succeeded=False,
+            deployment_id=deployment_id,
+            error=("Pre deployment operations failed - Setting up major pre-deployment components"),
+            deployment_status=DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED,
         )
 
     succeeded = start_deployment(scripts_dir, deployment_id)
@@ -445,6 +454,19 @@ def download_syntho_charts_release(scripts_dir: str, deployment_id: str) -> bool
     set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS)
 
     result = run_script(scripts_dir, deployment_dir, "download-syntho-charts-release.sh")
+    if not result.succeeded:
+        set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED)
+
+    return result.succeeded
+
+
+def major_predeployment_operations(scripts_dir: str, deployment_id: str) -> bool:
+    click.echo("Step 4: Major pre-deployment operations;")
+    deployments_dir = f"{scripts_dir}/deployments"
+    deployment_dir = f"{deployments_dir}/{deployment_id}"
+    set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS)
+
+    result = run_script(scripts_dir, deployment_dir, "major-pre-deployment-operations.sh")
     if not result.succeeded:
         set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED)
 
