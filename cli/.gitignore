@@ -3,3 +3,5 @@ build/
 
 # Ignore .egg-info directory
 *.egg-info/
+
+cli/scripts/not-ready-yet/*

@@ -104,8 +104,8 @@ def start(scripts_dir: str,
         version,
     )
 
-    result = pre_requirements_check(scripts_dir, deployment_id)
-    if not result:
+    succeeded = pre_requirements_check(scripts_dir, deployment_id)
+    if not succeeded:
         return DeploymentResult(
             succeeded=False,
             deployment_id=deployment_id,
@@ -115,7 +115,14 @@ def start(scripts_dir: str,
 
     set_cluster_name(scripts_dir, deployment_id)
 
-    start_deployment(scripts_dir, deployment_id)
+    succeeded = start_deployment(scripts_dir, deployment_id)
+    if not succeeded:
+        return DeploymentResult(
+            succeeded=False,
+            deployment_id=deployment_id,
+            error=("Syntho UI deployment failed"),
+            deployment_status=DeploymentStatus.SYNTHO_UI_DEPLOYMENT_FAILED,
+        )
 
     set_state(deployment_id, deployments_dir, DeploymentStatus.COMPLETED, is_completed=True)
     return DeploymentResult(
@@ -347,7 +354,7 @@ def pre_requirements_check(scripts_dir: str, deployment_id: str) -> bool:
     else:
         set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_REQ_CHECK_FAILED)
 
-    return result
+    return result.succeeded
 
 
 def get_active_deployment_id(scripts_dir: str) -> str:
@@ -386,7 +393,7 @@ def set_cluster_name(scripts_dir: str, deployment_id: str) -> NoReturn:
 
     update_deployments_state(deployments_dir, deployments_state)
 
-def start_deployment(scripts_dir: str, deployment_id: str):
+def start_deployment(scripts_dir: str, deployment_id: str) -> bool:
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
     set_state(deployment_id, deployments_dir, DeploymentStatus.SYNTHO_UI_DEPLOYMENT_IN_PROGRESS)
@@ -397,4 +404,4 @@ def start_deployment(scripts_dir: str, deployment_id: str):
     else:
         set_state(deployment_id, deployments_dir, DeploymentStatus.SYNTHO_UI_DEPLOYMENT_FAILED)
 
-    return result
+    return result.succeeded

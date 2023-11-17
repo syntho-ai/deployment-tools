@@ -90,12 +90,6 @@ def k8s_deployment(
 
 
 @cli.command()
-def k8s_deployment_active():
-    active_deployment_id = k8s_deployment_manager.get_active_deployment_id(scripts_dir)
-    click.echo(active_deployment_id)
-
-
-@cli.command()
 @click.option(
     "--deployment-id",
     type=str,
