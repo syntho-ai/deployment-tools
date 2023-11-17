@@ -1,0 +1,5 @@
+# Ignore build artifacts
+build/
+
+# Ignore .egg-info directory
+*.egg-info/

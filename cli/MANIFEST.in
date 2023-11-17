@@ -1,0 +1,7 @@
+include README.md
+include LICENSE
+include cli/scripts/deploy-kubernetes.sh
+include cli/scripts/pre-requirements-kubernetes.sh
+include cli/scripts/utils.sh
+include cli/scripts/cleanup-kubernetes.sh
+include cli/scripts/get-k8s-cluster-context-name.sh
