@@ -115,6 +115,15 @@ def start(scripts_dir: str,
 
     set_cluster_name(scripts_dir, deployment_id)
 
+    succeeded = configuration_questions(scripts_dir, deployment_id)
+    if not succeeded:
+        return DeploymentResult(
+            succeeded=False,
+            deployment_id=deployment_id,
+            error=("Pre deployment operations failed - Configuration"),
+            deployment_status=DeploymentStatus.SYNTHO_UI_DEPLOYMENT_FAILED,
+        )
+
     succeeded = start_deployment(scripts_dir, deployment_id)
     if not succeeded:
         return DeploymentResult(
@@ -403,5 +412,18 @@ def start_deployment(scripts_dir: str, deployment_id: str) -> bool:
         set_state(deployment_id, deployments_dir, DeploymentStatus.SYNTHO_UI_DEPLOYMENT_SUCCEEDED)
     else:
         set_state(deployment_id, deployments_dir, DeploymentStatus.SYNTHO_UI_DEPLOYMENT_FAILED)
+
+    return result.succeeded
+
+
+def configuration_questions(scripts_dir: str, deployment_id: str) -> bool:
+    click.echo("Step 2: Configuration;")
+    deployments_dir = f"{scripts_dir}/deployments"
+    deployment_dir = f"{deployments_dir}/{deployment_id}"
+    set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS)
+
+    result = run_script(scripts_dir, deployment_dir, "configuration-questions.sh")
+    if not result.succeeded:
+        set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED)
 
     return result.succeeded
