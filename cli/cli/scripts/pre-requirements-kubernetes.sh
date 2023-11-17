@@ -1,9 +1,8 @@
 #!/bin/bash
 
-# Function to check if a command exists
-command_exists() {
-    type "$1" &> /dev/null
-}
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "$SCRIPT_DIR/utils.sh" --source-only
+
 
 developer_tools_check() {
     sleep 2
@@ -22,6 +21,11 @@ developer_tools_check() {
     # Check if helm exists
     if ! command_exists "helm"; then
         errors+="Error: Missing command line tool - helm\n"
+    fi
+
+    # Check if tar exists
+    if ! command_exists "tar"; then
+        errors+="Error: Missing command line tool - tar\n"
     fi
 
     echo -n "$errors"

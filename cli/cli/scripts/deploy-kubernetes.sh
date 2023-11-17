@@ -20,7 +20,7 @@ source $DEPLOYMENT_DIR/.resources.env --source-only
 # https://github.com/syntho-ai/syntho-charts/archive/refs/tags/{VERSION}.tar.gz
 
 
-echo "Step 3: Deployment;"
+echo "Step 4: Deployment;"
 
 echo -n -e "\t- Creating syntho namespace"
 

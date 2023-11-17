@@ -1,16 +1,7 @@
 #!/bin/bash
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source "$SCRIPT_DIR/utils.sh" --source-only
-
 DEPLOYMENT_DIR="$DEPLOYMENT_DIR"
-source $DEPLOYMENT_DIR/.env --source-only
 
-LICENSE_KEY="$LICENSE_KEY"
-REGISTRY_USER="$REGISTRY_USER"
-REGISTRY_PWD="$REGISTRY_PWD"
-KUBECONFIG="$KUBECONFIG"
-ARCH="$ARCH"
 
 read -p $'\t- Do you want to use an existing volume (should be RWX supported)? (N/y): ' USE_EXISTING_VOLUMES
 USE_EXISTING_VOLUMES=${USE_EXISTING_VOLUMES:-N}
