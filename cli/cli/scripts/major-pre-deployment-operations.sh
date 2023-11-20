@@ -49,3 +49,55 @@ SYNTHO_UI_BACKEND_IMG_REPO="$SYNTHO_UI_BACKEND_IMG_REPO"
 SYNTHO_UI_BACKEND_IMG_VER="$SYNTHO_UI_BACKEND_IMG_VER"
 SYNTHO_UI_FRONTEND_IMG_REPO="$SYNTHO_UI_FRONTEND_IMG_REPO"
 SYNTHO_UI_FRONTEND_IMG_VER="$SYNTHO_UI_FRONTEND_IMG_VER"
+
+
+
+source $DEPLOYMENT_DIR/.pre.deployment.ops.env --source-only
+IMAGE_REGISTRY_SERVER="$IMAGE_REGISTRY_SERVER"
+NAMESPACE=syntho
+SECRET_NAME_FOR_IMAGE_REGISTRY=syntho-cr-secret
+
+create_namespace_if_not_exists() {
+    # Check if the namespace exists
+    if kubectl --kubeconfig $KUBECONFIG get namespace "$NAMESPACE" &> /dev/null; then
+        echo "Namespace already exists."
+    else
+        # Create the namespace
+        kubectl --kubeconfig $KUBECONFIG create namespace "$NAMESPACE"
+        echo "Namespace created."
+    fi
+}
+
+create_secret() {
+    kubectl --kubeconfig $KUBECONFIG --namespace $NAMESPACE create secret docker-registry \
+        $SECRET_NAME_FOR_IMAGE_REGISTRY --docker-server=$IMAGE_REGISTRY_SERVER \
+        --docker-username=$REGISTRY_USER --docker-password=$REGISTRY_PWD
+}
+
+create_namespace() {
+    sleep 1
+    local errors=""
+
+
+    if ! create_namespace_if_not_exists >/dev/null 2>&1; then
+        errors+="Error: Failed to create namespace\n"
+    fi
+
+    echo -n "$errors"
+}
+
+create_secret_for_registry_access() {
+    sleep 1
+    local errors=""
+
+
+    if ! create_secret >/dev/null 2>&1; then
+        errors+="Error: Failed to create secret for image registry access\n"
+    fi
+
+    echo -n "$errors"
+}
+
+
+with_loading "Creating namespace" create_namespace
+with_loading "Creating a kubernetes secret for image registry access" create_secret_for_registry_access

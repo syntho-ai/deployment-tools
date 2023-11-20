@@ -3,6 +3,10 @@
 DEPLOYMENT_DIR="$DEPLOYMENT_DIR"
 source $DEPLOYMENT_DIR/.env --source-only
 
+LICENSE_KEY="$LICENSE_KEY"
+REGISTRY_USER="$REGISTRY_USER"
+REGISTRY_PWD="$REGISTRY_PWD"
+
 
 read -p $'\t- Do you want to use an existing volume (should be RWX supported)? (N/y): ' USE_EXISTING_VOLUMES
 USE_EXISTING_VOLUMES=${USE_EXISTING_VOLUMES:-N}
@@ -20,11 +24,12 @@ else
     PV_LABEL_KEY=""
 fi
 
+DEPLOY_LOCAL_VOLUME_PROVISIONER=n
 if [ -n "$PV_LABEL_KEY" ]; then
     STORAGE_CLASS_NAME=""
     STORAGE_CLASS_ACCESS_MODE="ReadWriteMany"
 else
-    read -p $'\t- Do you want to use your own storage class for provisioning volumes? (Y/n): ' USE_STORAGE_CLASS
+    read -p $'\t- Do you want to use your own storage class for provisioning volumes (In case we create one, only single node k8s cluster is supported)? (Y/n): ' USE_STORAGE_CLASS
     USE_STORAGE_CLASS=${USE_STORAGE_CLASS:-Y}
     if [[ "$USE_STORAGE_CLASS" == "Y" || "$USE_STORAGE_CLASS" == "y" ]]; then
         while true; do
@@ -37,6 +42,7 @@ else
             fi
         done
     else
+        DEPLOY_LOCAL_VOLUME_PROVISIONER=y
         STORAGE_CLASS_NAME="standard"
         STORAGE_CLASS_ACCESS_MODE="ReadWriteOnce"
     fi
@@ -45,6 +51,7 @@ fi
 
 read -p $'\t- Do you want to use your own ingress controller for reaching the Syntho\'s UI? (Y/n): ' USE_INGRESS_CONTROLLER
 USE_INGRESS_CONTROLLER=${USE_INGRESS_CONTROLLER:-Y}
+DEPLOY_INGRESS_CONTROLLER=n
 if [[ "$USE_INGRESS_CONTROLLER" == "Y" || "$USE_INGRESS_CONTROLLER" == "y" ]]; then
     while true; do
         read -p $'\t- Please provide the ingress controller class name that will be used in Ingress record (mandatory)?: ' INGRESS_CLASS_NAME
@@ -55,6 +62,7 @@ if [[ "$USE_INGRESS_CONTROLLER" == "Y" || "$USE_INGRESS_CONTROLLER" == "y" ]]; t
         fi
     done
 else
+    DEPLOY_INGRESS_CONTROLLER=y
     INGRESS_CLASS_NAME="nginx"
 fi
 
@@ -62,6 +70,7 @@ fi
 read -p $'\t- What is the preferred protocol for reaching the UI (HTTPS/http): ' PROTOCOL
 PROTOCOL=${PROTOCOL:-https}
 PROTOCOL=$(echo "$PROTOCOL" | tr '[:upper:]' '[:lower:]')
+CREATE_SECRET_FOR_SSL=n
 if [ "$PROTOCOL" == "https" ]; then
     read -p $'\t- Do you want it to be TLS secured? (Y/n): ' TLS_ENABLED
     TLS_ENABLED=${TLS_ENABLED:-y}
@@ -73,6 +82,7 @@ if [ "$PROTOCOL" == "https" ]; then
     fi
 
     if [[ ( "$TLS_ENABLED" == "Y" || "$TLS_ENABLED" == "y" ) && ( "$OWN_SSL_SECRET" == "N" || "$OWN_SSL_SECRET" == "n" ) ]]; then
+        CREATE_SECRET_FOR_SSL=y
         while true; do
             read -p $'\t- Please provide ssl-certificate.crt: (mandatory)' SSL_CERT
             if [ -z "$SSL_CERT" ]; then
@@ -141,4 +151,14 @@ RAY_HEAD_CPU_REQUESTS=$(( ${CPU_RESOURCE_RAY_HEAD%"m"} / 2 ))m
 RAY_HEAD_CPU_LIMIT=$CPU_RESOURCE_RAY_HEAD
 RAY_HEAD_MEMORY_REQUESTS=$(( ${MEMORY_RESOURCE_RAY_HEAD%"G"} / 2 ))G
 RAY_HEAD_MEMORY_LIMIT=$MEMORY_RESOURCE_RAY_HEAD
+EOF
+
+cat << EOF > "$DEPLOYMENT_DIR/.pre.deployment.ops.env"
+DEPLOY_LOCAL_VOLUME_PROVISIONER=$DEPLOY_LOCAL_VOLUME_PROVISIONER
+DEPLOY_INGRESS_CONTROLLER=$DEPLOY_INGRESS_CONTROLLER
+CREATE_SECRET_FOR_SSL=$CREATE_SECRET_FOR_SSL
+SSL_CERT="$SSL_CERT"
+SSL_P_KEY="$SSL_P_KEY"
+REGISTRY_USER=$REGISTRY_USER
+REGISTRY_PWD=$REGISTRY_PWD
 EOF
