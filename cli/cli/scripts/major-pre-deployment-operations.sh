@@ -57,6 +57,8 @@ IMAGE_REGISTRY_SERVER="$IMAGE_REGISTRY_SERVER"
 NAMESPACE=syntho
 SECRET_NAME_FOR_IMAGE_REGISTRY=syntho-cr-secret
 DEPLOY_LOCAL_VOLUME_PROVISIONER="$DEPLOY_LOCAL_VOLUME_PROVISIONER"
+DEPLOY_INGRESS_CONTROLLER="$DEPLOY_INGRESS_CONTROLLER"
+
 
 create_namespace_if_not_exists() {
     # Check if the namespace exists
@@ -99,9 +101,35 @@ create_secret_for_registry_access() {
 }
 
 local_volume_provisioner() {
-    kubectl --kubeconfig $KUBECONFIG apply -f \
-        https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.24/deploy/local-path-storage.yaml
+    local VERSION=0.0.24
+    local V_VERSION="v${VERSION}"
+    local RELEASE_URL=https://github.com/rancher/local-path-provisioner/archive/refs/tags/${V_VERSION}.tar.gz
+    local TARBALL_DESTINATION=${DEPLOYMENT_DIR}/local-path-provisioner-${V_VERSION}.tar.gz
+    local EXTRACT_LOCATION=${DEPLOYMENT_DIR}
+    local NAMESPACE=syntho-local-path-storage
+
+    if ! command_exists "curl"; then
+        curl -LJ "${RELEASE_URL}" -o "${TARBALL_DESTINATION}"
+    else
+        wget "${RELEASE_URL}" -O "${TARBALL_DESTINATION}"
+    fi
+
+    tar -xzvf "${TARBALL_DESTINATION}" -C "${EXTRACT_LOCATION}"
+
+    # Check if the namespace exists
+    if kubectl --kubeconfig $KUBECONFIG get namespace "$NAMESPACE"; then
+        echo "Namespace already exists."
+    else
+        # Create the namespace
+        kubectl --kubeconfig $KUBECONFIG create namespace "$NAMESPACE"
+        echo "Namespace created."
+    fi
+
+    helm --kubeconfig $KUBECONFIG install syntho-local-path-storage \
+        --namespace syntho-local-path-storage \
+        ${DEPLOYMENT_DIR}/local-path-provisioner-${VERSION}/deploy/chart/local-path-provisioner/
 }
+
 
 install_local_volume_provisioner() {
     local errors=""
@@ -114,6 +142,21 @@ install_local_volume_provisioner() {
     echo -n "$errors"
 }
 
+# nginx_ingress_controller() {
+
+# }
+
+# install_nginx_ingress_controller() {
+#     local errors=""
+
+
+#     if ! nginx_ingress_controller >/dev/null 2>&1; then
+#         errors+="Error: Failed to install nginx ingress controller\n"
+#     fi
+
+#     echo -n "$errors"
+# }
+
 
 with_loading "Creating namespace" create_namespace
 with_loading "Creating a kubernetes secret for image registry access" create_secret_for_registry_access
@@ -121,3 +164,7 @@ with_loading "Creating a kubernetes secret for image registry access" create_sec
 if [[ "$DEPLOY_LOCAL_VOLUME_PROVISIONER" == "y" ]]; then
     with_loading "Installing a local volume provisioner" install_local_volume_provisioner
 fi
+
+# if [[ "$DEPLOY_INGRESS_CONTROLLER" == "y" ]]; then
+#     with_loading "Installing nginx ingress controller" install_nginx_ingress_controller
+# fi

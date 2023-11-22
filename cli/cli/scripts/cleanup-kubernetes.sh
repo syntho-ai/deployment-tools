@@ -34,28 +34,8 @@ delete_namespace_if_exists() {
 delete_namespace_if_exists
 
 delete_local_path_provisioner() {
-    NAMESPACE="local-path-storage"
-
-    # Check if the namespace exists
-    if kubectl --kubeconfig $KUBECONFIG get namespace "$NAMESPACE" &> /dev/null; then
-        echo "Namespace $NAMESPACE exists."
-
-        # Delete deployments in the namespace
-        kubectl --kubeconfig $KUBECONFIG delete deployments --all --namespace="$NAMESPACE"
-
-        # Delete the remaining resources in the namespace
-        kubectl --kubeconfig $KUBECONFIG delete --all --namespace="$NAMESPACE"
-
-        # Delete the namespace itself
-        kubectl --kubeconfig $KUBECONFIG delete namespace "$NAMESPACE"
-
-        kubectl --kubeconfig $KUBECONFIG delete storageclass local-path
-        
-        echo "Namespace $NAMESPACE and its resources have been deleted."
-
-    else
-        echo "Namespace $NAMESPACE does not exist."
-    fi
+    helm --kubeconfig $KUBECONFIG uninstall \
+        syntho-local-path-storage --namespace syntho-local-path-storage
 }
 
 
