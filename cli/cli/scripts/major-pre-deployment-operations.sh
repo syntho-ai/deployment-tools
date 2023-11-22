@@ -58,6 +58,9 @@ NAMESPACE=syntho
 SECRET_NAME_FOR_IMAGE_REGISTRY=syntho-cr-secret
 DEPLOY_LOCAL_VOLUME_PROVISIONER="$DEPLOY_LOCAL_VOLUME_PROVISIONER"
 DEPLOY_INGRESS_CONTROLLER="$DEPLOY_INGRESS_CONTROLLER"
+CREATE_SECRET_FOR_SSL=$CREATE_SECRET_FOR_SSL
+SSL_CERT="$SSL_CERT"
+SSL_P_KEY="$SSL_P_KEY"
 
 
 create_namespace_if_not_exists() {
@@ -150,6 +153,34 @@ install_nginx_ingress_controller() {
     echo -n "$errors"
 }
 
+ssl_secret() {
+    SSL_P_KEY=$(echo $SSL_P_KEY | base64)
+    SSL_CERT=$(echo $SSL_CERT | base64)
+
+    kubectl --kubeconfig $KUBECONFIG apply -f - <<EOF
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: frontend-tls
+      namespace: syntho
+    type: kubernetes.io/tls
+    data:
+      tls.key: $SSL_P_KEY
+      tls.crt: $SSL_CERT
+EOF
+}
+
+install_ssl_secret() {
+    local errors=""
+
+
+    if ! ssl_secret >/dev/null 2>&1; then
+        errors+="Error: Failed to install secret for ssl cert\n"
+    fi
+
+    echo -n "$errors"
+}
+
 
 with_loading "Creating namespace" create_namespace
 with_loading "Creating a kubernetes secret for image registry access" create_secret_for_registry_access
@@ -160,4 +191,8 @@ fi
 
 if [[ "$DEPLOY_INGRESS_CONTROLLER" == "y" ]]; then
     with_loading "Installing nginx ingress controller" install_nginx_ingress_controller
+fi
+
+if [[ "$CREATE_SECRET_FOR_SSL" == "y" ]]; then
+    with_loading "Installing a secret for ssl cert" install_ssl_secret
 fi
