@@ -56,6 +56,7 @@ source $DEPLOYMENT_DIR/.pre.deployment.ops.env --source-only
 IMAGE_REGISTRY_SERVER="$IMAGE_REGISTRY_SERVER"
 NAMESPACE=syntho
 SECRET_NAME_FOR_IMAGE_REGISTRY=syntho-cr-secret
+DEPLOY_LOCAL_VOLUME_PROVISIONER="$DEPLOY_LOCAL_VOLUME_PROVISIONER"
 
 create_namespace_if_not_exists() {
     # Check if the namespace exists
@@ -87,7 +88,6 @@ create_namespace() {
 }
 
 create_secret_for_registry_access() {
-    sleep 1
     local errors=""
 
 
@@ -98,6 +98,26 @@ create_secret_for_registry_access() {
     echo -n "$errors"
 }
 
+local_volume_provisioner() {
+    kubectl --kubeconfig $KUBECONFIG apply -f \
+        https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.24/deploy/local-path-storage.yaml
+}
+
+install_local_volume_provisioner() {
+    local errors=""
+
+
+    if ! local_volume_provisioner >/dev/null 2>&1; then
+        errors+="Error: Failed to install local volume provisioner\n"
+    fi
+
+    echo -n "$errors"
+}
+
 
 with_loading "Creating namespace" create_namespace
 with_loading "Creating a kubernetes secret for image registry access" create_secret_for_registry_access
+
+if [[ "$DEPLOY_LOCAL_VOLUME_PROVISIONER" == "y" ]]; then
+    with_loading "Installing a local volume provisioner" install_local_volume_provisioner
+fi

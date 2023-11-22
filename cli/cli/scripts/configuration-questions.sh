@@ -43,7 +43,7 @@ else
         done
     else
         DEPLOY_LOCAL_VOLUME_PROVISIONER=y
-        STORAGE_CLASS_NAME="standard"
+        STORAGE_CLASS_NAME="local-path"
         STORAGE_CLASS_ACCESS_MODE="ReadWriteOnce"
     fi
 fi
