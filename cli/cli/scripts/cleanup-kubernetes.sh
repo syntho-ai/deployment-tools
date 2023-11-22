@@ -15,16 +15,9 @@ SECRET_NAME_FOR_IMAGE_REGISTRY=syntho-cr-secret
 DEPLOY_LOCAL_VOLUME_PROVISIONER="$DEPLOY_LOCAL_VOLUME_PROVISIONER"
 DEPLOY_INGRESS_CONTROLLER="$DEPLOY_INGRESS_CONTROLLER"
 
-echo "cleanup is ran with kubeconfig: $KUBECONFIG"
-# KUBECONFIG="$KUBECONFIG"
-# helm --kubeconfig $KUBECONFIG uninstall ray-cluster
-# helm --kubeconfig $KUBECONFIG uninstall syntho-ui
 delete_image_registry_secret() {
     kubectl --kubeconfig $KUBECONFIG --namespace syntho delete secret syntho-cr-secret
 }
-delete_image_registry_secret
-
-# kubectl --kubeconfig $KUBECONFIG delete namespace mynamespace --grace-period=0 --force
 
 delete_namespace_if_exists() {
     # Check if the namespace exists
@@ -36,7 +29,6 @@ delete_namespace_if_exists() {
         echo "Namespace does not exist."
     fi
 }
-delete_namespace_if_exists
 
 delete_local_path_provisioner() {
     helm --kubeconfig $KUBECONFIG uninstall \
@@ -67,10 +59,36 @@ delete_nginx_ingress_controller() {
 }
 
 
-if [[ "$DEPLOY_LOCAL_VOLUME_PROVISIONER" == "y" ]]; then
-    delete_local_path_provisioner
-fi
 
-if [[ "$DEPLOY_INGRESS_CONTROLLER" == "y" ]]; then
-    delete_nginx_ingress_controller
-fi
+destroy() {
+    delete_image_registry_secret
+    delete_namespace_if_exists
+
+    if [[ "$DEPLOY_LOCAL_VOLUME_PROVISIONER" == "y" ]]; then
+        delete_local_path_provisioner
+    fi
+
+    if [[ "$DEPLOY_INGRESS_CONTROLLER" == "y" ]]; then
+        delete_nginx_ingress_controller
+    fi
+}
+
+destroy_with_error_handling() {
+    local errors=""
+
+
+    if ! destroy >/dev/null 2>&1; then
+        errors+="Error: Failed to clean up components\n"
+    fi
+
+    echo -n "$errors"
+}
+
+
+destroy
+# with_loading "Cleaning up (destroying)" destroy_with_error_handling
+
+# KUBECONFIG="$KUBECONFIG"
+# helm --kubeconfig $KUBECONFIG uninstall ray-cluster
+# helm --kubeconfig $KUBECONFIG uninstall syntho-ui
+# kubectl --kubeconfig $KUBECONFIG delete namespace mynamespace --grace-period=0 --force
