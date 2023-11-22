@@ -116,17 +116,8 @@ local_volume_provisioner() {
 
     tar -xzvf "${TARBALL_DESTINATION}" -C "${EXTRACT_LOCATION}"
 
-    # Check if the namespace exists
-    if kubectl --kubeconfig $KUBECONFIG get namespace "$NAMESPACE"; then
-        echo "Namespace already exists."
-    else
-        # Create the namespace
-        kubectl --kubeconfig $KUBECONFIG create namespace "$NAMESPACE"
-        echo "Namespace created."
-    fi
-
     helm --kubeconfig $KUBECONFIG install syntho-local-path-storage \
-        --namespace syntho-local-path-storage \
+        --namespace syntho-local-path-storage --create-namespace \
         ${DEPLOYMENT_DIR}/local-path-provisioner-${VERSION}/deploy/chart/local-path-provisioner/
 }
 
@@ -142,20 +133,22 @@ install_local_volume_provisioner() {
     echo -n "$errors"
 }
 
-# nginx_ingress_controller() {
+nginx_ingress_controller() {
+    helm --kubeconfig $KUBECONFIG upgrade --install syntho-ingress-nginx ingress-nginx \
+      --repo https://kubernetes.github.io/ingress-nginx \
+      --namespace syntho-ingress-nginx --create-namespace
+}
 
-# }
-
-# install_nginx_ingress_controller() {
-#     local errors=""
+install_nginx_ingress_controller() {
+    local errors=""
 
 
-#     if ! nginx_ingress_controller >/dev/null 2>&1; then
-#         errors+="Error: Failed to install nginx ingress controller\n"
-#     fi
+    if ! nginx_ingress_controller >/dev/null 2>&1; then
+        errors+="Error: Failed to install nginx ingress controller\n"
+    fi
 
-#     echo -n "$errors"
-# }
+    echo -n "$errors"
+}
 
 
 with_loading "Creating namespace" create_namespace
@@ -165,6 +158,6 @@ if [[ "$DEPLOY_LOCAL_VOLUME_PROVISIONER" == "y" ]]; then
     with_loading "Installing a local volume provisioner" install_local_volume_provisioner
 fi
 
-# if [[ "$DEPLOY_INGRESS_CONTROLLER" == "y" ]]; then
-#     with_loading "Installing nginx ingress controller" install_nginx_ingress_controller
-# fi
+if [[ "$DEPLOY_INGRESS_CONTROLLER" == "y" ]]; then
+    with_loading "Installing nginx ingress controller" install_nginx_ingress_controller
+fi
