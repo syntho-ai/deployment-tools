@@ -8,8 +8,22 @@ REGISTRY_USER="$REGISTRY_USER"
 REGISTRY_PWD="$REGISTRY_PWD"
 
 
-read -p $'\t- Do you want to use an existing volume (should be RWX supported)? (N/y): ' USE_EXISTING_VOLUMES
-USE_EXISTING_VOLUMES=${USE_EXISTING_VOLUMES:-N}
+while true; do
+    read -p $'\t- Do you want to use an existing volume (should be RWX supported)? (N/y): ' USE_EXISTING_VOLUMES
+    USE_EXISTING_VOLUMES=${USE_EXISTING_VOLUMES:-N}
+
+    case "$USE_EXISTING_VOLUMES" in
+        [nN])
+            break
+            ;;
+        [yY])
+            break
+            ;;
+        *)
+            echo "Invalid input. Please enter 'n', 'N', 'y', or 'Y'."
+            ;;
+    esac
+done
 
 if [[ "$USE_EXISTING_VOLUMES" == "Y" || "$USE_EXISTING_VOLUMES" == "y" ]]; then
     while true; do
@@ -29,8 +43,22 @@ if [ -n "$PV_LABEL_KEY" ]; then
     STORAGE_CLASS_NAME=""
     STORAGE_CLASS_ACCESS_MODE="ReadWriteMany"
 else
-    read -p $'\t- Do you want to use your own storage class for provisioning volumes (In case we create one, only single node k8s cluster is supported)? (Y/n): ' USE_STORAGE_CLASS
-    USE_STORAGE_CLASS=${USE_STORAGE_CLASS:-Y}
+    while true; do
+        read -p $'\t- Do you want to use your own storage class for provisioning volumes (In case we create one, only a single-node k8s cluster is supported)? (Y/n): ' USE_STORAGE_CLASS
+        USE_STORAGE_CLASS=${USE_STORAGE_CLASS:-Y}
+
+        case "$USE_STORAGE_CLASS" in
+            [yY])
+                break
+                ;;
+            [nN])
+                break
+                ;;
+            *)
+                echo "Invalid input. Please enter 'y', 'Y', 'n', or 'N'."
+                ;;
+        esac
+    done
     if [[ "$USE_STORAGE_CLASS" == "Y" || "$USE_STORAGE_CLASS" == "y" ]]; then
         while true; do
             read -p $'\t- Please provide the storage class name that supports RWX that will be used in PVC (mandatory)?: ' STORAGE_CLASS_NAME
@@ -49,8 +77,22 @@ else
 fi
 
 
-read -p $'\t- Do you want to use your own ingress controller for reaching the Syntho\'s UI? (Y/n): ' USE_INGRESS_CONTROLLER
-USE_INGRESS_CONTROLLER=${USE_INGRESS_CONTROLLER:-Y}
+while true; do
+    read -p $'\t- Do you want to use your own ingress controller for reaching the Syntho\'s UI? (Y/n): ' USE_INGRESS_CONTROLLER
+    USE_INGRESS_CONTROLLER=${USE_INGRESS_CONTROLLER:-Y}
+
+    case "$USE_INGRESS_CONTROLLER" in
+        [yY])
+            break
+            ;;
+        [nN])
+            break
+            ;;
+        *)
+            echo "Invalid input. Please enter 'y', 'Y', 'n', or 'N'."
+            ;;
+    esac
+done
 DEPLOY_INGRESS_CONTROLLER=n
 if [[ "$USE_INGRESS_CONTROLLER" == "Y" || "$USE_INGRESS_CONTROLLER" == "y" ]]; then
     while true; do
@@ -67,16 +109,58 @@ else
 fi
 
 
-read -p $'\t- What is the preferred protocol for reaching the UI (HTTPS/http): ' PROTOCOL
-PROTOCOL=${PROTOCOL:-https}
+while true; do
+    read -p $'\t- What is the preferred protocol for reaching the UI (HTTPS/http): ' PROTOCOL
+    PROTOCOL=${PROTOCOL:-https}
+
+    case "$PROTOCOL" in
+        [Hh][Tt][Tt][Pp])
+            break
+            ;;
+        [Hh][Tt][Tt][Pp][Ss])
+            break
+            ;;
+        *)
+            echo "Invalid input. Please enter 'http' or 'https'."
+            ;;
+    esac
+done
 PROTOCOL=$(echo "$PROTOCOL" | tr '[:upper:]' '[:lower:]')
 CREATE_SECRET_FOR_SSL=n
 if [ "$PROTOCOL" == "https" ]; then
-    read -p $'\t- Do you want it to be TLS secured? (Y/n): ' TLS_ENABLED
-    TLS_ENABLED=${TLS_ENABLED:-y}
+    while true; do
+        read -p $'\t- Do you want it to be TLS secured? (Y/n): ' TLS_ENABLED
+        TLS_ENABLED=${TLS_ENABLED:-y}
+
+        case "$TLS_ENABLED" in
+            [yY])
+                break
+                ;;
+            [nN])
+                break
+                ;;
+            *)
+                echo "Invalid input. Please enter 'y', 'Y', 'n', or 'N'."
+                ;;
+        esac
+    done
     if [[ "$TLS_ENABLED" == "Y" || "$TLS_ENABLED" == "y" ]]; then
-        read -p $'\t- Do you want to create SSL certificate secret in the cluster yourself (secret name should be `frontend-tls` in `syntho` namespace) (N/y): ' OWN_SSL_SECRET
-        OWN_SSL_SECRET=${OWN_SSL_SECRET:-n}
+        while true; do
+            read -p $'\t- Do you want to create SSL certificate secret in the cluster yourself (secret name should be `frontend-tls` in `syntho` namespace) (N/y): ' OWN_SSL_SECRET
+            OWN_SSL_SECRET=${OWN_SSL_SECRET:-n}
+
+            case "$OWN_SSL_SECRET" in
+                [yY])
+                    break
+                    ;;
+                [nN])
+                    break
+                    ;;
+                *)
+                    echo "Invalid input. Please enter 'y', 'Y', 'n', or 'N'."
+                    ;;
+            esac
+        done
     else
         OWN_SSL_SECRET=n
     fi
