@@ -6,6 +6,7 @@ import click
 
 from typing import Dict, NoReturn, List
 from hashlib import md5
+from functools import wraps
 from datetime import datetime
 from enum import Enum
 from collections import namedtuple
@@ -59,6 +60,23 @@ class DeploymentStatus(Enum):
         return self.value[1]
 
 
+def with_working_directory(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        original_dir = os.getcwd()
+
+        try:
+            result = func(*args, **kwargs)
+
+            return result
+
+        finally:
+            os.chdir(original_dir)
+
+    return wrapper
+
+
+@with_working_directory
 def start(scripts_dir: str,
           license_key: str,
           registry_user: str,
@@ -209,6 +227,7 @@ def cleanup_with_cleanup_level(scripts_dir: str, deployment_id: str, cleanup_lev
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
     if cleanup_level == CleanUpLevel.FULL:
+        os.chdir(deployment_dir)
         result = run_script(scripts_dir, deployment_dir, "cleanup-kubernetes.sh")
         if not result.succeeded:
             return False
@@ -233,6 +252,7 @@ def cleanup_with_cleanup_level(scripts_dir: str, deployment_id: str, cleanup_lev
     return True
 
 
+@with_working_directory
 def destroy(scripts_dir: str, deployment_id: str):
     click.echo(f"Deployment({deployment_id}) will be destroyed alongside its components")
     cleanup_with_cleanup_level(scripts_dir, deployment_id, CleanUpLevel.FULL)
@@ -297,6 +317,8 @@ def initialize_deployment(deployment_id: str,
     started_at = datetime.utcnow().isoformat()
     os.makedirs(deployment_dir)
 
+    os.chdir(deployment_dir)
+
     deployment = {
         "id": deployment_id,
         "status": DeploymentStatus.INITIALIZING.get(),
@@ -329,13 +351,18 @@ def prepare_env(deployment_id: str,
 
     set_state(deployment_id, deployments_dir, DeploymentStatus.PREPARING_ENV)
 
+
+    kube_dir = f"{deployment_dir}/.kube"
+    if not os.path.exists(kube_dir):
+        os.makedirs(kube_dir)
+
     if os.path.isfile(kubeconfig):
-        os.symlink(kubeconfig, f"{deployment_dir}/kubeconfig")
+        os.symlink(kubeconfig, f"{kube_dir}/config")
     else:
-        with open(f"{deployment_dir}/kubeconfig", "w") as kubeconfig_file:
+        with open(f"{kube_dir}/config", "w") as kubeconfig_file:
             kubeconfig_file.write(kubeconfig)
 
-    kubeconfig_file_path = f"{deployment_dir}/kubeconfig"
+    kubeconfig_file_path = f"{kube_dir}/config"
 
     env = {
         "LICENSE_KEY": license_key,

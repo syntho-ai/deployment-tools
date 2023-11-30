@@ -186,13 +186,13 @@ with_loading "Creating namespace" create_namespace
 with_loading "Creating a kubernetes secret for image registry access" create_secret_for_registry_access
 
 if [[ "$DEPLOY_LOCAL_VOLUME_PROVISIONER" == "y" ]]; then
-    with_loading "Installing a local volume provisioner" install_local_volume_provisioner
+    with_loading "Setting up a local volume provisioner" install_local_volume_provisioner
 fi
 
 if [[ "$DEPLOY_INGRESS_CONTROLLER" == "y" ]]; then
-    with_loading "Installing nginx ingress controller" install_nginx_ingress_controller
+    with_loading "Setting up nginx ingress controller" install_nginx_ingress_controller
 fi
 
 if [[ "$CREATE_SECRET_FOR_SSL" == "y" ]]; then
-    with_loading "Installing a secret for ssl cert" install_ssl_secret
+    with_loading "Setting up a secret for ssl cert" install_ssl_secret
 fi

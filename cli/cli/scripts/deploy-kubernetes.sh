@@ -22,47 +22,15 @@ source $DEPLOYMENT_DIR/.resources.env --source-only
 
 echo "Step 5: Deployment;"
 
-echo -n -e "\t- Creating syntho namespace"
+echo -n -e "\t- Deploying Ray Cluster (this might take some time)"
 
 for _ in {1..4}; do
   echo -n "."
-  sleep 1
+  sleep 2
 done
 echo " done."
 
-echo -n -e "\t- Getting the $SYNTHO_VERSION-$ARCH version of Syntho stack"
-
-for _ in {1..4}; do
-  echo -n "."
-  sleep 1
-done
-echo " done."
-
-echo -n -e "\t- Setting up necessary secrets (for tls and accessing image repo) into kubernetes cluster"
-
-for _ in {1..4}; do
-  echo -n "."
-  sleep 1
-done
-echo " done."
-
-echo -n -e "\t- Setting up an ingress controller"
-
-for _ in {1..4}; do
-  echo -n "."
-  sleep 1
-done
-echo " done."
-
-echo -n -e "\t- Setting up a local volume provisioner"
-
-for _ in {1..4}; do
-  echo -n "."
-  sleep 1
-done
-echo " done."
-
-echo -n -e "\t- Deploying Syntho stack (this might take some time)"
+echo -n -e "\t- Deploying Syntho Stack (this might take some time)"
 
 for _ in {1..4}; do
   echo -n "."

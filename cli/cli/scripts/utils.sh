@@ -14,12 +14,13 @@ cleanup() {
 trap cleanup INT  # Set up the trap to call the cleanup function on Ctrl+C
 
 show_loading_animation() {
+    local sleep_duration="$2"
     local dots=""
     local i=0
     echo -n -e "\t- $1$dots"
     
     while true; do
-        sleep 0.5
+        sleep $sleep_duration
         i=$(( (i+1) % 4 ))
         dots="${dots}."
         echo -n -e "\r\t- $1$dots"
@@ -34,8 +35,9 @@ command_exists() {
 with_loading() {
     local step_name="$1"
     local function_to_run="$2"
+    local sleep_duration="${3:-0.5}"
 
-    show_loading_animation "$step_name" &
+    show_loading_animation "$step_name" "$sleep_duration" &
     animation_pid=$!
 
     errors=$($function_to_run 2>&1)
