@@ -214,6 +214,11 @@ def run_script(scripts_dir:str,
         )
     except subprocess.CalledProcessError as e:
         return SubprocessResult(succeeded=False, output=e.stderr, exitcode=e.returncode)
+    except KeyboardInterrupt:
+        return SubprocessResult(succeeded=False, output="", exitcode=1)
+    except Exception as e:
+        return SubprocessResult(succeeded=False, output="", exitcode=1)
+
 
 
 def cleanup(scripts_dir: str, deployment_id: str, status: DeploymentStatus):
