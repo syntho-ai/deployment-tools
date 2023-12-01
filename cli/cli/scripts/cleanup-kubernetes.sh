@@ -9,11 +9,15 @@ source $DEPLOYMENT_DIR/.env --source-only
 KUBECONFIG="$KUBECONFIG"
 
 
-source $DEPLOYMENT_DIR/.pre.deployment.ops.env --source-only
+source $DEPLOYMENT_DIR/.pre.deployment.ops.env --source-only &> /dev/null
 NAMESPACE=syntho
 SECRET_NAME_FOR_IMAGE_REGISTRY=syntho-cr-secret
 DEPLOY_LOCAL_VOLUME_PROVISIONER="$DEPLOY_LOCAL_VOLUME_PROVISIONER"
 DEPLOY_INGRESS_CONTROLLER="$DEPLOY_INGRESS_CONTROLLER"
+
+delete_ray_cluster() {
+    helm --kubeconfig $KUBECONFIG uninstall ray-cluster --namespace syntho
+}
 
 delete_image_registry_secret() {
     kubectl --kubeconfig $KUBECONFIG --namespace syntho delete secret syntho-cr-secret
@@ -61,6 +65,7 @@ delete_nginx_ingress_controller() {
 
 
 destroy() {
+    delete_ray_cluster
     delete_image_registry_secret
     delete_namespace_if_exists
 

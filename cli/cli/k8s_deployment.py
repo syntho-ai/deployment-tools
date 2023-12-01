@@ -200,7 +200,6 @@ def run_script(scripts_dir:str,
     script_path = os.path.join(scripts_dir, script_name)
 
     try:
-
         if capture_output:
             res = subprocess.run([script_path], check=True, shell=False, env=env,
                                  capture_output=True, text=True)
@@ -453,11 +452,12 @@ def set_cluster_name(scripts_dir: str, deployment_id: str) -> NoReturn:
     update_deployments_state(deployments_dir, deployments_state)
 
 def start_deployment(scripts_dir: str, deployment_id: str) -> bool:
+    click.echo("Step 5: Deployment;")
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
     set_state(deployment_id, deployments_dir, DeploymentStatus.SYNTHO_UI_DEPLOYMENT_IN_PROGRESS)
 
-    result = run_script(scripts_dir, deployment_dir, "deploy-kubernetes.sh")
+    result = run_script(scripts_dir, deployment_dir, "deploy-ray-and-syntho-stack.sh")
     if result.succeeded:
         set_state(deployment_id, deployments_dir, DeploymentStatus.SYNTHO_UI_DEPLOYMENT_SUCCEEDED)
     else:

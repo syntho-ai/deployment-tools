@@ -8,3 +8,4 @@ include cli/scripts/get-k8s-cluster-context-name.sh
 include cli/scripts/configuration-questions.sh
 include cli/scripts/download-syntho-charts-release.sh
 include cli/scripts/major-pre-deployment-operations.sh
+include cli/scripts/deploy-ray-and-syntho-stack.sh

@@ -28,6 +28,11 @@ developer_tools_check() {
         errors+="Error: Missing command line tool - tar\n"
     fi
 
+    # Check if tar exists
+    if ! command_exists "awk"; then
+        errors+="Error: Missing command line tool - awk\n"
+    fi
+
     echo -n "$errors"
 }
 

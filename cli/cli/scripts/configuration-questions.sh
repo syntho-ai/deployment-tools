@@ -41,7 +41,7 @@ fi
 DEPLOY_LOCAL_VOLUME_PROVISIONER=n
 if [ -n "$PV_LABEL_KEY" ]; then
     STORAGE_CLASS_NAME=""
-    STORAGE_CLASS_ACCESS_MODE="ReadWriteMany"
+    STORAGE_ACCESS_MODE="ReadWriteMany"
 else
     while true; do
         read -p $'\t- Do you want to use your own storage class for provisioning volumes (In case we create one, only a single-node k8s cluster is supported)? (Y/n): ' USE_STORAGE_CLASS
@@ -65,14 +65,14 @@ else
             if [ -z "$STORAGE_CLASS_NAME" ]; then
                 echo -e "\t- Value is mandatory. Please provide a value."
             else
-                STORAGE_CLASS_ACCESS_MODE="ReadWriteMany"
+                STORAGE_ACCESS_MODE="ReadWriteMany"
                 break
             fi
         done
     else
         DEPLOY_LOCAL_VOLUME_PROVISIONER=y
         STORAGE_CLASS_NAME="local-path"
-        STORAGE_CLASS_ACCESS_MODE="ReadWriteOnce"
+        STORAGE_ACCESS_MODE="ReadWriteOnce"
     fi
 fi
 
@@ -211,18 +211,35 @@ fi
 read -p $'\t- What is the preferred domain for reaching the UI (default: syntho.company.com): ' DOMAIN
 DOMAIN=${DOMAIN:-syntho.company.com}
 
-read -p $'\t- How much CPU resource you would like to use for the ray head (eg. 32000m) (default: 1000m): ' CPU_RESOURCE_RAY_HEAD
-CPU_RESOURCE_RAY_HEAD=${CPU_RESOURCE_RAY_HEAD:-1000m}
+while true; do
+    read -p $'\t- How much CPU resource you would like to use for the ray head (e.g., 32000m) (default: 1000m): ' CPU_RESOURCE_RAY_HEAD
+    CPU_RESOURCE_RAY_HEAD=${CPU_RESOURCE_RAY_HEAD:-1000m}
 
-read -p $'\t- How much memory resource you would like to use for the ray head (eg. 16G) (default: 4G): ' MEMORY_RESOURCE_RAY_HEAD
-MEMORY_RESOURCE_RAY_HEAD=${MEMORY_RESOURCE_RAY_HEAD:-4G}
+    # Use regex to check if the input matches the desired format
+    if [[ $CPU_RESOURCE_RAY_HEAD =~ ^[0-9]+m$ ]]; then
+        break
+    else
+        echo "Invalid input format. Please enter a positive integer followed by 'm'."
+    fi
+done
 
+while true; do
+    read -p $'\t- How much memory resource you would like to use for the ray head (e.g., 16G) (default: 4G): ' MEMORY_RESOURCE_RAY_HEAD
+    MEMORY_RESOURCE_RAY_HEAD=${MEMORY_RESOURCE_RAY_HEAD:-4G}
+
+    # Use regex to check if the input matches the desired format
+    if [[ $MEMORY_RESOURCE_RAY_HEAD =~ ^[0-9]+G$ ]]; then
+        break
+    else
+        echo "Invalid input format. Please enter a positive integer followed by 'G'."
+    fi
+done
 
 
 cat << EOF > "$DEPLOYMENT_DIR/.config.env"
 LICENSE_KEY=$LICENSE_KEY
 STORAGE_CLASS_NAME=$STORAGE_CLASS_NAME
-STORAGE_CLASS_ACCESS_MODE=$STORAGE_CLASS_ACCESS_MODE
+STORAGE_ACCESS_MODE=$STORAGE_ACCESS_MODE
 PV_LABEL_KEY=$PV_LABEL_KEY
 TLS_ENABLED=$TLS_ENABLED
 DOMAIN=$DOMAIN
