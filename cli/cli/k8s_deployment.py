@@ -230,6 +230,10 @@ def cleanup_with_cleanup_level(scripts_dir: str, deployment_id: str, cleanup_lev
 
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
+
+    if not os.path.isdir(deployment_dir):
+        return
+
     if cleanup_level == CleanUpLevel.FULL:
         os.chdir(deployment_dir)
         result = run_script(scripts_dir, deployment_dir, "cleanup-kubernetes.sh")
@@ -258,10 +262,16 @@ def cleanup_with_cleanup_level(scripts_dir: str, deployment_id: str, cleanup_lev
 
 @with_working_directory
 def destroy(scripts_dir: str, deployment_id: str):
+    deployments_dir = f"{scripts_dir}/deployments"
+    deployment_dir = f"{deployments_dir}/{deployment_id}"
+    if not os.path.isdir(deployment_dir):
+        click.echo(f"Deployment({deployment_id}) couldn't be found")
+        return
+
     click.echo(f"Deployment({deployment_id}) will be destroyed alongside its components")
     cleanup_with_cleanup_level(scripts_dir, deployment_id, CleanUpLevel.FULL)
     click.echo(
-        f"Deployment({deployment_id}) is is destroyed and all its components have been removed"
+        f"Deployment({deployment_id}) is destroyed and all its components have been removed"
     )
 
 

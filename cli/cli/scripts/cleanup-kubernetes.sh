@@ -19,6 +19,10 @@ delete_ray_cluster() {
     helm --kubeconfig $KUBECONFIG uninstall ray-cluster --namespace syntho
 }
 
+delete_synthoui() {
+    helm --kubeconfig $KUBECONFIG uninstall syntho-ui --namespace syntho
+}
+
 delete_image_registry_secret() {
     kubectl --kubeconfig $KUBECONFIG --namespace syntho delete secret syntho-cr-secret
 }
@@ -66,6 +70,7 @@ delete_nginx_ingress_controller() {
 
 destroy() {
     delete_ray_cluster
+    delete_synthoui
     delete_image_registry_secret
     delete_namespace_if_exists
 
