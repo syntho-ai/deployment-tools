@@ -165,11 +165,11 @@ wait_for_synthoui_health() {
         kubectl --kubeconfig $KUBECONFIG get pod -n syntho | grep "^$POD_PREFIX_FOR_BACKEND_WORKER" | grep -q "Running"
     }
 
-    # is_backend_worker_pod_ready() {
-    #     local POD_PREFIX_FOR_BACKEND_WORKER=backend-worker-
-    #     local POD_NAME_FOR_BACKEND_WORKER=$(kubectl --kubeconfig $KUBECONFIG get pod -n syntho | grep "^$POD_PREFIX_FOR_BACKEND_WORKER" | awk '{print $1}')
-    #     kubectl --kubeconfig $KUBECONFIG -n syntho get pod $POD_NAME_FOR_BACKEND_WORKER -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' | grep -q "True"
-    # }
+    is_backend_worker_pod_ready() {
+        local POD_PREFIX_FOR_BACKEND_WORKER=backend-worker-
+        local POD_NAME_FOR_BACKEND_WORKER=$(kubectl --kubeconfig $KUBECONFIG get pod -n syntho | grep "^$POD_PREFIX_FOR_BACKEND_WORKER" | awk '{print $1}')
+        kubectl --kubeconfig $KUBECONFIG -n syntho get pod $POD_NAME_FOR_BACKEND_WORKER -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' | grep -q "True"
+    }
 
     # # this is a workaround to make it restart
     kill_backend_worker
@@ -178,10 +178,9 @@ wait_for_synthoui_health() {
         sleep 5
     done
 
-    # while ! is_backend_worker_pod_ready; do
-    #     echo "not ready yet"
-    #     sleep 5
-    # done
+    while ! is_backend_worker_pod_ready; do
+        sleep 5
+    done
 }
 
 deploy_ray_cluster() {
@@ -226,3 +225,13 @@ deploy_syntho_ui() {
 
 with_loading "Deploying Ray Cluster (this might take some time)" deploy_ray_cluster 2
 with_loading "Deploying Syntho Stack (this might take some time)" deploy_syntho_ui 4
+
+echo '
+##############
+For local testing:
+
+kubectl --kubeconfig '"$KUBECONFIG"' port-forward service/syntho-ingress-nginx-controller 32282:80 -n syntho-ingress-nginx
+echo "127.0.0.1    '"$DOMAIN"'" | sudo tee -a /etc/hosts
+
+##############
+'

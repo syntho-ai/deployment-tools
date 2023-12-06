@@ -96,7 +96,7 @@ destroy_with_error_handling() {
 
 
 # destroy
-with_loading "Cleaning things up (destroying)" destroy_with_error_handling 2
+with_loading "Cleaning things up (destroying)" destroy_with_error_handling 4
 
 # KUBECONFIG="$KUBECONFIG"
 # helm --kubeconfig $KUBECONFIG uninstall ray-cluster
