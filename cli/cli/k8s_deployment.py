@@ -83,7 +83,8 @@ def start(scripts_dir: str,
           registry_pwd: str,
           kubeconfig: str,
           arch_value: str,
-          version: str) -> str:
+          version: str,
+          skip_configuration: bool) -> str:
 
     deployments_dir = get_deployments_dir(scripts_dir)
     deployment_id = generate_deployment_id(kubeconfig)
@@ -120,6 +121,7 @@ def start(scripts_dir: str,
         arch_value,
         kubeconfig,
         version,
+        skip_configuration,
     )
 
     succeeded = pre_requirements_check(scripts_dir, deployment_id)
@@ -133,7 +135,7 @@ def start(scripts_dir: str,
 
     set_cluster_name(scripts_dir, deployment_id)
 
-    succeeded = configuration_questions(scripts_dir, deployment_id)
+    succeeded = configuration_questions(scripts_dir, deployment_id, skip_configuration)
     if not succeeded:
         return DeploymentResult(
             succeeded=False,
@@ -361,7 +363,8 @@ def prepare_env(deployment_id: str,
                 registry_pwd: str,
                 arch_value: str,
                 kubeconfig: str,
-                version: str):
+                version: str,
+                skip_configuration: bool):
 
     set_state(deployment_id, deployments_dir, DeploymentStatus.PREPARING_ENV)
 
@@ -384,7 +387,8 @@ def prepare_env(deployment_id: str,
         "REGISTRY_PWD": registry_pwd,
         "ARCH": arch_value,
         "KUBECONFIG": kubeconfig_file_path,
-        "VERSION": version
+        "VERSION": version,
+        "SKIP_CONFIGURATION": "true" if skip_configuration else "false",
     }
     env_file_path = f"{deployment_dir}/.env"
     with open(env_file_path, "w") as file:
@@ -476,8 +480,12 @@ def start_deployment(scripts_dir: str, deployment_id: str) -> bool:
     return result.succeeded
 
 
-def configuration_questions(scripts_dir: str, deployment_id: str) -> bool:
-    click.echo("Step 2: Configuration;")
+def configuration_questions(scripts_dir: str, deployment_id: str, skip_configuration) -> bool:
+    if not skip_configuration:
+        click.echo("Step 2: Configuration;")
+    else:
+        click.echo("Step 2: Configuration; [SKIPPED]")
+
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
     set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS)

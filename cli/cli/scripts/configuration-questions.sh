@@ -6,24 +6,29 @@ source $DEPLOYMENT_DIR/.env --source-only
 LICENSE_KEY="$LICENSE_KEY"
 REGISTRY_USER="$REGISTRY_USER"
 REGISTRY_PWD="$REGISTRY_PWD"
+SKIP_CONFIGURATION="$SKIP_CONFIGURATION"
 
 
-while true; do
-    read -p $'\t- Do you want to use an existing volume (should be RWX supported)? (N/y): ' USE_EXISTING_VOLUMES
-    USE_EXISTING_VOLUMES=${USE_EXISTING_VOLUMES:-N}
+if [[ "$SKIP_CONFIGURATION" == "false" ]]; then
+    while true; do
+        read -p $'\t- Do you want to use an existing volume (should be RWX supported)? (N/y): ' USE_EXISTING_VOLUMES
+        USE_EXISTING_VOLUMES=${USE_EXISTING_VOLUMES:-N}
 
-    case "$USE_EXISTING_VOLUMES" in
-        [nN])
-            break
-            ;;
-        [yY])
-            break
-            ;;
-        *)
-            echo "Invalid input. Please enter 'n', 'N', 'y', or 'Y'."
-            ;;
-    esac
-done
+        case "$USE_EXISTING_VOLUMES" in
+            [nN])
+                break
+                ;;
+            [yY])
+                break
+                ;;
+            *)
+                echo "Invalid input. Please enter 'n', 'N', 'y', or 'Y'."
+                ;;
+        esac
+    done
+else
+    USE_EXISTING_VOLUMES=n
+fi
 
 if [[ "$USE_EXISTING_VOLUMES" == "Y" || "$USE_EXISTING_VOLUMES" == "y" ]]; then
     while true; do
@@ -43,22 +48,27 @@ if [ -n "$PV_LABEL_KEY" ]; then
     STORAGE_CLASS_NAME=""
     STORAGE_ACCESS_MODE="ReadWriteMany"
 else
-    while true; do
-        read -p $'\t- Do you want to use your own storage class for provisioning volumes (In case we create one, only a single-node k8s cluster is supported)? (Y/n): ' USE_STORAGE_CLASS
-        USE_STORAGE_CLASS=${USE_STORAGE_CLASS:-Y}
+    if [[ "$SKIP_CONFIGURATION" == "false" ]]; then
+        while true; do
+            read -p $'\t- Do you want to use your own storage class for provisioning volumes (In case we create one, only a single-node k8s cluster is supported)? (Y/n): ' USE_STORAGE_CLASS
+            USE_STORAGE_CLASS=${USE_STORAGE_CLASS:-Y}
 
-        case "$USE_STORAGE_CLASS" in
-            [yY])
-                break
-                ;;
-            [nN])
-                break
-                ;;
-            *)
-                echo "Invalid input. Please enter 'y', 'Y', 'n', or 'N'."
-                ;;
-        esac
-    done
+            case "$USE_STORAGE_CLASS" in
+                [yY])
+                    break
+                    ;;
+                [nN])
+                    break
+                    ;;
+                *)
+                    echo "Invalid input. Please enter 'y', 'Y', 'n', or 'N'."
+                    ;;
+            esac
+        done
+    else
+        USE_STORAGE_CLASS=n
+    fi
+
     if [[ "$USE_STORAGE_CLASS" == "Y" || "$USE_STORAGE_CLASS" == "y" ]]; then
         while true; do
             read -p $'\t- Please provide the storage class name that supports RWX that will be used in PVC (mandatory)?: ' STORAGE_CLASS_NAME
@@ -77,22 +87,27 @@ else
 fi
 
 
-while true; do
-    read -p $'\t- Do you want to use your own ingress controller for reaching the Syntho\'s UI? (Y/n): ' USE_INGRESS_CONTROLLER
-    USE_INGRESS_CONTROLLER=${USE_INGRESS_CONTROLLER:-Y}
+if [[ "$SKIP_CONFIGURATION" == "false" ]]; then
+    while true; do
+        read -p $'\t- Do you want to use your own ingress controller for reaching the Syntho\'s UI? (Y/n): ' USE_INGRESS_CONTROLLER
+        USE_INGRESS_CONTROLLER=${USE_INGRESS_CONTROLLER:-Y}
 
-    case "$USE_INGRESS_CONTROLLER" in
-        [yY])
-            break
-            ;;
-        [nN])
-            break
-            ;;
-        *)
-            echo "Invalid input. Please enter 'y', 'Y', 'n', or 'N'."
-            ;;
-    esac
-done
+        case "$USE_INGRESS_CONTROLLER" in
+            [yY])
+                break
+                ;;
+            [nN])
+                break
+                ;;
+            *)
+                echo "Invalid input. Please enter 'y', 'Y', 'n', or 'N'."
+                ;;
+        esac
+    done
+else
+    USE_INGRESS_CONTROLLER=n
+fi
+
 DEPLOY_INGRESS_CONTROLLER=n
 if [[ "$USE_INGRESS_CONTROLLER" == "Y" || "$USE_INGRESS_CONTROLLER" == "y" ]]; then
     while true; do
@@ -109,22 +124,27 @@ else
 fi
 
 
-while true; do
-    read -p $'\t- What is the preferred protocol for reaching the UI (HTTPS/http): ' PROTOCOL
-    PROTOCOL=${PROTOCOL:-https}
+if [[ "$SKIP_CONFIGURATION" == "false" ]]; then
+    while true; do
+        read -p $'\t- What is the preferred protocol for reaching the UI (HTTPS/http): ' PROTOCOL
+        PROTOCOL=${PROTOCOL:-https}
 
-    case "$PROTOCOL" in
-        [Hh][Tt][Tt][Pp])
-            break
-            ;;
-        [Hh][Tt][Tt][Pp][Ss])
-            break
-            ;;
-        *)
-            echo "Invalid input. Please enter 'http' or 'https'."
-            ;;
-    esac
-done
+        case "$PROTOCOL" in
+            [Hh][Tt][Tt][Pp])
+                break
+                ;;
+            [Hh][Tt][Tt][Pp][Ss])
+                break
+                ;;
+            *)
+                echo "Invalid input. Please enter 'http' or 'https'."
+                ;;
+        esac
+    done
+else
+    PROTOCOL=http
+fi
+
 PROTOCOL=$(echo "$PROTOCOL" | tr '[:upper:]' '[:lower:]')
 CREATE_SECRET_FOR_SSL=n
 if [ "$PROTOCOL" == "https" ]; then
@@ -208,32 +228,44 @@ else
     OWN_SSL_SECRET=false
 fi
 
-read -p $'\t- What is the preferred domain for reaching the UI (default: syntho.company.com): ' DOMAIN
-DOMAIN=${DOMAIN:-syntho.company.com}
+if [[ "$SKIP_CONFIGURATION" == "false" ]]; then
+    read -p $'\t- What is the preferred domain for reaching the UI (default: syntho.company.com): ' DOMAIN
+    DOMAIN=${DOMAIN:-syntho.company.com}
+else
+    DOMAIN=syntho.company.com
+fi
 
-while true; do
-    read -p $'\t- How much CPU resource you would like to use for the ray head (e.g., 32000m) (default: 1000m): ' CPU_RESOURCE_RAY_HEAD
-    CPU_RESOURCE_RAY_HEAD=${CPU_RESOURCE_RAY_HEAD:-1000m}
+if [[ "$SKIP_CONFIGURATION" == "false" ]]; then
+    while true; do
+        read -p $'\t- How much CPU resource you would like to use for the ray head (e.g., 32000m) (default: 1000m): ' CPU_RESOURCE_RAY_HEAD
+        CPU_RESOURCE_RAY_HEAD=${CPU_RESOURCE_RAY_HEAD:-1000m}
 
-    # Use regex to check if the input matches the desired format
-    if [[ $CPU_RESOURCE_RAY_HEAD =~ ^[0-9]+m$ ]]; then
-        break
-    else
-        echo "Invalid input format. Please enter a positive integer followed by 'm'."
-    fi
-done
+        # Use regex to check if the input matches the desired format
+        if [[ $CPU_RESOURCE_RAY_HEAD =~ ^[0-9]+m$ ]]; then
+            break
+        else
+            echo "Invalid input format. Please enter a positive integer followed by 'm'."
+        fi
+    done
+else
+    CPU_RESOURCE_RAY_HEAD=1000m
+fi
 
-while true; do
-    read -p $'\t- How much memory resource you would like to use for the ray head (e.g., 16G) (default: 4G): ' MEMORY_RESOURCE_RAY_HEAD
-    MEMORY_RESOURCE_RAY_HEAD=${MEMORY_RESOURCE_RAY_HEAD:-4G}
+if [[ "$SKIP_CONFIGURATION" == "false" ]]; then
+    while true; do
+        read -p $'\t- How much memory resource you would like to use for the ray head (e.g., 16G) (default: 4G): ' MEMORY_RESOURCE_RAY_HEAD
+        MEMORY_RESOURCE_RAY_HEAD=${MEMORY_RESOURCE_RAY_HEAD:-4G}
 
-    # Use regex to check if the input matches the desired format
-    if [[ $MEMORY_RESOURCE_RAY_HEAD =~ ^[0-9]+G$ ]]; then
-        break
-    else
-        echo "Invalid input format. Please enter a positive integer followed by 'G'."
-    fi
-done
+        # Use regex to check if the input matches the desired format
+        if [[ $MEMORY_RESOURCE_RAY_HEAD =~ ^[0-9]+G$ ]]; then
+            break
+        else
+            echo "Invalid input format. Please enter a positive integer followed by 'G'."
+        fi
+    done
+else
+    MEMORY_RESOURCE_RAY_HEAD=4G
+fi
 
 
 cat << EOF > "$DEPLOYMENT_DIR/.config.env"

@@ -258,7 +258,7 @@ with_loading "Deploying Ray Cluster (this might take some time)" deploy_ray_clus
 with_loading "Deploying Syntho Stack (this might take some time)" deploy_syntho_ui 4
 
 if [[ $DEPLOY_INGRESS_CONTROLLER == "y" && $PROTOCOL == "http" ]]; then
-    with_loading "Waiting ingress controller to be ready for accessing the UI" wait_local_nginx_ingress_controller 5
+    with_loading "Waiting ingress controller to be ready for accessing the UI (this might take some time)" wait_local_nginx_ingress_controller 5
 fi
 
 
@@ -270,6 +270,6 @@ kubectl --kubeconfig '"$KUBECONFIG"' port-forward service/syntho-ingress-nginx-c
 echo "127.0.0.1    '"$DOMAIN"'" | sudo tee -a /etc/hosts
 
 
-visit: http://'"$DOMAIN"'":32282
+visit: http://'"$DOMAIN"':32282
 ##############
 '

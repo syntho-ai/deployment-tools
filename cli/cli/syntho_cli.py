@@ -51,12 +51,18 @@ def cli():
     default="stable",
     required=False
 )
+@click.option(
+    "--skip-configuration",
+    is_flag=True,
+    help="Skip configuration, and use default configuration params for deployment",
+)
 def k8s_deployment(
     license_key: str,
     registry_user: str,
     registry_pwd: str,
     kubeconfig: str,
     version: Optional[str],
+    skip_configuration: bool,
 ):
     arch = utils.platform_arch()
     if not arch.supported():
@@ -72,6 +78,7 @@ def k8s_deployment(
         kubeconfig,
         arch.value,
         version,
+        skip_configuration,
     )
 
     if result.succeeded:
