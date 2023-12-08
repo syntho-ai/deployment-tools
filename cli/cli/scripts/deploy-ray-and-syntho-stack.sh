@@ -256,7 +256,7 @@ wait_local_nginx_ingress_controller() {
 
 
 with_loading "Deploying Ray Cluster (this might take some time)" deploy_ray_cluster 2
-with_loading "Deploying Syntho Stack (this might take some time)" deploy_syntho_ui 4
+with_loading "Deploying Syntho Stack (this might take some time)" deploy_syntho_ui 5
 
 
 if [[ ($DEPLOY_INGRESS_CONTROLLER == "y" && $PROTOCOL == "http") || ($SKIP_CONFIGURATION == "true") ]]; then

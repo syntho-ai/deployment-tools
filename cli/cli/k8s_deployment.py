@@ -11,6 +11,8 @@ from datetime import datetime
 from enum import Enum
 from collections import namedtuple
 
+from cli.utils import thread_safe
+
 
 DeploymentResult = namedtuple("DeploymentResult", [
     "succeeded",
@@ -179,6 +181,8 @@ def start(scripts_dir: str,
         deployment_status=DeploymentStatus.COMPLETED,
     )
 
+
+@thread_safe
 def is_deployment_completed(deployments_dir: str, deployment_id: str) -> bool:
     deployment_state_path = f"{deployments_dir}/k8s-deployment-state.yaml"
     deployment_state_dict = None
@@ -310,6 +314,7 @@ def get_deployment_status(deployments_dir: str,
             return deployment_status
 
 
+@thread_safe
 def get_deployments_state(deployments_dir: str) -> Dict:
     deployment_state_path = f"{deployments_dir}/k8s-deployment-state.yaml"
     if os.path.exists(deployment_state_path):
@@ -349,6 +354,7 @@ def initialize_deployment(deployment_id: str,
     update_deployments_state(deployments_dir, deployments_state)
 
 
+@thread_safe
 def update_deployments_state(deployments_dir: str, deployments_state: Dict) -> NoReturn:
     deployment_state_path = f"{deployments_dir}/k8s-deployment-state.yaml"
     with open(deployment_state_path, "w") as file:
