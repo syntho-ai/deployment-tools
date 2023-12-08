@@ -1,5 +1,10 @@
 #!/bin/bash
 
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+NC='\033[0m' # No Color
+
 # Declare animation_pid as a global variable
 animation_pid=""
 
@@ -48,12 +53,12 @@ with_loading() {
 
     if [ -n "$errors" ]; then
         # If there are errors, print "failed" and the error message
-        echo -e "\r\t- $step_name failed."
-        echo -e "\nErrors:"
+        echo -e "\r\t- $step_name ${RED}failed.${NC}"
+        echo -e "\n${RED}Errors:${NC}"
         echo -e "$errors"
         exit 1
     else
         # If the function runs without errors, print "done"
-        echo -e "\r\t- $step_name done."
+        echo -e "\r\t- $step_name ${GREEN}done.${NC}"
     fi
 }

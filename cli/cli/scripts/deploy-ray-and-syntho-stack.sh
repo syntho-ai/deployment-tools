@@ -7,6 +7,7 @@ source "$SCRIPT_DIR/utils.sh" --source-only
 DEPLOYMENT_DIR="$DEPLOYMENT_DIR"
 source $DEPLOYMENT_DIR/.env --source-only
 KUBECONFIG="$KUBECONFIG"
+SKIP_CONFIGURATION="$SKIP_CONFIGURATION"
 source $DEPLOYMENT_DIR/.config.env --source-only
 source $DEPLOYMENT_DIR/.images.env --source-only
 ARCH="$ARCH"
@@ -257,19 +258,20 @@ wait_local_nginx_ingress_controller() {
 with_loading "Deploying Ray Cluster (this might take some time)" deploy_ray_cluster 2
 with_loading "Deploying Syntho Stack (this might take some time)" deploy_syntho_ui 4
 
-if [[ $DEPLOY_INGRESS_CONTROLLER == "y" && $PROTOCOL == "http" ]]; then
+
+if [[ ($DEPLOY_INGRESS_CONTROLLER == "y" && $PROTOCOL == "http") || ($SKIP_CONFIGURATION == "true") ]]; then
     with_loading "Waiting ingress controller to be ready for accessing the UI (this might take some time)" wait_local_nginx_ingress_controller 5
-fi
 
-
-echo '
-##############
-For local testing:
+    echo '
+################### For Local Development ################################
 
 kubectl --kubeconfig '"$KUBECONFIG"' port-forward service/syntho-ingress-nginx-controller 32282:80 -n syntho-ingress-nginx
 echo "127.0.0.1    '"$DOMAIN"'" | sudo tee -a /etc/hosts
 
-
 visit: http://'"$DOMAIN"':32282
-##############
+################### For Local Development ################################
 '
+fi
+
+echo "Syntho stack got deployed. Please visit: $PROTOCOL://$DOMAIN"
+echo "PS: Make sure the DNS configuration is made properly on your side!"

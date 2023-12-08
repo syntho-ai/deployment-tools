@@ -484,7 +484,8 @@ def configuration_questions(scripts_dir: str, deployment_id: str, skip_configura
     if not skip_configuration:
         click.echo("Step 2: Configuration;")
     else:
-        click.echo("Step 2: Configuration; [SKIPPED]")
+        skipped_text = click.style("[SKIPPED]", fg="yellow")
+        click.echo(f"Step 2: Configuration; {skipped_text}")
 
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
