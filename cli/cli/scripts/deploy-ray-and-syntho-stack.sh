@@ -15,6 +15,7 @@ if [[ "$ARCH" == "arm" ]]; then
 fi
 source $DEPLOYMENT_DIR/.pre.deployment.ops.env --source-only
 CHARTS_DIR="$CHARTS_DIR"
+DEPLOY_INGRESS_CONTROLLER="$DEPLOY_INGRESS_CONTROLLER"
 source $DEPLOYMENT_DIR/.resources.env --source-only
 
 
@@ -183,6 +184,25 @@ wait_for_synthoui_health() {
     done
 }
 
+wait_local_nginx() {
+    is_200() {
+        local INGRESS_CONTROLLER_SERVICE_NAME="syntho-ingress-nginx-controller"
+        local INGRESS_CONTROLLER_NAMESPACE="syntho-ingress-nginx"
+        local DOMAIN="$DOMAIN"
+
+        kubectl run -i --tty --rm busybox-2 --image=busybox --restart=Never --namespace syntho -- /bin/sh -c "wget -O- \
+        --header=\"Host: $DOMAIN\" --server-response \
+        http://$INGRESS_CONTROLLER_SERVICE_NAME.$INGRESS_CONTROLLER_NAMESPACE.svc.cluster.local/login/ \
+        2>&1 | grep 'HTTP/' | awk '{print \$2}'" | grep -q 200
+    }
+
+    while ! is_200; do
+        echo "no"
+        sleep 5
+    done
+    echo "yes"
+}
+
 deploy_ray_cluster() {
     local errors=""
 
@@ -221,10 +241,26 @@ deploy_syntho_ui() {
     echo -n "$errors"
 }
 
+wait_local_nginx_ingress_controller() {
+    local errors=""
+
+
+    if ! wait_local_nginx >/dev/null 2>&1; then
+        errors+="Error: Nginx controller health check has been unexpectedly failed\n"
+    fi
+
+    echo -n "$errors"
+}
+
 
 
 with_loading "Deploying Ray Cluster (this might take some time)" deploy_ray_cluster 2
 with_loading "Deploying Syntho Stack (this might take some time)" deploy_syntho_ui 4
+
+if [[ $DEPLOY_INGRESS_CONTROLLER == "y" && $PROTOCOL == "http" ]]; then
+    with_loading "Waiting ingress controller to be ready for accessing the UI" wait_local_nginx_ingress_controller 5
+fi
+
 
 echo '
 ##############
@@ -233,5 +269,7 @@ For local testing:
 kubectl --kubeconfig '"$KUBECONFIG"' port-forward service/syntho-ingress-nginx-controller 32282:80 -n syntho-ingress-nginx
 echo "127.0.0.1    '"$DOMAIN"'" | sudo tee -a /etc/hosts
 
+
+visit: http://'"$DOMAIN"'":32282
 ##############
 '
