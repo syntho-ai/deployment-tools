@@ -69,6 +69,10 @@ def k8s_deployment(
         raise click.ClickException(
             f"Unsupported architecture: {arch.value}. Only AMD/ARM is supported."
         )
+    starting_text = click.style(
+        "-- Syntho stack is going to be deployed --", fg="white", blink=True, bold=True,
+    )
+    click.echo(f"{starting_text}\n")
 
     result = k8s_deployment_manager.start(
         scripts_dir,
@@ -82,15 +86,36 @@ def k8s_deployment(
     )
 
     if result.succeeded:
+        deployment_successful_text = click.style(
+            "Deployment is successful. See helpful commands below.", fg="white", bold=True
+        )
+        deployment_status_text = click.style(
+            f"Deployment status: syntho-cli k8s-deployment-status --deployment-id "
+            f"{result.deployment_id}",
+            fg="white",
+            bold=True,
+        )
+        destroy_deployment_text = click.style(
+            f"Destroy deployment: syntho-cli k8s-deployment-destroy "
+            f"--deployment-id {result.deployment_id}",
+            fg="white",
+            bold=True,
+        )
         click.echo(
             "\n"
-            "Deployment is successful. See helpful commands below.\n\n"
-            f"Deployment status: syntho-cli k8s-deployment-status --deployment-id {result.deployment_id}\n"
-            f"Destroy deployment: syntho-cli k8s-deployment-destroy --deployment-id {result.deployment_id}\n"
+            f"{deployment_successful_text}\n\n"
+            f"{deployment_status_text}\n"
+            f"{destroy_deployment_text}\n"
         )
     else:
-        click.echo(f"Error deploying to kubernetes: {result.error}", err=True)
-        click.echo(f"Cleaning things up", err=True)
+        deployment_failed_text = click.style(
+            f"Error deploying to kubernetes: {result.error}", fg="red"
+        )
+        cleaningthingsup_text = click.style(
+            "Cleaning things up", fg="red"
+        )
+        click.echo(f"{deployment_failed_text}", err=True)
+        click.echo(f"{cleaningthingsup_text}", err=True)
         k8s_deployment_manager.cleanup(scripts_dir, result.deployment_id, result.deployment_status)
         sys.exit(1)
 

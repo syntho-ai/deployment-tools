@@ -262,16 +262,16 @@ with_loading "Deploying Syntho Stack (this might take some time)" deploy_syntho_
 if [[ ($DEPLOY_INGRESS_CONTROLLER == "y" && $PROTOCOL == "http") || ($SKIP_CONFIGURATION == "true") ]]; then
     with_loading "Waiting ingress controller to be ready for accessing the UI (this might take some time)" wait_local_nginx_ingress_controller 5
 
-    echo '
-################### For Local Development ################################
+    echo -e '
+'"${YELLOW}"'################### For Local Development ################################'"${NC}"'
 
 kubectl --kubeconfig '"$KUBECONFIG"' port-forward service/syntho-ingress-nginx-controller 32282:80 -n syntho-ingress-nginx
 echo "127.0.0.1    '"$DOMAIN"'" | sudo tee -a /etc/hosts
 
-visit: http://'"$DOMAIN"':32282
-################### For Local Development ################################
+'"${GREEN}"'visit:'"${NC}"' http://'"$DOMAIN"':32282
+'"${YELLOW}"'################### For Local Development ################################'"${NC}"'
 '
 fi
 
-echo "Syntho stack got deployed. Please visit: $PROTOCOL://$DOMAIN"
-echo "PS: Make sure the DNS configuration is made properly on your side!"
+echo -e "${YELLOW}Syntho stack got deployed. ${GREEN}Please visit:${NC} $PROTOCOL://$DOMAIN${NC}"
+echo -e "${YELLOW}PS: Make sure the DNS configuration is made properly on your side!${NC}"

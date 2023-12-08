@@ -109,8 +109,6 @@ def start(scripts_dir: str,
                 deployment_status=deployment_status,
             )
 
-    click.echo("--Syntho stack is going to be deployed--")
-
     initialize_deployment(deployment_id, deployment_dir, deployments_dir, version)
 
     prepare_env(
@@ -490,7 +488,7 @@ def configuration_questions(scripts_dir: str, deployment_id: str, skip_configura
     if not skip_configuration:
         click.echo("Step 2: Configuration;")
     else:
-        skipped_text = click.style("[SKIPPED]", fg="yellow")
+        skipped_text = click.style("[SKIPPED]", bg="yellow", fg="white", bold=True)
         click.echo(f"Step 2: Configuration; {skipped_text}")
 
     deployments_dir = f"{scripts_dir}/deployments"
