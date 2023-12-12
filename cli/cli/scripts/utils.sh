@@ -1,13 +1,17 @@
 #!/bin/bash
 
 RED='\033[0;31m'
+BOLD_WHITE_ON_RED='\033[1;37;41m'
 GREEN='\033[0;32m'
 BOLD_WHITE_ON_GREEN='\033[1;37;42m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
+CLEARUP='\033[K'
 
-# Declare animation_pid as a global variable
+# Declare global variables
 animation_pid=""
+latest_elapsed_time=""
+start_time=""
 
 cleanup() {
     # This function is called when the script is interrupted (e.g., Ctrl+C).
@@ -17,19 +21,31 @@ cleanup() {
     exit 1
 }
 
-trap cleanup INT  # Set up the trap to call the cleanup function on Ctrl+C
+# Set up the trap to call the cleanup function on Ctrl+C
+trap cleanup INT
 
 show_loading_animation() {
+    start_time=$(date +%s)
+    latest_elapsed_time="00:00:00"
+
     local sleep_duration="$2"
     local dots=""
-    local i=0
-    echo -n -e "\t- $1$dots"
+    local elapsed_time
+    echo -n -e "\t- [00:00:00] $1$dots"
     
     while true; do
+        elapsed_time=$(($(date +%s) - start_time))
+        if [[ $(uname) == "Darwin" ]]; then
+            formatted_elapsed_time=$(date -u -r ${elapsed_time} +"%T")
+        else
+            formatted_elapsed_time=$(date -u -d @${elapsed_time} +"%T")
+        fi
+        latest_elapsed_time="$formatted_elapsed_time"
+        echo -n -e "\r\t- [$latest_elapsed_time] $1$dots"
+
         sleep $sleep_duration
-        i=$(( (i+1) % 4 ))
+
         dots="${dots}."
-        echo -n -e "\r\t- $1$dots"
     done
 }
 
@@ -54,12 +70,12 @@ with_loading() {
 
     if [ -n "$errors" ]; then
         # If there are errors, print "failed" and the error message
-        echo -e "\r\t- $step_name ${RED}failed.${NC}"
+        echo -e "\r\t- [${BOLD_WHITE_ON_RED}failed${NC}] $step_name $CLEARUP"
         echo -e "\n${RED}Errors:${NC}"
         echo -e "$errors"
         exit 1
     else
         # If the function runs without errors, print "done"
-        echo -e "\r\t- $step_name ${BOLD_WHITE_ON_GREEN}done.${NC}"
+        echo -e "\r\t- [${BOLD_WHITE_ON_GREEN}done${NC}] $step_name $CLEARUP"
     fi
 }

@@ -5,7 +5,7 @@ source "$SCRIPT_DIR/utils.sh" --source-only
 
 
 developer_tools_check() {
-    sleep 2
+    sleep 5
     local errors=""
 
     # Check if curl or wget exists
@@ -37,7 +37,7 @@ developer_tools_check() {
 }
 
 kubernetes_cluster_check() {
-    sleep 2
+    sleep 5
     local errors=""
 
     # Check if KUBECONFIG is set
