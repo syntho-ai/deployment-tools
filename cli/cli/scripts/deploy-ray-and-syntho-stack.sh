@@ -255,12 +255,12 @@ wait_local_nginx_ingress_controller() {
 
 
 
-with_loading "Deploying Ray Cluster (this might take some time)" deploy_ray_cluster 2
-with_loading "Deploying Syntho Stack (this might take some time)" deploy_syntho_ui 5
+with_loading "Deploying Ray Cluster (this might take some time)" deploy_ray_cluster
+with_loading "Deploying Syntho Stack (this might take some time)" deploy_syntho_ui
 
 
 if [[ ($DEPLOY_INGRESS_CONTROLLER == "y" && $PROTOCOL == "http") || ($SKIP_CONFIGURATION == "true") ]]; then
-    with_loading "Waiting ingress controller to be ready for accessing the UI (this might take some time)" wait_local_nginx_ingress_controller 5
+    with_loading "Waiting ingress controller to be ready for accessing the UI (this might take some time)" wait_local_nginx_ingress_controller
 
     echo -e '
 '"${YELLOW}"'################### For Local Development ################################'"${NC}"'

@@ -25,10 +25,11 @@ cleanup() {
 trap cleanup INT
 
 show_loading_animation() {
+    local ttl="$2"
     start_time=$(date +%s)
     latest_elapsed_time="00:00:00"
 
-    local sleep_duration="$2"
+    local sleep_duration="0.5"
     local spinner="/-\\|"
     local spinner_length=${#spinner}
     local spinner_index=0
@@ -57,13 +58,17 @@ command_exists() {
     type "$1" &> /dev/null
 }
 
+default_timeout_callback() {
+    echo "default timeout callback is called"
+}
+
 with_loading() {
     local step_name="$1"
     local function_to_run="$2"
-    local sleep_duration="${3:-1}"
-    sleep_duration=0.5
+    local ttl="${3:-3600}"
+    local timeout_callback_function="$4"
 
-    show_loading_animation "$step_name" "$sleep_duration" &
+    show_loading_animation "$step_name" "$ttl" &
     animation_pid=$!
 
     errors=$($function_to_run 2>&1)
@@ -82,4 +87,13 @@ with_loading() {
         # If the function runs without errors, print "done"
         echo -e "\r\t- [${BOLD_WHITE_ON_GREEN}done${NC}] $step_name $CLEARUP"
     fi
+
+    # # Check if a custom timeout callback function is provided
+    # if [ -n "$timeout_callback_function" ]; then
+    #     # Call the custom timeout callback function
+    #     $timeout_callback_function
+    # else
+    #     # Call the default timeout callback function
+    #     default_timeout_callback
+    # fi
 }
