@@ -29,10 +29,12 @@ show_loading_animation() {
     latest_elapsed_time="00:00:00"
 
     local sleep_duration="$2"
-    local dots=""
-    local elapsed_time
-    echo -n -e "\t- [00:00:00] $1$dots"
-    
+    local spinner="/-\\|"
+    local spinner_length=${#spinner}
+    local spinner_index=0
+
+    echo -n -e "\t- [00:00:00] $1 ${spinner:0:1}"
+
     while true; do
         elapsed_time=$(($(date +%s) - start_time))
         if [[ $(uname) == "Darwin" ]]; then
@@ -41,11 +43,13 @@ show_loading_animation() {
             formatted_elapsed_time=$(date -u -d @${elapsed_time} +"%T")
         fi
         latest_elapsed_time="$formatted_elapsed_time"
-        echo -n -e "\r\t- [$latest_elapsed_time] $1$dots"
+        spinner_char="${spinner:${spinner_index}:1}"
+
+        echo -n -e "\r\t- [$latest_elapsed_time] $1 $spinner_char"
+
+        spinner_index=$(( (spinner_index + 1) % spinner_length ))
 
         sleep $sleep_duration
-
-        dots="${dots}."
     done
 }
 
@@ -53,11 +57,11 @@ command_exists() {
     type "$1" &> /dev/null
 }
 
-
 with_loading() {
     local step_name="$1"
     local function_to_run="$2"
-    local sleep_duration="${3:-0.5}"
+    local sleep_duration="${3:-1}"
+    sleep_duration=0.5
 
     show_loading_animation "$step_name" "$sleep_duration" &
     animation_pid=$!
