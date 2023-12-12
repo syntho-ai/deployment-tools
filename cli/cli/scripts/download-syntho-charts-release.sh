@@ -16,11 +16,11 @@ download_release() {
 
     if ! command_exists "curl"; then
         if ! curl -LJ "${CHARTS_RELEASE_ASSET_URL}" -o "${TARBALL_DESTINATION}" >/dev/null 2>&1; then
-            errors+="Error: Failed to download release using curl. Make sure that the given version exists.\n"
+            errors+="Failed to download release using curl. Make sure that the given version exists.\n"
         fi
     else
         if ! wget "${CHARTS_RELEASE_ASSET_URL}" -O "${TARBALL_DESTINATION}" >/dev/null 2>&1; then
-            errors+="Error: Failed to download release using wget. Make sure that the given version exists.\n"
+            errors+="Failed to download release using wget. Make sure that the given version exists.\n"
         fi
     fi
 
@@ -33,7 +33,7 @@ extract_release() {
 
 
     if ! tar -xzvf "${TARBALL_DESTINATION}" -C "${EXTRACT_LOCATION}" >/dev/null 2>&1; then
-        errors+="Error: Failed to extract the release\n"
+        errors+="Failed to extract the release\n"
     fi
 
     echo -n "$errors"

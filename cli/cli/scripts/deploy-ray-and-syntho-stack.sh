@@ -209,15 +209,15 @@ deploy_ray_cluster() {
 
 
     if ! generate_ray_values >/dev/null 2>&1; then
-        errors+="Error: values.yaml generation error for the Ray Cluster\n"
+        errors+="values.yaml generation error for the Ray Cluster\n"
     fi
 
     if ! deploy_ray >/dev/null 2>&1; then
-        errors+="Error: Ray Cluster deployment has been unexpectedly failed\n"
+        errors+="Ray Cluster deployment has been unexpectedly failed\n"
     fi
 
     if ! wait_for_ray_cluster_health >/dev/null 2>&1; then
-        errors+="Error: Ray Cluster health check has been unexpectedly failed\n"
+        errors+="Ray Cluster health check has been unexpectedly failed\n"
     fi
 
     echo -n "$errors"
@@ -228,15 +228,15 @@ deploy_syntho_ui() {
 
 
     if ! generate_synthoui_values >/dev/null 2>&1; then
-        errors+="Error: values.yaml generation error for the Syntho Stack\n"
+        errors+="values.yaml generation error for the Syntho Stack\n"
     fi
 
     if ! deploy_synthoui >/dev/null 2>&1; then
-        errors+="Error: Syntho Stack deployment has been unexpectedly failed\n"
+        errors+="Syntho Stack deployment has been unexpectedly failed\n"
     fi
 
     if ! wait_for_synthoui_health >/dev/null 2>&1; then
-        errors+="Error: Syntho UI health check has been unexpectedly failed\n"
+        errors+="Syntho UI health check has been unexpectedly failed\n"
     fi
 
     echo -n "$errors"
@@ -247,7 +247,7 @@ wait_local_nginx_ingress_controller() {
 
 
     if ! wait_local_nginx >/dev/null 2>&1; then
-        errors+="Error: Nginx controller health check has been unexpectedly failed\n"
+        errors+="Nginx controller health check has been unexpectedly failed\n"
     fi
 
     echo -n "$errors"

@@ -86,7 +86,7 @@ create_namespace() {
 
 
     if ! create_namespace_if_not_exists >/dev/null 2>&1; then
-        errors+="Error: Failed to create namespace\n"
+        errors+="Failed to create namespace\n"
     fi
 
     echo -n "$errors"
@@ -97,7 +97,7 @@ create_secret_for_registry_access() {
 
 
     if ! create_secret >/dev/null 2>&1; then
-        errors+="Error: Failed to create secret for image registry access\n"
+        errors+="Failed to create secret for image registry access\n"
     fi
 
     echo -n "$errors"
@@ -130,7 +130,7 @@ install_local_volume_provisioner() {
 
 
     if ! local_volume_provisioner >/dev/null 2>&1; then
-        errors+="Error: Failed to install local volume provisioner\n"
+        errors+="Failed to install local volume provisioner\n"
     fi
 
     echo -n "$errors"
@@ -147,7 +147,7 @@ install_nginx_ingress_controller() {
 
 
     if ! nginx_ingress_controller >/dev/null 2>&1; then
-        errors+="Error: Failed to install nginx ingress controller\n"
+        errors+="Failed to install nginx ingress controller\n"
     fi
 
     echo -n "$errors"
@@ -175,7 +175,7 @@ install_ssl_secret() {
 
 
     if ! ssl_secret >/dev/null 2>&1; then
-        errors+="Error: Failed to install secret for ssl cert\n"
+        errors+="Failed to install secret for ssl cert\n"
     fi
 
     echo -n "$errors"

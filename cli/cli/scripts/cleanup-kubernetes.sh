@@ -88,17 +88,10 @@ destroy_with_error_handling() {
 
 
     if ! destroy >/dev/null 2>&1; then
-        errors+="Error: Failed to clean up components\n"
+        errors+="Failed to clean up components\n"
     fi
 
     echo -n "$errors"
 }
 
-
-# destroy
 with_loading "Cleaning things up (destroying)" destroy_with_error_handling
-
-# KUBECONFIG="$KUBECONFIG"
-# helm --kubeconfig $KUBECONFIG uninstall ray-cluster
-# helm --kubeconfig $KUBECONFIG uninstall syntho-ui
-# kubectl --kubeconfig $KUBECONFIG delete namespace mynamespace --grace-period=0 --force

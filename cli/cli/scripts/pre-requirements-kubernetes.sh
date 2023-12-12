@@ -10,27 +10,27 @@ developer_tools_check() {
 
     # Check if curl or wget exists
     if ! command_exists "curl" && ! command_exists "wget"; then
-        errors+="Error: Missing command line tool - curl or wget\n"
+        errors+="Missing command line tool - curl or wget\n"
     fi
 
     # Check if kubectl exists
     if ! command_exists "kubectl"; then
-        errors+="Error: Missing command line tool - kubectl\n"
+        errors+="Missing command line tool - kubectl\n"
     fi
 
     # Check if helm exists
     if ! command_exists "helm"; then
-        errors+="Error: Missing command line tool - helm\n"
+        errors+="Missing command line tool - helm\n"
     fi
 
     # Check if tar exists
     if ! command_exists "tar"; then
-        errors+="Error: Missing command line tool - tar\n"
+        errors+="Missing command line tool - tar\n"
     fi
 
     # Check if tar exists
     if ! command_exists "awk"; then
-        errors+="Error: Missing command line tool - awk\n"
+        errors+="Missing command line tool - awk\n"
     fi
 
     echo -n "$errors"
@@ -42,12 +42,12 @@ kubernetes_cluster_check() {
 
     # Check if KUBECONFIG is set
     if [ -z "$KUBECONFIG" ]; then
-        errors+="Error: KUBECONFIG is not set.\n"
+        errors+="KUBECONFIG is not set.\n"
     fi
 
     # Check if KUBECONFIG points to a valid Kubernetes cluster
     if ! kubectl --kubeconfig="$KUBECONFIG" config current-context &> /dev/null; then
-        errors+="Error: KUBECONFIG does not point to a valid Kubernetes cluster.\n"
+        errors+="KUBECONFIG does not point to a valid Kubernetes cluster.\n"
     fi
 
     echo -n "$errors"

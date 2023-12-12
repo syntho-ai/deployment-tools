@@ -81,7 +81,9 @@ with_loading() {
         # If there are errors, print "failed" and the error message
         echo -e "\r\t- [${BOLD_WHITE_ON_RED}failed${NC}] $step_name $CLEARUP"
         echo -e "\n${RED}Errors:${NC}"
-        echo -e "$errors"
+
+        echo -e "$errors\n"
+
         exit 1
     else
         # If the function runs without errors, print "done"
