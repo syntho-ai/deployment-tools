@@ -25,7 +25,6 @@ cleanup() {
 trap cleanup INT
 
 show_loading_animation() {
-    local ttl="$2"
     start_time=$(date +%s)
     latest_elapsed_time="00:00:00"
 
@@ -38,6 +37,7 @@ show_loading_animation() {
 
     while true; do
         elapsed_time=$(($(date +%s) - start_time))
+
         if [[ $(uname) == "Darwin" ]]; then
             formatted_elapsed_time=$(date -u -r ${elapsed_time} +"%T")
         else
@@ -68,7 +68,7 @@ with_loading() {
     local ttl="${3:-3600}"
     local timeout_callback_function="$4"
 
-    show_loading_animation "$step_name" "$ttl" &
+    show_loading_animation "$step_name" &
     animation_pid=$!
 
     errors=$($function_to_run 2>&1)
@@ -78,7 +78,6 @@ with_loading() {
     wait $animation_pid 2>/dev/null
 
     if [ -n "$errors" ]; then
-        # If there are errors, print "failed" and the error message
         echo -e "\r\t- [${BOLD_WHITE_ON_RED}failed${NC}] $step_name $CLEARUP"
         echo -e "\n${RED}Errors:${NC}"
 
@@ -86,16 +85,6 @@ with_loading() {
 
         exit 1
     else
-        # If the function runs without errors, print "done"
         echo -e "\r\t- [${BOLD_WHITE_ON_GREEN}done${NC}] $step_name $CLEARUP"
     fi
-
-    # # Check if a custom timeout callback function is provided
-    # if [ -n "$timeout_callback_function" ]; then
-    #     # Call the custom timeout callback function
-    #     $timeout_callback_function
-    # else
-    #     # Call the default timeout callback function
-    #     default_timeout_callback
-    # fi
 }
