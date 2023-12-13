@@ -65,7 +65,7 @@ command_exists() {
 }
 
 default_timeout_callback() {
-    echo "default timeout callback is called"
+    echo "do nothing"
 }
 
 with_loading() {
@@ -74,19 +74,37 @@ with_loading() {
     local ttl="${3:-3600}"
     local timeout_callback_function="$4"
     local errors=""
+    local elapsed_location="$SHARED/$function_to_run.elapsed"
 
     show_loading_animation "$step_name" "$function_to_run" &
     animation_pid=$!
 
-    $function_to_run 2>&1 &  # Run the command in the background
-    pid=$!  # Get the process ID
+    # Run the command in the background
+    $function_to_run 2>&1 &
+    # Get the process ID
+    pid=$!
+
     # Check if the process is still running
+    local timedout="false"
     while ps -p $pid > /dev/null; do
-        sleep 1  # Sleep for a short duration
+        sleep 1
+
+        elapsed=$(<"$elapsed_location")
+        if [ "$elapsed" -gt "$ttl" ]; then
+            timedout="true"
+            # Terminate the process
+            kill $pid
+            wait $pid 2>/dev/null
+            errors+="Process couldn't be finalized in a defined TTL\n"
+            break
+        fi
     done
-    # Process has completed, check the exit status
-    if ! wait $pid; then
-        errors=$(wait $pid 2>&1)
+
+    if [[ $timedout == "false" ]]; then
+        # Process has completed, check the exit status
+        if ! wait $pid; then
+            errors=$(wait $pid 2>&1)
+        fi
     fi
 
     # Terminate the loading animation

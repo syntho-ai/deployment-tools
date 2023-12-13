@@ -141,46 +141,25 @@ wait_for_synthoui_health() {
 
     is_frontend_healthy() {
         local POD_NAME=$(kubectl --kubeconfig $KUBECONFIG get pod -n syntho | grep "^$POD_PREFIX" | awk '{print $1}')
+        content=""
 
         if [ -n "$POD_NAME" ]; then
-            local CONTENT=$(kubectl --kubeconfig $KUBECONFIG -n syntho exec -ti $POD_NAME -- /bin/sh -c "wget -q --spider --server-response http://0.0.0.0:3000")
-            echo $CONTENT | grep -q "HTTP/1.1 200 OK"
+            content=$(kubectl --kubeconfig $KUBECONFIG -n syntho exec -i $POD_NAME -- /bin/sh -c "wget -q --spider --server-response http://0.0.0.0:3000" 2>&1)
         fi
+
+        echo "$content" | grep -q "HTTP/1.1 200 OK"
     }
 
     while ! is_pod_running; do
+        echo "frontend not running yet"
         sleep 5
     done
+
+    echo "waiting before making request to frontend"
+    sleep 5
 
     while ! is_frontend_healthy; do
-        sleep 5
-    done
-
-    kill_backend_worker() {
-        local POD_PREFIX_FOR_BACKEND_WORKER=backend-worker-
-        local POD_NAME_FOR_BACKEND_WORKER=$(kubectl --kubeconfig $KUBECONFIG get pod -n syntho | grep "^$POD_PREFIX_FOR_BACKEND_WORKER" | awk '{print $1}')
-        kubectl --kubeconfig $KUBECONFIG delete pod -n syntho $POD_NAME_FOR_BACKEND_WORKER
-    }
-
-    is_backend_worker_pod_running() {
-        local POD_PREFIX_FOR_BACKEND_WORKER=backend-worker-
-        kubectl --kubeconfig $KUBECONFIG get pod -n syntho | grep "^$POD_PREFIX_FOR_BACKEND_WORKER" | grep -q "Running"
-    }
-
-    is_backend_worker_pod_ready() {
-        local POD_PREFIX_FOR_BACKEND_WORKER=backend-worker-
-        local POD_NAME_FOR_BACKEND_WORKER=$(kubectl --kubeconfig $KUBECONFIG get pod -n syntho | grep "^$POD_PREFIX_FOR_BACKEND_WORKER" | awk '{print $1}')
-        kubectl --kubeconfig $KUBECONFIG -n syntho get pod $POD_NAME_FOR_BACKEND_WORKER -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' | grep -q "True"
-    }
-
-    # # this is a workaround to make it restart
-    kill_backend_worker
-
-    while ! is_backend_worker_pod_running; do
-        sleep 5
-    done
-
-    while ! is_backend_worker_pod_ready; do
+        echo "frontend not healthy yet"
         sleep 5
     done
 }
@@ -216,6 +195,12 @@ deploy_ray_cluster() {
         errors+="Ray Cluster deployment has been unexpectedly failed\n"
     fi
 
+    echo -n "$errors"
+}
+
+health_check_ray_cluster() {
+    local errors=""
+
     if ! wait_for_ray_cluster_health >/dev/null 2>&1; then
         errors+="Ray Cluster health check has been unexpectedly failed\n"
     fi
@@ -235,6 +220,12 @@ deploy_syntho_ui() {
         errors+="Syntho Stack deployment has been unexpectedly failed\n"
     fi
 
+    echo -n "$errors"
+}
+
+health_check_syntho_ui() {
+    local errors=""
+
     if ! wait_for_synthoui_health >/dev/null 2>&1; then
         errors+="Syntho UI health check has been unexpectedly failed\n"
     fi
@@ -253,10 +244,20 @@ wait_local_nginx_ingress_controller() {
     echo -n "$errors"
 }
 
+ray_cluster_deployment_failure_callback() {
+    echo "timeout: ray_cluster_deployment_failure_callback"
+}
+
+syntho_ui_deployment_failure_callback() {
+    echo "timeout: syntho_ui_deployment_failure_callback"
+}
 
 
-with_loading "Deploying Ray Cluster (this might take some time)" deploy_ray_cluster
-with_loading "Deploying Syntho Stack (this might take some time)" deploy_syntho_ui
+
+with_loading "Deploying Ray Cluster" deploy_ray_cluster
+with_loading "Checking if Ray Cluster is healthy (this might take some time)" health_check_ray_cluster 600 ray_cluster_deployment_failure_callback
+with_loading "Deploying Syntho Stack" deploy_syntho_ui
+with_loading "Checking if Syntho Stack is healthy (this might take some time)" health_check_syntho_ui 600 syntho_ui_deployment_failure_callback
 
 
 if [[ ($DEPLOY_INGRESS_CONTROLLER == "y" && $PROTOCOL == "http") || ($SKIP_CONFIGURATION == "true") ]]; then
