@@ -73,11 +73,21 @@ with_loading() {
     local function_to_run="$2"
     local ttl="${3:-3600}"
     local timeout_callback_function="$4"
+    local errors=""
 
     show_loading_animation "$step_name" "$function_to_run" &
     animation_pid=$!
 
-    errors=$($function_to_run 2>&1)
+    $function_to_run 2>&1 &  # Run the command in the background
+    pid=$!  # Get the process ID
+    # Check if the process is still running
+    while ps -p $pid > /dev/null; do
+        sleep 1  # Sleep for a short duration
+    done
+    # Process has completed, check the exit status
+    if ! wait $pid; then
+        errors=$(wait $pid 2>&1)
+    fi
 
     # Terminate the loading animation
     kill $animation_pid
@@ -94,22 +104,3 @@ with_loading() {
         echo -e "\r\t- [${BOLD_WHITE_ON_GREEN}done${NC}] $step_name $CLEARUP"
     fi
 }
-
-
-# $function_to_run 2>&1 &  # Run the command in the background
-# pid=$!  # Get the process ID
-
-# # Check if the process is still running
-# while ps -p $pid > /dev/null; do
-#     sleep 1  # Sleep for a short duration
-# done
-
-# # Process has completed, check the exit status
-# if wait $pid; then
-#     echo "Command completed successfully"
-# else
-#     echo "Command failed"
-#     # Capture and handle errors
-#     errors=$(wait $pid 2>&1)
-#     echo "Errors: $errors"
-# fi
