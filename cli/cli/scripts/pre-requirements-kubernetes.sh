@@ -61,5 +61,19 @@ source $DEPLOYMENT_DIR/.env --source-only
 KUBECONFIG="$KUBECONFIG"
 
 
+# my_timeout_callback() {
+#     sleep 30
+
+#     errors=""
+#     echo "do nothing" >/dev/null 2>&1
+
+#     echo -n "$errors"
+# }
+
+# my_callback() {
+#     with_loading "Please wait until the necessary materials are being prepared for diagnosis" my_timeout_callback "" "" 2
+# }
+
+# with_loading "Checking developer tools" developer_tools_check 5 my_callback
 with_loading "Checking developer tools" developer_tools_check
 with_loading "Checking if the given KUBECONFIG points to a valid k8s cluster" kubernetes_cluster_check

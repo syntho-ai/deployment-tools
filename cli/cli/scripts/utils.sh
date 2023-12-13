@@ -6,6 +6,7 @@ mkdir -p "$SHARED"
 
 RED='\033[0;31m'
 BOLD_WHITE_ON_RED='\033[1;37;41m'
+BOLD_WHITE_ON_ORANGE='\033[1;37;48;5;208m'
 GREEN='\033[0;32m'
 BOLD_WHITE_ON_GREEN='\033[1;37;42m'
 YELLOW='\033[0;33m'
@@ -33,12 +34,26 @@ show_loading_animation() {
     latest_elapsed_time="00:00:00"
 
     local func_name="$2"
+    local indentation_level="${3:-1}"
     local sleep_duration="0.5"
     local spinner="/-\\|"
     local spinner_length=${#spinner}
     local spinner_index=0
 
-    echo -n -e "\t- [00:00:00] $1 ${spinner:0:1}"
+    local indentation=""
+    for ((i=1; i<=indentation_level; i++)); do
+        indentation+="\t"
+    done
+
+    # Determine the character based on the indentation level
+    local prefix=''
+    if [ $((indentation_level % 2)) -eq 1 ]; then
+        prefix='-'
+    else
+        prefix='*'
+    fi
+
+    echo -n -e "$indentation$prefix [00:00:00] $1 ${spinner:0:1}"
 
     while true; do
         elapsed_time=$(($(date +%s) - start_time))
@@ -52,7 +67,7 @@ show_loading_animation() {
         latest_elapsed_time="$formatted_elapsed_time"
         spinner_char="${spinner:${spinner_index}:1}"
 
-        echo -n -e "\r\t- [$latest_elapsed_time] $1 $spinner_char"
+        echo -n -e "\r$indentation$prefix [$latest_elapsed_time] $1 $spinner_char"
 
         spinner_index=$(( (spinner_index + 1) % spinner_length ))
 
@@ -73,10 +88,24 @@ with_loading() {
     local function_to_run="$2"
     local ttl="${3:-3600}"
     local timeout_callback_function="$4"
+    local indentation_level="${5:-1}"
     local errors=""
     local elapsed_location="$SHARED/$function_to_run.elapsed"
 
-    show_loading_animation "$step_name" "$function_to_run" &
+    local indentation=""
+    for ((i=1; i<=indentation_level; i++)); do
+        indentation+="\t"
+    done
+
+    # Determine the character based on the indentation level
+    local prefix=''
+    if [ $((indentation_level % 2)) -eq 1 ]; then
+        prefix='-'
+    else
+        prefix='*'
+    fi
+
+    show_loading_animation "$step_name" "$function_to_run" "$indentation_level" &
     animation_pid=$!
 
     # Run the command in the background
@@ -112,13 +141,25 @@ with_loading() {
     wait $animation_pid 2>/dev/null
 
     if [ -n "$errors" ]; then
-        echo -e "\r\t- [${BOLD_WHITE_ON_RED}failed${NC}] $step_name $CLEARUP"
+        if [[ $timedout == "true" ]];then
+            echo -e "\r$indentation$prefix [${BOLD_WHITE_ON_ORANGE}timeout${NC}] $step_name $CLEARUP"
+
+            # Check if a custom timeout callback function is provided
+            if [ -n "$timeout_callback_function" ]; then
+                # Call the custom timeout callback function
+                $timeout_callback_function
+            else
+                # Call the default timeout callback function
+                default_timeout_callback
+            fi
+        else
+            echo -e "\r$indentation$prefix [${BOLD_WHITE_ON_RED}failed${NC}] $step_name $CLEARUP"
+        fi
+
         echo -e "\n${RED}Errors:${NC}"
-
         echo -e "$errors\n"
-
         exit 1
     else
-        echo -e "\r\t- [${BOLD_WHITE_ON_GREEN}done${NC}] $step_name $CLEARUP"
+        echo -e "\r$indentation$prefix [${BOLD_WHITE_ON_GREEN}done${NC}] $step_name $CLEARUP"
     fi
 }
