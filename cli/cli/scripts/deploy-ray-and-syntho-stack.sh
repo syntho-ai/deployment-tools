@@ -185,7 +185,7 @@ wait_local_nginx() {
 
 deploy_ray_cluster() {
     local errors=""
-
+    sleep 2
 
     if ! generate_ray_values >/dev/null 2>&1; then
         errors+="values.yaml generation error for the Ray Cluster\n"
