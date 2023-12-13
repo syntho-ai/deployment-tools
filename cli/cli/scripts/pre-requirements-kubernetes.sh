@@ -33,11 +33,6 @@ developer_tools_check() {
         errors+="Missing command line tool - awk\n"
     fi
 
-    # # Check if timeout exists
-    # if ! command_exists "timeout" && ! command_exists "gtimeout"; then
-    #     errors+="Missing command line tool - timeout or gtimeout\n"
-    # fi
-
     echo -n "$errors"
 }
 

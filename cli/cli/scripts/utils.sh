@@ -1,5 +1,9 @@
 #!/bin/bash
 
+DEPLOYMENT_DIR="$DEPLOYMENT_DIR"
+SHARED="$DEPLOYMENT_DIR/shared"
+mkdir -p "$SHARED"
+
 RED='\033[0;31m'
 BOLD_WHITE_ON_RED='\033[1;37;41m'
 GREEN='\033[0;32m'
@@ -28,6 +32,7 @@ show_loading_animation() {
     start_time=$(date +%s)
     latest_elapsed_time="00:00:00"
 
+    local func_name="$2"
     local sleep_duration="0.5"
     local spinner="/-\\|"
     local spinner_length=${#spinner}
@@ -37,6 +42,7 @@ show_loading_animation() {
 
     while true; do
         elapsed_time=$(($(date +%s) - start_time))
+        echo "$elapsed_time" > "$SHARED/$func_name.elapsed"
 
         if [[ $(uname) == "Darwin" ]]; then
             formatted_elapsed_time=$(date -u -r ${elapsed_time} +"%T")
@@ -68,7 +74,7 @@ with_loading() {
     local ttl="${3:-3600}"
     local timeout_callback_function="$4"
 
-    show_loading_animation "$step_name" &
+    show_loading_animation "$step_name" "$function_to_run" &
     animation_pid=$!
 
     errors=$($function_to_run 2>&1)
@@ -88,3 +94,22 @@ with_loading() {
         echo -e "\r\t- [${BOLD_WHITE_ON_GREEN}done${NC}] $step_name $CLEARUP"
     fi
 }
+
+
+# $function_to_run 2>&1 &  # Run the command in the background
+# pid=$!  # Get the process ID
+
+# # Check if the process is still running
+# while ps -p $pid > /dev/null; do
+#     sleep 1  # Sleep for a short duration
+# done
+
+# # Process has completed, check the exit status
+# if wait $pid; then
+#     echo "Command completed successfully"
+# else
+#     echo "Command failed"
+#     # Capture and handle errors
+#     errors=$(wait $pid 2>&1)
+#     echo "Errors: $errors"
+# fi
