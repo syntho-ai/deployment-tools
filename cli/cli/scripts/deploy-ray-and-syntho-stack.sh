@@ -271,7 +271,7 @@ get_all_logs() {
 
 deployment_failure_callback() {
     with_loading "Please wait until the necessary materials are being prepared for diagnosis" get_all_logs "" "" 2
-    with_loading "Please share this material (/tmp/syntho-all-logs.tar.gz) with support@syntho.ai" do_nothing "" "" 2
+    with_loading "Please share this file (/tmp/syntho-all-logs.tar.gz) with support@syntho.ai" do_nothing "" "" 2
 }
 
 
