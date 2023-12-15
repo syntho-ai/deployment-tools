@@ -117,11 +117,16 @@ with_loading() {
     pid=$!
 
     # Check if the process is still running
+    local elapsed=0
     local timedout="false"
     while ps -p $pid > /dev/null; do
         sleep 1
 
-        elapsed=$(<"$elapsed_location")
+        tmp_elapsed=$(<"$elapsed_location")
+        # Check if tmp_elapsed is an integer
+        if [[ "$tmp_elapsed" =~ ^[0-9]+$ ]]; then
+            elapsed=$tmp_elapsed
+        fi
         if [ "$elapsed" -gt "$ttl" ]; then
             timedout="true"
             # Terminate the process
