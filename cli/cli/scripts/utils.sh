@@ -79,8 +79,11 @@ command_exists() {
     type "$1" &> /dev/null
 }
 
-default_timeout_callback() {
-    echo "do nothing"
+do_nothing() {
+    sleep 1
+    errors=""
+    echo "do nothing" >/dev/null 2>&1
+    echo -n "$errors"
 }
 
 with_loading() {
@@ -144,13 +147,10 @@ with_loading() {
         if [[ $timedout == "true" ]];then
             echo -e "\r$indentation$prefix [${BOLD_WHITE_ON_ORANGE}timeout${NC}] $step_name $CLEARUP"
 
-            # Check if a custom timeout callback function is provided
+            # Check if a timeout callback function is provided
             if [ -n "$timeout_callback_function" ]; then
                 # Call the custom timeout callback function
                 $timeout_callback_function
-            else
-                # Call the default timeout callback function
-                default_timeout_callback
             fi
         else
             echo -e "\r$indentation$prefix [${BOLD_WHITE_ON_RED}failed${NC}] $step_name $CLEARUP"

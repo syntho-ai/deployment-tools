@@ -225,7 +225,11 @@ def run_script(scripts_dir:str,
 
 
 def cleanup(scripts_dir: str, deployment_id: str, status: DeploymentStatus):
+    click.echo(f"Deployment({deployment_id}) will be destroyed alongside its components")
     cleanup_with_cleanup_level(scripts_dir, deployment_id, status.cleanup_level())
+    click.echo(
+        f"Deployment({deployment_id}) is destroyed and all its components have been removed"
+    )
 
 
 def cleanup_with_cleanup_level(scripts_dir: str, deployment_id: str, cleanup_level: CleanUpLevel) -> bool:

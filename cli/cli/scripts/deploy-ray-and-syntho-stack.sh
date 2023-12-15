@@ -18,6 +18,8 @@ source $DEPLOYMENT_DIR/.pre.deployment.ops.env --source-only
 CHARTS_DIR="$CHARTS_DIR"
 DEPLOY_INGRESS_CONTROLLER="$DEPLOY_INGRESS_CONTROLLER"
 source $DEPLOYMENT_DIR/.resources.env --source-only
+SHARED="$DEPLOYMENT_DIR/shared"
+mkdir -p "$SHARED"
 
 
 # for ray cluster
@@ -195,12 +197,6 @@ deploy_ray_cluster() {
         errors+="Ray Cluster deployment has been unexpectedly failed\n"
     fi
 
-    echo -n "$errors"
-}
-
-health_check_ray_cluster() {
-    local errors=""
-
     if ! wait_for_ray_cluster_health >/dev/null 2>&1; then
         errors+="Ray Cluster health check has been unexpectedly failed\n"
     fi
@@ -220,12 +216,6 @@ deploy_syntho_ui() {
         errors+="Syntho Stack deployment has been unexpectedly failed\n"
     fi
 
-    echo -n "$errors"
-}
-
-health_check_syntho_ui() {
-    local errors=""
-
     if ! wait_for_synthoui_health >/dev/null 2>&1; then
         errors+="Syntho UI health check has been unexpectedly failed\n"
     fi
@@ -244,29 +234,65 @@ wait_local_nginx_ingress_controller() {
     echo -n "$errors"
 }
 
-ray_cluster_deployment_failure_callback() {
-    echo "timeout: ray_cluster_deployment_failure_callback"
+all_logs() {
+    sleep 5
+
+    NAMESPACE="syntho"
+    OUTPUT_DIR="/tmp"
+    LOG_OUTPUT_FILE="${SHARED}/syntho-all-logs.txt"
+    DESCRIBE_OUTPUT_FILE="${SHARED}/syntho-all-describes.txt"
+    EXISTING_TARBALL="/tmp/syntho-all-logs.tar.gz"
+    rm -f "$LOG_OUTPUT_FILE" "$DESCRIBE_OUTPUT_FILE" "$EXISTING_TARBALL"
+
+    PODS=($(kubectl --kubeconfig $KUBECONFIG get pods -n $NAMESPACE -o jsonpath='{.items[*].metadata.name}'))
+
+    for POD in $PODS; do
+        echo "Logs for Pod: $POD" >> $LOG_OUTPUT_FILE
+
+        kubectl --kubeconfig $KUBECONFIG logs $POD -n $NAMESPACE --all-containers >> $LOG_OUTPUT_FILE
+        echo "----------------------------------------" >> $LOG_OUTPUT_FILE
+
+        echo "Describe for Pod: $POD" >> $DESCRIBE_OUTPUT_FILE
+        kubectl --kubeconfig $KUBECONFIG describe pod $POD -n $NAMESPACE >> $DESCRIBE_OUTPUT_FILE
+        echo "----------------------------------------" >> $DESCRIBE_OUTPUT_FILE
+    done
+
+    tar -czvf "/tmp/syntho-all-logs.tar.gz" -C "$SHARED" syntho-all-logs.txt syntho-all-describes.txt
 }
 
-syntho_ui_deployment_failure_callback() {
-    echo "timeout: syntho_ui_deployment_failure_callback"
+get_all_logs() {
+
+    if ! all_logs >/dev/null 2>&1; then
+        errors+="Preparing all logs has been unexpectedly failed\n"
+    fi
+
+    echo -n "$errors"
+}
+
+deployment_failure_callback() {
+    with_loading "Please wait until the necessary materials are being prepared for diagnosis" get_all_logs "" "" 2
+    with_loading "Please share this material (/tmp/syntho-all-logs.tar.gz) with support@syntho.ai" do_nothing "" "" 2
 }
 
 
-
-with_loading "Deploying Ray Cluster" deploy_ray_cluster
-with_loading "Checking if Ray Cluster is healthy (this might take some time)" health_check_ray_cluster 600 ray_cluster_deployment_failure_callback
-with_loading "Deploying Syntho Stack" deploy_syntho_ui
-with_loading "Checking if Syntho Stack is healthy (this might take some time)" health_check_syntho_ui 600 syntho_ui_deployment_failure_callback
+with_loading "Deploying Ray Cluster" deploy_ray_cluster 600 deployment_failure_callback
+with_loading "Deploying Syntho Stack" deploy_syntho_ui 600 deployment_failure_callback
 
 
 if [[ ($DEPLOY_INGRESS_CONTROLLER == "y" && $PROTOCOL == "http") || ($SKIP_CONFIGURATION == "true") ]]; then
     with_loading "Waiting ingress controller to be ready for accessing the UI (this might take some time)" wait_local_nginx_ingress_controller
 
+    TMP_KUBECONFIG_DIR="/tmp/.kube-for-syntho"
+    TMP_KUBECONFIG="/tmp/.kube-for-syntho/config"
+    rm -f "$TMP_KUBECONFIG_DIR"
+    mkdir -p "$TMP_KUBECONFIG_DIR"
+    cp "$KUBECONFIG" "$TMP_KUBECONFIG"
+
+
     echo -e '
 '"${YELLOW}"'################### For Local Development ################################'"${NC}"'
 
-kubectl --kubeconfig '"$KUBECONFIG"' port-forward service/syntho-ingress-nginx-controller 32282:80 -n syntho-ingress-nginx
+kubectl --kubeconfig '"$TMP_KUBECONFIG"' port-forward service/syntho-ingress-nginx-controller 32282:80 -n syntho-ingress-nginx
 echo "127.0.0.1    '"$DOMAIN"'" | sudo tee -a /etc/hosts
 
 '"${GREEN}"'visit:'"${NC}"' http://'"$DOMAIN"':32282

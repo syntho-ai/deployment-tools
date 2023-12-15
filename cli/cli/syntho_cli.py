@@ -114,8 +114,7 @@ def k8s_deployment(
         cleaningthingsup_text = click.style(
             "Cleaning things up", fg="red"
         )
-        click.echo(f"{deployment_failed_text}", err=True)
-        click.echo(f"{cleaningthingsup_text}", err=True)
+        click.echo(f"\n\n{deployment_failed_text} - {cleaningthingsup_text}", err=True)
         k8s_deployment_manager.cleanup(scripts_dir, result.deployment_id, result.deployment_status)
         sys.exit(1)
 
