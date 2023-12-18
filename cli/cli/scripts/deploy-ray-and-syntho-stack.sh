@@ -20,6 +20,9 @@ DEPLOY_INGRESS_CONTROLLER="$DEPLOY_INGRESS_CONTROLLER"
 source $DEPLOYMENT_DIR/.resources.env --source-only
 SHARED="$DEPLOYMENT_DIR/shared"
 mkdir -p "$SHARED"
+source $DEPLOYMENT_DIR/.auth.env --source-only
+UI_LOGIN_EMAIL="${UI_LOGIN_EMAIL:-admin@company.com}"
+UI_LOGIN_PASSWORD="${UI_LOGIN_PASSWORD:-password}"
 
 
 # for ray cluster
@@ -284,7 +287,7 @@ if [[ ($DEPLOY_INGRESS_CONTROLLER == "y" && $PROTOCOL == "http") || ($SKIP_CONFI
 
     TMP_KUBECONFIG_DIR="/tmp/.kube-for-syntho"
     TMP_KUBECONFIG="/tmp/.kube-for-syntho/config"
-    rm -f "$TMP_KUBECONFIG_DIR"
+    rm -rf "$TMP_KUBECONFIG_DIR"
     mkdir -p "$TMP_KUBECONFIG_DIR"
     cp "$KUBECONFIG" "$TMP_KUBECONFIG"
 
@@ -300,5 +303,9 @@ echo "127.0.0.1    '"$DOMAIN"'" | sudo tee -a /etc/hosts
 '
 fi
 
-echo -e "${YELLOW}Syntho stack got deployed. ${GREEN}Please visit:${NC} $PROTOCOL://$DOMAIN${NC}"
-echo -e "${YELLOW}PS: Make sure the DNS configuration is made properly on your side!${NC}"
+echo -e '
+'"${YELLOW}Syntho stack got deployed. ${GREEN}Please visit:${NC} $PROTOCOL://$DOMAIN${NC}"'
+'"${YELLOW}- Email: $UI_LOGIN_EMAIL"'
+'"${YELLOW}- Password: $UI_LOGIN_PASSWORD"'
+'"${YELLOW}PS: Make sure the DNS configuration is made properly on your side!${NC}"'
+'
