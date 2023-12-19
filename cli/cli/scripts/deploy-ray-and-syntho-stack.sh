@@ -253,7 +253,6 @@ all_logs() {
     for POD in "${PODS[@]}"; do
         kubectl --kubeconfig $KUBECONFIG logs $POD -n $NAMESPACE --all-containers > "$LOGS_DIR/$POD.logs"
         kubectl --kubeconfig $KUBECONFIG describe pod $POD -n $NAMESPACE > "$LOGS_DIR/$POD.describe"
-        echo "$POD" >> "$LOGS_DIR/processed"
     done
 
     tar -czvf "$TARBALL" -C "$LOGS_DIR" .
