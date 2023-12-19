@@ -274,7 +274,7 @@ deployment_failure_callback() {
 
 
 with_loading "Deploying Ray Cluster" deploy_ray_cluster 600 deployment_failure_callback
-with_loading "Deploying Syntho Stack" deploy_syntho_ui 60 deployment_failure_callback
+with_loading "Deploying Syntho Stack" deploy_syntho_ui 600 deployment_failure_callback
 
 
 if [[ ($DEPLOY_INGRESS_CONTROLLER == "y" && $PROTOCOL == "http") || ($SKIP_CONFIGURATION == "true") ]]; then
