@@ -59,7 +59,7 @@ delete_nginx_ingress_controller() {
     # Check if the namespace exists
     if kubectl --kubeconfig "$KUBECONFIG" get namespace syntho-ingress-nginx &> /dev/null; then
         # Delete the namespace
-        kubectl --kubeconfig "$KUBECONFIG" delete namespace syntho-ingress-nginx
+        kubectl --kubeconfig "$KUBECONFIG" delete namespace syntho-ingress-nginx --grace-period=0 --force
         echo "Namespace deleted."
     else
         echo "Namespace does not exist."

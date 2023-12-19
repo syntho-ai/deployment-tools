@@ -241,26 +241,22 @@ all_logs() {
     sleep 5
 
     NAMESPACE="syntho"
-    OUTPUT_DIR="/tmp"
-    LOG_OUTPUT_FILE="${SHARED}/syntho-all-logs.txt"
-    DESCRIBE_OUTPUT_FILE="${SHARED}/syntho-all-describes.txt"
-    EXISTING_TARBALL="/tmp/syntho-all-logs.tar.gz"
-    rm -f "$LOG_OUTPUT_FILE" "$DESCRIBE_OUTPUT_FILE" "$EXISTING_TARBALL"
+    OUTPUT_DIR="/tmp/syntho"
+    LOGS_DIR="$SHARED/logs"
+    TARBALL="$OUTPUT_DIR/diagnosis.tar.gz"
+    rm -rf "$OUTPUT_DIR" "$LOGS_DIR"
+    mkdir -p "$OUTPUT_DIR" "$LOGS_DIR"
 
     PODS=($(kubectl --kubeconfig $KUBECONFIG get pods -n $NAMESPACE -o jsonpath='{.items[*].metadata.name}'))
+    echo "${PODS[@]}" > "$LOGS_DIR/pods"
 
-    for POD in $PODS; do
-        echo "Logs for Pod: $POD" >> $LOG_OUTPUT_FILE
-
-        kubectl --kubeconfig $KUBECONFIG logs $POD -n $NAMESPACE --all-containers >> $LOG_OUTPUT_FILE
-        echo "----------------------------------------" >> $LOG_OUTPUT_FILE
-
-        echo "Describe for Pod: $POD" >> $DESCRIBE_OUTPUT_FILE
-        kubectl --kubeconfig $KUBECONFIG describe pod $POD -n $NAMESPACE >> $DESCRIBE_OUTPUT_FILE
-        echo "----------------------------------------" >> $DESCRIBE_OUTPUT_FILE
+    for POD in "${PODS[@]}"; do
+        kubectl --kubeconfig $KUBECONFIG logs $POD -n $NAMESPACE --all-containers > "$LOGS_DIR/$POD.logs"
+        kubectl --kubeconfig $KUBECONFIG describe pod $POD -n $NAMESPACE > "$LOGS_DIR/$POD.describe"
+        echo "$POD" >> "$LOGS_DIR/processed"
     done
 
-    tar -czvf "/tmp/syntho-all-logs.tar.gz" -C "$SHARED" syntho-all-logs.txt syntho-all-describes.txt
+    tar -czvf "$TARBALL" -C "$LOGS_DIR" .
 }
 
 get_all_logs() {
@@ -274,12 +270,12 @@ get_all_logs() {
 
 deployment_failure_callback() {
     with_loading "Please wait until the necessary materials are being prepared for diagnosis" get_all_logs "" "" 2
-    with_loading "Please share this file (/tmp/syntho-all-logs.tar.gz) with support@syntho.ai" do_nothing "" "" 2
+    with_loading "Please share this file (/tmp/syntho/diagnosis.tar.gz) with support@syntho.ai" do_nothing "" "" 2
 }
 
 
 with_loading "Deploying Ray Cluster" deploy_ray_cluster 600 deployment_failure_callback
-with_loading "Deploying Syntho Stack" deploy_syntho_ui 600 deployment_failure_callback
+with_loading "Deploying Syntho Stack" deploy_syntho_ui 60 deployment_failure_callback
 
 
 if [[ ($DEPLOY_INGRESS_CONTROLLER == "y" && $PROTOCOL == "http") || ($SKIP_CONFIGURATION == "true") ]]; then
