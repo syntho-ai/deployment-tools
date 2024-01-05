@@ -7,7 +7,7 @@ toil from the user.
 
 - `pip install . --no-cache`
 
-## Helpful Commands (k8s-deployment)
+## Helpful Commands
 
 - `syntho-cli --help`
 
@@ -19,16 +19,30 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  k8s-deployment
-  k8s-deployment-active
-  k8s-deployment-destroy
-  k8s-deployment-status
-  k8s-deployments
+  k8s  Manages Kubernetes deployments
 
 ```
 
-- Deploy the entire stack into given k8s cluster: `syntho-cli k8s-deployment --license-key a-key --registry-user a-user --registry-pwd a-pwd --kubeconfig $KUBECONFIG --version 0.1.0`
-- List deployments: `syntho-cli k8s-deployments`
+- `syntho-cli k8s --help`
+
+```
+
+Usage: syntho-cli k8s [OPTIONS] COMMAND [ARGS]...
+
+  Manages Kubernetes deployments
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  deployment   Deploys the Syntho Stack into the given cluster
+  deployments  Shows existing deployments and their statuses
+  destroy      Destroys a deployment and its components
+  status       Shows the deployment status of the given deployment
+```
+
+- Deploy the entire stack into given k8s cluster: `syntho-cli k8s deployment --license-key a-key --registry-user a-user --registry-pwd a-pwd --kubeconfig $KUBECONFIG --version 0.1.0 --skip-configuration (optional)`
+- List deployments: `syntho-cli k8s deployments`
 
 ```
 - cluster_name: kind-syntho-development
@@ -39,5 +53,5 @@ Commands:
   version: 0.1.0
 ```
 
-- Deployment status for a specific deployment: `syntho-cli k8s-deployment-status --deployment-id fb5c7d6708bfbf1011119c5fe835f84f`
-- Destroying a deployment: `syntho-cli k8s-deployment-destroy --deployment-id fb5c7d6708bfbf1011119c5fe835f84f`
+- Deployment status for a specific deployment: `syntho-cli k8s status --deployment-id fb5c7d6708bfbf1011119c5fe835f84f`
+- Destroying a deployment: `syntho-cli k8s destroy --deployment-id fb5c7d6708bfbf1011119c5fe835f84f`
