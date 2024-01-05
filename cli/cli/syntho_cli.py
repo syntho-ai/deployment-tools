@@ -115,7 +115,16 @@ def k8s_deployment(
             "Cleaning things up", fg="red"
         )
         click.echo(f"\n\n{deployment_failed_text} - {cleaningthingsup_text}", err=True)
-        k8s_deployment_manager.cleanup(scripts_dir, result.deployment_id, result.deployment_status)
+        is_destroyed = k8s_deployment_manager.cleanup(scripts_dir, result.deployment_id, result.deployment_status)
+        if not is_destroyed:
+            destroy_failed_text = click.style(
+                f"Error destroying deployment\n", fg="red"
+            )
+            next_command_text = click.style(
+                f"Please run `syntho-cli k8s-deployment-destroy --deployment-id {result.deployment_id} "
+                "--force` to forcefully destroy the deployment", fg="red"
+            )
+            click.echo(f"\n\n{destroy_failed_text}{next_command_text}", err=True)
         sys.exit(1)
 
 
@@ -140,8 +149,23 @@ def k8s_deployment_status(deployment_id: str):
     help="Specify the deployment id to be destroyed",
     required=True
 )
-def k8s_deployment_destroy(deployment_id: str):
-    k8s_deployment_manager.destroy(scripts_dir, deployment_id)
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Forces the destroy process",
+)
+def k8s_deployment_destroy(deployment_id: str, force: bool):
+    is_destroyed = k8s_deployment_manager.destroy(scripts_dir, deployment_id, force)
+    if not is_destroyed:
+        destroy_failed_text = click.style(
+            f"Error destroying deployment\n", fg="red"
+        )
+        next_command_text = click.style(
+            f"Please run `syntho-cli k8s-deployment-destroy --deployment-id {deployment_id} "
+            "--force` to forcefully destroy the deployment", fg="red"
+        )
+        click.echo(f"\n\n{destroy_failed_text}{next_command_text}", err=True)
+
 
 
 @cli.command()

@@ -196,11 +196,13 @@ def is_deployment_completed(deployments_dir: str, deployment_id: str) -> bool:
 def run_script(scripts_dir:str,
                deployment_dir: str,
                script_name: str,
-               capture_output: bool = False) -> SubprocessResult:
+               capture_output: bool = False,
+               **extra_env) -> SubprocessResult:
     env = {
         "DEPLOYMENT_DIR": deployment_dir,
         "PATH": os.environ.get("PATH", ""),
     }
+    env.update(**extra_env)
     script_path = os.path.join(scripts_dir, script_name)
 
     try:
@@ -224,15 +226,18 @@ def run_script(scripts_dir:str,
 
 
 
-def cleanup(scripts_dir: str, deployment_id: str, status: DeploymentStatus):
+def cleanup(scripts_dir: str, deployment_id: str, status: DeploymentStatus) -> bool:
     click.echo(f"Deployment({deployment_id}) will be destroyed alongside its components")
-    cleanup_with_cleanup_level(scripts_dir, deployment_id, status.cleanup_level())
-    click.echo(
-        f"Deployment({deployment_id}) is destroyed and all its components have been removed"
-    )
+    result = cleanup_with_cleanup_level(scripts_dir, deployment_id, status.cleanup_level())
+    if result:
+        click.echo(
+            f"Deployment({deployment_id}) is destroyed and all its components have been removed"
+        )
+    return result
 
 
-def cleanup_with_cleanup_level(scripts_dir: str, deployment_id: str, cleanup_level: CleanUpLevel) -> bool:
+def cleanup_with_cleanup_level(scripts_dir: str, deployment_id: str, cleanup_level: CleanUpLevel,
+                               force: bool = False) -> bool:
     if cleanup_level == CleanUpLevel.NA:
         return
 
@@ -244,7 +249,12 @@ def cleanup_with_cleanup_level(scripts_dir: str, deployment_id: str, cleanup_lev
 
     if cleanup_level == CleanUpLevel.FULL:
         os.chdir(deployment_dir)
-        result = run_script(scripts_dir, deployment_dir, "cleanup-kubernetes.sh")
+        result = run_script(
+            scripts_dir,
+            deployment_dir,
+            "cleanup-kubernetes.sh",
+            **{"FORCE": str(force).lower()}
+        )
         if not result.succeeded:
             return False
 
@@ -269,7 +279,7 @@ def cleanup_with_cleanup_level(scripts_dir: str, deployment_id: str, cleanup_lev
 
 
 @with_working_directory
-def destroy(scripts_dir: str, deployment_id: str):
+def destroy(scripts_dir: str, deployment_id: str, force: bool) -> bool:
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
     if not os.path.isdir(deployment_dir):
@@ -277,11 +287,13 @@ def destroy(scripts_dir: str, deployment_id: str):
         return
 
     click.echo(f"Deployment({deployment_id}) will be destroyed alongside its components")
-    cleanup_with_cleanup_level(scripts_dir, deployment_id, CleanUpLevel.FULL)
-    click.echo(
-        f"Deployment({deployment_id}) is destroyed and all its components have been removed"
-    )
+    result = cleanup_with_cleanup_level(scripts_dir, deployment_id, CleanUpLevel.FULL, force=force)
+    if result:
+        click.echo(
+            f"Deployment({deployment_id}) is destroyed and all its components have been removed"
+        )
 
+    return result
 
 def generate_deployment_id(kubeconfig: str) -> str:
     kubeconfig_content = kubeconfig
