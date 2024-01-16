@@ -109,7 +109,7 @@ local_volume_provisioner() {
     local RELEASE_URL=https://github.com/rancher/local-path-provisioner/archive/refs/tags/${V_VERSION}.tar.gz
     local TARBALL_DESTINATION=${DEPLOYMENT_DIR}/local-path-provisioner-${V_VERSION}.tar.gz
     local EXTRACT_LOCATION=${DEPLOYMENT_DIR}
-    local NAMESPACE=syntho-local-path-storage
+    local NAMESPACE=syntho
 
     if ! command_exists "curl"; then
         curl -LJ "${RELEASE_URL}" -o "${TARBALL_DESTINATION}"
@@ -120,7 +120,7 @@ local_volume_provisioner() {
     tar -xzvf "${TARBALL_DESTINATION}" -C "${EXTRACT_LOCATION}"
 
     helm --kubeconfig $KUBECONFIG install syntho-local-path-storage \
-        --namespace syntho-local-path-storage --create-namespace \
+        --namespace syntho --create-namespace \
         ${DEPLOYMENT_DIR}/local-path-provisioner-${VERSION}/deploy/chart/local-path-provisioner/
 }
 
@@ -139,7 +139,7 @@ install_local_volume_provisioner() {
 nginx_ingress_controller() {
     helm --kubeconfig $KUBECONFIG upgrade --install syntho-ingress-nginx ingress-nginx \
       --repo https://kubernetes.github.io/ingress-nginx \
-      --namespace syntho-ingress-nginx --create-namespace
+      --namespace syntho --create-namespace
 }
 
 install_nginx_ingress_controller() {

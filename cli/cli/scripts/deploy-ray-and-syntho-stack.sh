@@ -172,7 +172,7 @@ wait_for_synthoui_health() {
 wait_local_nginx() {
     is_200() {
         local INGRESS_CONTROLLER_SERVICE_NAME="syntho-ingress-nginx-controller"
-        local INGRESS_CONTROLLER_NAMESPACE="syntho-ingress-nginx"
+        local INGRESS_CONTROLLER_NAMESPACE="syntho"
         local DOMAIN="$DOMAIN"
 
         kubectl run -i --tty --rm busybox-2 --image=busybox --restart=Never --namespace syntho -- /bin/sh -c "wget -O- \
@@ -288,13 +288,13 @@ if [[ ($DEPLOY_INGRESS_CONTROLLER == "y" && $PROTOCOL == "http") || ($SKIP_CONFI
 
 
     echo -e '
-'"${YELLOW}"'################### For Local Development ################################'"${NC}"'
+'"${YELLOW}"'################### For Local Experimentation ################################'"${NC}"'
 
-kubectl --kubeconfig '"$TMP_KUBECONFIG"' port-forward service/syntho-ingress-nginx-controller 32282:80 -n syntho-ingress-nginx
+kubectl --kubeconfig '"$TMP_KUBECONFIG"' port-forward service/syntho-ingress-nginx-controller 32282:80 -n syntho
 echo "127.0.0.1    '"$DOMAIN"'" | sudo tee -a /etc/hosts
 
 '"${GREEN}"'visit:'"${NC}"' http://'"$DOMAIN"':32282
-'"${YELLOW}"'################### For Local Development ################################'"${NC}"'
+'"${YELLOW}"'################### For Local Experimentation ################################'"${NC}"'
 '
 fi
 

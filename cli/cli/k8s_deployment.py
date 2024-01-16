@@ -79,6 +79,12 @@ def with_working_directory(func):
 
 
 @with_working_directory
+def deployment_preparation(scripts_dir: str):
+    click.echo("Step 0: Deployment Preparation;")
+    run_script(scripts_dir, "", "k8s-deployment-preparation.sh")
+
+
+@with_working_directory
 def start(scripts_dir: str,
           license_key: str,
           registry_user: str,

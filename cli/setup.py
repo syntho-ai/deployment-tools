@@ -32,7 +32,8 @@ setup(
                           "scripts/configuration-questions.sh",
                           "scripts/download-syntho-charts-release.sh",
                           "scripts/major-pre-deployment-operations.sh",
-                          "scripts/deploy-ray-and-syntho-stack.sh"]},
+                          "scripts/deploy-ray-and-syntho-stack.sh",
+                          "scripts/k8s-deployment-preparation.sh"]},
     include_package_data=True,
     install_requires=[
         "click==8.1.7",

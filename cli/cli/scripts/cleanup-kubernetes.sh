@@ -27,7 +27,6 @@ delete_ray_cluster() {
 delete_synthoui() {
     if [[ $FORCE == "true" ]]; then
         helm --kubeconfig $KUBECONFIG uninstall syntho-ui --namespace syntho --no-hooks --timeout 0
-        kubectl --kubeconfig $KUBECONFIG delete pods --namespace syntho --grace-period=0 --force --all
     else
         helm --kubeconfig $KUBECONFIG uninstall syntho-ui --namespace syntho
     fi
@@ -58,53 +57,26 @@ delete_namespace_if_exists() {
 
 delete_local_path_provisioner() {
     if [[ $FORCE == "true" ]]; then
-        helm --kubeconfig $KUBECONFIG uninstall syntho-local-path-storage --namespace syntho-local-path-storage --no-hooks --timeout 0
+        helm --kubeconfig $KUBECONFIG uninstall syntho-local-path-storage --namespace syntho --no-hooks --timeout 0
     else
-        helm --kubeconfig $KUBECONFIG uninstall syntho-local-path-storage --namespace syntho-local-path-storage
-    fi
-
-    # Check if the namespace exists
-    if kubectl --kubeconfig "$KUBECONFIG" get namespace syntho-local-path-storage &> /dev/null; then
-        # Delete the namespace
-        if [[ $FORCE == "true" ]]; then
-            kubectl --kubeconfig "$KUBECONFIG" delete namespace syntho-local-path-storage --grace-period=0 --force
-        else
-            kubectl --kubeconfig "$KUBECONFIG" delete namespace syntho-local-path-storage
-        fi
-        echo "Namespace deleted."
-    else
-        echo "Namespace does not exist."
+        helm --kubeconfig $KUBECONFIG uninstall syntho-local-path-storage --namespace syntho
     fi
 }
 
 delete_nginx_ingress_controller() {
     if [[ $FORCE == "true" ]]; then
-        helm --kubeconfig $KUBECONFIG uninstall syntho-ingress-nginx --namespace syntho-ingress-nginx --no-hooks --timeout 0
+        helm --kubeconfig $KUBECONFIG uninstall syntho-ingress-nginx --namespace syntho --no-hooks --timeout 0
     else
-        helm --kubeconfig $KUBECONFIG uninstall syntho-ingress-nginx --namespace syntho-ingress-nginx
-    fi
-
-    # Check if the namespace exists
-    if kubectl --kubeconfig "$KUBECONFIG" get namespace syntho-ingress-nginx &> /dev/null; then
-        # Delete the namespace
-        if [[ $FORCE == "true" ]]; then
-            kubectl --kubeconfig "$KUBECONFIG" delete namespace syntho-ingress-nginx --grace-period=0 --force
-        else
-            kubectl --kubeconfig "$KUBECONFIG" delete namespace syntho-ingress-nginx
-        fi
-        echo "Namespace deleted."
-    else
-        echo "Namespace does not exist."
+        helm --kubeconfig $KUBECONFIG uninstall syntho-ingress-nginx --namespace syntho
     fi
 }
 
 
 
 destroy() {
-    delete_ray_cluster
     delete_synthoui
+    delete_ray_cluster
     delete_image_registry_secret
-    delete_namespace_if_exists
 
     if [[ "$DEPLOY_LOCAL_VOLUME_PROVISIONER" == "y" ]]; then
         delete_local_path_provisioner
@@ -113,6 +85,12 @@ destroy() {
     if [[ "$DEPLOY_INGRESS_CONTROLLER" == "y" ]]; then
         delete_nginx_ingress_controller
     fi
+
+    if [[ $FORCE == "true" ]]; then
+        kubectl --kubeconfig $KUBECONFIG delete pods --namespace syntho --grace-period=0 --force --all
+    fi
+
+    delete_namespace_if_exists
 }
 
 destroy_with_error_handling() {

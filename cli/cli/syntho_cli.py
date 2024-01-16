@@ -21,6 +21,12 @@ def cli():
 def k8s():
     pass
 
+
+# @k8s.command(name="preparation", help="Helps to prepare kubeconfig before proceeding with a deployment")
+# def k8s_preparation():
+#     k8s_deployment_manager.deployment_preparation(scripts_dir)
+
+
 @k8s.command(name="deployment", help="Deploys the Syntho Stack into the given cluster")
 @click.option(
     "--license-key",
