@@ -33,7 +33,12 @@ setup(
                           "scripts/download-syntho-charts-release.sh",
                           "scripts/major-pre-deployment-operations.sh",
                           "scripts/deploy-ray-and-syntho-stack.sh",
-                          "scripts/k8s-deployment-preparation.sh"]},
+                          "scripts/k8s-deployment-preparation.sh",
+                          "scripts/cleanup-docker-compose.sh",
+                          "scripts/pre-requirements-dc.sh",
+                          "scripts/configuration-questions-dc.sh",
+                          "scripts/download-syntho-charts-release-dc.sh",
+                          "scripts/deploy-ray-and-syntho-stack-dc.sh"]},
     include_package_data=True,
     install_requires=[
         "click==8.1.7",

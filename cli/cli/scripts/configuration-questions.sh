@@ -267,6 +267,38 @@ else
     MEMORY_RESOURCE_RAY_HEAD=4G
 fi
 
+if [[ "$SKIP_CONFIGURATION" == "false" ]]; then
+    while true; do
+        read -p $'\t- Login E-mail (default: admin@company.com): ' UI_ADMIN_LOGIN_EMAIL
+        UI_ADMIN_LOGIN_EMAIL=${UI_ADMIN_LOGIN_EMAIL:-admin@company.com}
+
+        # Use regex to check if the input matches the desired format
+        if [[ $UI_ADMIN_LOGIN_EMAIL =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+            break
+        else
+            echo "Invalid input format. Please enter a proper email address."
+        fi
+    done
+else
+    UI_ADMIN_LOGIN_EMAIL=admin@company.com
+fi
+
+if [[ "$SKIP_CONFIGURATION" == "false" ]]; then
+    while true; do
+        read -p $'\t- Login Password (default: password!): ' UI_ADMIN_LOGIN_PASSWORD
+        UI_ADMIN_LOGIN_PASSWORD=${UI_ADMIN_LOGIN_PASSWORD:-password!}
+
+        # Use regex to check if the input matches the desired format
+        if [[ $UI_ADMIN_LOGIN_PASSWORD =~ ^.{8,}$ ]]; then
+            break
+        else
+            echo "Invalid input format. Password should be at least 8 characters long."
+        fi
+    done
+else
+    UI_ADMIN_LOGIN_PASSWORD=password!
+fi
+
 
 cat << EOF > "$DEPLOYMENT_DIR/.config.env"
 LICENSE_KEY=$LICENSE_KEY
@@ -294,4 +326,9 @@ SSL_CERT="$SSL_CERT"
 SSL_P_KEY="$SSL_P_KEY"
 REGISTRY_USER=$REGISTRY_USER
 REGISTRY_PWD=$REGISTRY_PWD
+EOF
+
+cat << EOF > "$DEPLOYMENT_DIR/.auth.env"
+UI_ADMIN_LOGIN_EMAIL=$UI_ADMIN_LOGIN_EMAIL
+UI_ADMIN_LOGIN_PASSWORD=$UI_ADMIN_LOGIN_PASSWORD
 EOF

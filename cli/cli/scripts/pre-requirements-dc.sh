@@ -3,6 +3,8 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$SCRIPT_DIR/utils.sh" --source-only
 
+source $DEPLOYMENT_DIR/.env --source-only
+DOCKER_CONFIG="$DOCKER_CONFIG"
 
 network_check() {
     sleep 2
@@ -23,6 +25,7 @@ network_check() {
     echo -n "$errors"
 }
 
+
 developer_tools_check() {
     sleep 2
     local errors=""
@@ -32,14 +35,9 @@ developer_tools_check() {
         errors+="Missing command line tool - curl or wget\n"
     fi
 
-    # Check if kubectl exists
-    if ! command_exists "kubectl"; then
-        errors+="Missing command line tool - kubectl\n"
-    fi
-
-    # Check if helm exists
-    if ! command_exists "helm"; then
-        errors+="Missing command line tool - helm\n"
+    # Check if docker exists
+    if ! command_exists "docker"; then
+        errors+="Missing command line tool - docker\n"
     fi
 
     # Check if tar exists
@@ -55,31 +53,24 @@ developer_tools_check() {
     echo -n "$errors"
 }
 
-kubernetes_cluster_check() {
+docker_host_check() {
     sleep 2
     local errors=""
 
-    # Check if KUBECONFIG is set
-    if [ -z "$KUBECONFIG" ]; then
-        errors+="KUBECONFIG is not set.\n"
+    # Check if DOCKER_CONFIG is set
+    if [ -z "$DOCKER_CONFIG" ]; then
+        errors+="DOCKER_CONFIG is not set.\n"
     fi
 
-    # Check if KUBECONFIG points to a valid Kubernetes cluster
-    if ! kubectl --kubeconfig="$KUBECONFIG" config current-context &> /dev/null; then
-        errors+="KUBECONFIG does not point to a valid Kubernetes cluster.\n"
+    # Check if DOCKER_CONFIG points to a valid docker host
+    if ! DOCKER_CONFIG=$CUSTOM_DOCKER_CONFIG docker info &> /dev/null; then
+        errors+="DOCKER_CONFIG does not point to a valid docker host.\n"
     fi
 
     echo -n "$errors"
 }
 
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source "$SCRIPT_DIR/utils.sh" --source-only
-
-source $DEPLOYMENT_DIR/.env --source-only
-KUBECONFIG="$KUBECONFIG"
-
-
 with_loading "Checking network connectivity" network_check
 with_loading "Checking developer tools" developer_tools_check
-with_loading "Checking if the given KUBECONFIG points to a valid k8s cluster" kubernetes_cluster_check
+with_loading "Checking if the given DOCKER_CONFIG points to a valid docker host" docker_host_check

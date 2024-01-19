@@ -21,8 +21,8 @@ source $DEPLOYMENT_DIR/.resources.env --source-only
 SHARED="$DEPLOYMENT_DIR/shared"
 mkdir -p "$SHARED"
 source $DEPLOYMENT_DIR/.auth.env --source-only
-UI_LOGIN_EMAIL="${UI_LOGIN_EMAIL:-admin@company.com}"
-UI_LOGIN_PASSWORD="${UI_LOGIN_PASSWORD:-password}"
+UI_LOGIN_EMAIL="${UI_ADMIN_LOGIN_EMAIL}"
+UI_LOGIN_PASSWORD="${UI_ADMIN_LOGIN_PASSWORD}"
 
 
 # for ray cluster
@@ -123,6 +123,8 @@ generate_synthoui_values() {
          s|{{ SYNTHO_UI_CORE_IMG_VER }}|$SYNTHO_UI_CORE_IMG_VER|g; \
          s|{{ SYNTHO_UI_BACKEND_IMG_REPO }}|$SYNTHO_UI_BACKEND_IMG_REPO|g; \
          s|{{ SYNTHO_UI_BACKEND_IMG_VER }}|$SYNTHO_UI_BACKEND_IMG_VER|g; \
+         s|{{ UI_LOGIN_EMAIL }}|$UI_LOGIN_EMAIL|g; \
+         s|{{ UI_LOGIN_PASSWORD }}|$UI_LOGIN_PASSWORD|g; \
          s|{{ SYNTHO_UI_FRONTEND_IMG_REPO }}|$SYNTHO_UI_FRONTEND_IMG_REPO|g; \
          s|{{ SYNTHO_UI_FRONTEND_IMG_VER }}|$SYNTHO_UI_FRONTEND_IMG_VER|g; \
          s|{{ INGRESS_CONTROLLER }}|$INGRESS_CONTROLLER|g; \
@@ -243,7 +245,7 @@ all_logs() {
     NAMESPACE="syntho"
     OUTPUT_DIR="/tmp/syntho"
     LOGS_DIR="$SHARED/logs"
-    TARBALL="$OUTPUT_DIR/diagnosis.tar.gz"
+    TARBALL="$OUTPUT_DIR/diagnosis-k8s.tar.gz"
     rm -rf "$OUTPUT_DIR" "$LOGS_DIR"
     mkdir -p "$OUTPUT_DIR" "$LOGS_DIR"
 
@@ -269,7 +271,7 @@ get_all_logs() {
 
 deployment_failure_callback() {
     with_loading "Please wait until the necessary materials are being prepared for diagnosis" get_all_logs "" "" 2
-    with_loading "Please share this file (/tmp/syntho/diagnosis.tar.gz) with support@syntho.ai" do_nothing "" "" 2
+    with_loading "Please share this file (/tmp/syntho/diagnosis-k8s.tar.gz) with support@syntho.ai" do_nothing "" "" 2
 }
 
 
