@@ -7,6 +7,7 @@ source "$SCRIPT_DIR/utils.sh" --source-only
 DEPLOYMENT_DIR="$DEPLOYMENT_DIR"
 source $DEPLOYMENT_DIR/.env --source-only
 DOCKER_CONFIG="$DOCKER_CONFIG"
+DOCKER_HOST="$DOCKER_HOST"
 SKIP_CONFIGURATION="$SKIP_CONFIGURATION"
 source $DEPLOYMENT_DIR/.config.env --source-only
 source $DEPLOYMENT_DIR/.images.env --source-only
@@ -26,6 +27,7 @@ ADMIN_EMAIL="${UI_ADMIN_LOGIN_EMAIL}"
 
 
 LICENSE_KEY="$LICENSE_KEY"
+DOMAIN="$DOMAIN"
 RAY_IMAGE_IMG_REPO="$RAY_IMAGE_IMG_REPO"
 RAY_IMAGE_IMG_TAG="$RAY_IMAGE_IMG_TAG"
 RAY_CPUS="$RAY_CPUS"
@@ -37,6 +39,17 @@ SYNTHO_UI_BACKEND_IMG_REPO="$SYNTHO_UI_BACKEND_IMG_REPO"
 SYNTHO_UI_BACKEND_IMG_VER="$SYNTHO_UI_BACKEND_IMG_VER"
 SYNTHO_UI_FRONTEND_IMG_REPO="$SYNTHO_UI_FRONTEND_IMG_REPO"
 SYNTHO_UI_FRONTEND_IMG_VER="$SYNTHO_UI_FRONTEND_IMG_VER"
+
+if [[ -f "${DEPLOYMENT_DIR}/.ssh-sock.env" ]] && [[ -f "${DEPLOYMENT_DIR}/.ssh-agent-pid.env" ]]; then
+    source ${DEPLOYMENT_DIR}/.ssh-sock.env
+    IS_REMOTE_DOCKER="true"
+else
+    IS_REMOTE_DOCKER="false"
+fi
+
+source ${DEPLOYMENT_DIR}/.docker-arch.env
+CLIENT_ARCH="$CLIENT_ARCH"
+SERVER_ARCH="$SERVER_ARCH"
 
 
 generate_env() {
@@ -54,13 +67,53 @@ generate_env() {
          s|{{ SYNTHO_UI_BACKEND_IMG_VER }}|$SYNTHO_UI_BACKEND_IMG_VER|g; \
          s|{{ SYNTHO_UI_FRONTEND_IMG_REPO }}|$SYNTHO_UI_FRONTEND_IMG_REPO|g; \
          s|{{ SYNTHO_UI_FRONTEND_IMG_VER }}|$SYNTHO_UI_FRONTEND_IMG_VER|g; \
+         s|{{ DOMAIN }}|$DOMAIN|g; \
          s|{{ ADMIN_EMAIL }}|$ADMIN_EMAIL|g; \
          s|{{ ADMIN_PASSWORD }}|$ADMIN_PASSWORD|g; \
          s|{{ ADMIN_USERNAME }}|$ADMIN_USERNAME|g" "$TEMPLATE_FILE" > "$OUTPUT_FILE"
 }
 
 deploy_docker_compose() {
-    DOCKER_CONFIG=$DOCKER_CONFIG docker compose -f $DC_DIR/docker-compose.yaml up -d
+    DOCKER_FILE="-f $DC_DIR/docker-compose.yaml"
+    
+    if [ "$IS_REMOTE_DOCKER" = "true" ]; then
+        SSH_ENDPOINT=${DOCKER_HOST#*//}
+        ssh $SSH_ENDPOINT mkdir -p /tmp/syntho
+        scp $DC_DIR/postgres/docker-postgres-entrypoint.sh $SSH_ENDPOINT:/tmp/syntho/docker-postgres-entrypoint.sh
+        ssh $SSH_ENDPOINT chmod +x /tmp/syntho/docker-postgres-entrypoint.sh
+
+        generate_override_remote_file "$DC_DIR/docker-compose-override-remote.yaml"
+        DOCKER_FILE+=" -f $DC_DIR/docker-compose-override-remote.yaml"
+
+        if [[ $CLIENT_ARCH == "arm64" && $SERVER_ARCH == "amd64" ]]; then
+            generate_override_amd64_file "$DC_DIR/docker-compose-override-amd64.yaml"
+            DOCKER_FILE+=" -f $DC_DIR/docker-compose-override-amd64.yaml"
+        fi
+    fi
+
+    DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose $(echo $DOCKER_FILE) up -d
+}
+
+generate_override_remote_file() {
+    local fdir="$1"
+    cat << EOF > "$fdir"
+version: '3'
+services:
+  postgres:
+    volumes:
+      - database-data:/var/lib/postgresql/data/
+      - /tmp/syntho/docker-postgres-entrypoint.sh:/docker-entrypoint-initdb.d/docker-postgres-entrypoint.sh
+EOF
+}
+
+generate_override_amd64_file() {
+    local fdir="$1"
+    cat << EOF > "$fdir"
+version: '3'
+services:
+  postgres:
+    platform: linux/amd64
+EOF
 }
 
 wait_for_frontend_service_health() {
@@ -68,7 +121,7 @@ wait_for_frontend_service_health() {
 
     is_fe_running() {
         # Check whether Docker container logs contain "started server on 0.0.0.0:3000"
-        DOCKER_CONFIG=$DOCKER_CONFIG docker compose -f $DC_DIR/docker-compose.yaml logs frontend 2>&1 | grep -q "started server on 0.0.0.0:3000"
+        DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose -f $DC_DIR/docker-compose.yaml logs frontend 2>&1 | grep -q "started server on 0.0.0.0:3000"
     }
 
 
@@ -88,7 +141,7 @@ deploy_syntho_stack() {
         errors+="Syntho Stack deployment has been unexpectedly failed\n"
     fi
 
-    echo -n "$errors"
+    write_and_exit "$errors" "deploy_syntho_stack"
 }
 
 wait_for_fe_health() {
@@ -98,7 +151,7 @@ wait_for_fe_health() {
         errors+="Syntho Stack health check has been unexpectedly failed\n"
     fi
 
-    echo -n "$errors"
+    write_and_exit "$errors" "wait_for_fe_health"
 }
 
 all_logs() {
@@ -111,11 +164,11 @@ all_logs() {
     rm -rf "$OUTPUT_DIR" "$LOGS_DIR"
     mkdir -p "$OUTPUT_DIR" "$LOGS_DIR"
 
-    services=$(DOCKER_CONFIG=$DOCKER_CONFIG docker compose -f $DC_DIR/docker-compose.yaml ps --services)
+    services=$(DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose -f $DC_DIR/docker-compose.yaml ps --services)
 
     echo "$services" | while IFS= read -r service; do
         echo "Processing logs for service: $service"
-        DOCKER_CONFIG=$DOCKER_CONFIG docker compose -f $DC_DIR/docker-compose.yaml logs $service > "$LOGS_DIR/$service.logs"
+        DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose -f $DC_DIR/docker-compose.yaml logs $service > "$LOGS_DIR/$service.logs"
     done
 
     tar -czvf "$TARBALL" -C "$LOGS_DIR" .
@@ -127,7 +180,7 @@ get_all_logs() {
         errors+="Preparing all logs has been unexpectedly failed\n"
     fi
 
-    echo -n "$errors"
+    write_and_exit "$errors" "get_all_logs"
 }
 
 deployment_failure_callback() {
@@ -136,12 +189,22 @@ deployment_failure_callback() {
 }
 
 
-with_loading "Deploying Syntho Stack" deploy_syntho_stack 600 deployment_failure_callback
+with_loading "Deploying Syntho Stack" deploy_syntho_stack 900 deployment_failure_callback
 with_loading "Waiting for Syntho UI to be healthy" wait_for_fe_health 300 deployment_failure_callback
 
+if [[ -f "${DEPLOYMENT_DIR}/.ssh-sock.env" ]] && [[ -f "${DEPLOYMENT_DIR}/.ssh-agent-pid.env" ]]; then
+    source ${DEPLOYMENT_DIR}/.ssh-agent-pid.env --source-only
+    SSH_AGENT_PID=$SSH_AGENT_PID
+    kill $SSH_AGENT_PID
+    rm ${DEPLOYMENT_DIR}/.ssh-agent-pid.env
+    rm ${DEPLOYMENT_DIR}/.ssh-sock.env
+    unset SSH_AUTH_SOCK
+    unset SSH_AGENT_PID
+fi
 
 echo -e '
-'"${YELLOW}Syntho stack got deployed. ${GREEN}Please visit:${NC} http://localhost:3000${NC}"'
+'"${YELLOW}Syntho stack got deployed.${NC} ${GREEN}Please visit:${NC} http://${DOMAIN}:3000${NC}"'
+'"${YELLOW}Make sure the port (3000) on the docker host is reachable.${NC}"'
 '"${YELLOW}- Email: $ADMIN_EMAIL${NC}"'
 '"${YELLOW}- Password: $ADMIN_PASSWORD${NC}"'
 '

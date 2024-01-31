@@ -73,9 +73,17 @@ else
     UI_ADMIN_LOGIN_PASSWORD=password!
 fi
 
+if [[ "$SKIP_CONFIGURATION" == "false" ]]; then
+    read -p $'\t- What is the preferred domain for reaching the UI (eg. localhost, 127.0.0.1, your.company.domain, 192.168.1.34) (default: localhost): ' DOMAIN
+    DOMAIN=${DOMAIN:-localhost}
+else
+    DOMAIN=localhost
+fi
+
 
 cat << EOF > "$DEPLOYMENT_DIR/.config.env"
 LICENSE_KEY=$LICENSE_KEY
+DOMAIN=$DOMAIN
 EOF
 
 cat << EOF > "$DEPLOYMENT_DIR/.resources.env"

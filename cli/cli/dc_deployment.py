@@ -45,17 +45,14 @@ def start(scripts_dir: str,
           registry_user: str,
           registry_pwd: str,
           docker_host,
-          docker_port,
-          docker_host_user,
-          docker_host_user_private_key,
-          docker_host_user_passphrase,
+          docker_ssh_user_private_key,
           arch_value: str,
           version: str,
           skip_configuration: bool) -> str:
 
 
     deployments_dir = get_deployments_dir(scripts_dir)
-    deployment_id = generate_deployment_id(docker_host, docker_port)
+    deployment_id = generate_deployment_id(docker_host)
     deployment_dir = f"{deployments_dir}/{deployment_id}"
 
     deployment_status = get_deployment_status(deployments_dir, deployment_dir, deployment_id)
@@ -85,10 +82,7 @@ def start(scripts_dir: str,
         registry_user,
         registry_pwd,
         docker_host,
-        docker_port,
-        docker_host_user,
-        docker_host_user_private_key,
-        docker_host_user_passphrase,
+        docker_ssh_user_private_key,
         arch_value,
         version,
         skip_configuration,
@@ -138,8 +132,8 @@ def start(scripts_dir: str,
         deployment_status=DeploymentStatus.COMPLETED,
     )
 
-def generate_deployment_id(docker_host: str, docker_port: int) -> str:
-    deployment_indicator = f"{docker_host}:{docker_port}"
+def generate_deployment_id(docker_host: str) -> str:
+    deployment_indicator = f"host:{docker_host}"
     indicator_hash = md5(deployment_indicator.encode()).hexdigest()
     return f"dc-{indicator_hash}"
 
@@ -300,10 +294,7 @@ def prepare_env(deployment_id: str,
                 registry_user: str,
                 registry_pwd: str,
                 docker_host: str,
-                docker_port: int,
-                docker_host_user: str,
-                docker_host_user_private_key: str,
-                docker_host_user_passphrase: str,
+                docker_ssh_user_private_key: str,
                 arch_value: str,
                 version: str,
                 skip_configuration: bool):
@@ -316,16 +307,11 @@ def prepare_env(deployment_id: str,
     ).decode()
 
     docker_config = {
-        "Host": docker_host,
-        "Port": docker_port,
-        "User": docker_host_user,
         "auths": {
             "syntho.azurecr.io": {
                 "auth": base64_registry_creds
             }
-        },
-        "identityFile": docker_host_user_private_key,
-        "passphrase": docker_host_user_passphrase
+        }
     }
 
     docker_dir = f"{deployment_dir}/.docker"
@@ -345,13 +331,18 @@ def prepare_env(deployment_id: str,
         "REGISTRY_PWD": registry_pwd,
         "ARCH": arch_value,
         "DOCKER_CONFIG": docker_config_file_path.replace("/config.json", ""),
+        "DOCKER_HOST": docker_host,
+        "DOCKER_SSH_USER_PRIVATE_KEY": docker_ssh_user_private_key,
         "VERSION": version,
         "SKIP_CONFIGURATION": "true" if skip_configuration else "false",
     }
     env_file_path = f"{deployment_dir}/.env"
     with open(env_file_path, "w") as file:
         for key, value in env.items():
-            file.write(f"{key}={value}\n")
+            if value:
+                file.write(f"{key}={value}\n")
+            else:
+                file.write(f"{key}=\n")
 
     set_state(deployment_id, deployments_dir, DeploymentStatus.INITIALIZED)
 
@@ -424,7 +415,7 @@ def download_syntho_charts_release(scripts_dir: str, deployment_id: str) -> bool
 
 
 def start_deployment(scripts_dir: str, deployment_id: str) -> bool:
-    click.echo("Step 5: Deployment;")
+    click.echo("Step 4: Deployment;")
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
     set_state(deployment_id, deployments_dir, DeploymentStatus.DEPLOYMENT_IN_PROGRESS)

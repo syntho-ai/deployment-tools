@@ -39,7 +39,7 @@ developer_tools_check() {
     fi
 
     # Check if kubectl exists
-    if ! command_exists "kubectl"; then
+    if ! command_exists "kubectlaaaaaaaa"; then
         errors+="Missing command line tool - kubectl\n"
     fi
 

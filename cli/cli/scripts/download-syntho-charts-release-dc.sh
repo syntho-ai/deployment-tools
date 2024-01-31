@@ -24,7 +24,7 @@ download_release() {
         fi
     fi
 
-    echo -n "$errors"
+    write_and_exit "$errors" "download_release"
 }
 
 extract_release() {
@@ -36,7 +36,7 @@ extract_release() {
         errors+="Failed to extract the release\n"
     fi
 
-    echo -n "$errors"
+    write_and_exit "$errors" "extract_release"
 }
 
 

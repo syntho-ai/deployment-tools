@@ -221,35 +221,14 @@ def k8s_deployments():
 @click.option(
     "--docker-host",
     type=str,
-    help="Specify the docker host. Default: localhost",
-    default="localhost",
+    help="Specify the docker host. Default: unix:///var/run/docker.sock",
+    default="unix:///var/run/docker.sock",
     required=False
 )
 @click.option(
-    "--docker-port",
-    type=int,
-    help="Specify the docker port. Default: 22",
-    default=22,
-    required=False
-)
-@click.option(
-    "--docker-host-user",
+    "--docker-ssh-user-private-key",
     type=str,
-    help="Specify the docker host user. Default: null",
-    default=None,
-    required=False
-)
-@click.option(
-    "--docker-host-user-private-key",
-    type=str,
-    help="Specify a private key for ssh authentication when remote access is required for the given docker host user. Default: null",
-    default=None,
-    required=False
-)
-@click.option(
-    "--docker-host-user-passphrase",
-    type=str,
-    help="Specify a passphrase that is associated with the given private key. Default: null",
+    help="Specify a private key for remote docker host access via ssh. Default: null",
     default=None,
     required=False
 )
@@ -277,10 +256,7 @@ def dc_deployment(
     registry_user: str,
     registry_pwd: str,
     docker_host: str,
-    docker_port: int,
-    docker_host_user: str,
-    docker_host_user_private_key: str,
-    docker_host_user_passphrase: str,
+    docker_ssh_user_private_key: str,
     arch: Optional[str],
     version: Optional[str],
     skip_configuration: bool,
@@ -301,10 +277,7 @@ def dc_deployment(
         registry_user,
         registry_pwd,
         docker_host,
-        docker_port,
-        docker_host_user,
-        docker_host_user_private_key,
-        docker_host_user_passphrase,
+        docker_ssh_user_private_key,
         arch,
         version,
         skip_configuration,
