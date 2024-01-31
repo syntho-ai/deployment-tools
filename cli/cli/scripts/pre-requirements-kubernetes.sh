@@ -3,6 +3,12 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$SCRIPT_DIR/utils.sh" --source-only
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "$SCRIPT_DIR/utils.sh" --source-only
+
+source $DEPLOYMENT_DIR/.env --source-only
+KUBECONFIG="$KUBECONFIG"
+
 
 network_check() {
     sleep 2
@@ -20,7 +26,7 @@ network_check() {
         errors+="There is no active network connection.\n"
     fi
 
-    echo -n "$errors"
+    write_and_exit "$errors" "network_check"
 }
 
 developer_tools_check() {
@@ -52,7 +58,7 @@ developer_tools_check() {
         errors+="Missing command line tool - awk\n"
     fi
 
-    echo -n "$errors"
+    write_and_exit "$errors" "developer_tools_check"
 }
 
 kubernetes_cluster_check() {
@@ -69,15 +75,8 @@ kubernetes_cluster_check() {
         errors+="KUBECONFIG does not point to a valid Kubernetes cluster.\n"
     fi
 
-    echo -n "$errors"
+    write_and_exit "$errors" "kubernetes_cluster_check"
 }
-
-
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-source "$SCRIPT_DIR/utils.sh" --source-only
-
-source $DEPLOYMENT_DIR/.env --source-only
-KUBECONFIG="$KUBECONFIG"
 
 
 with_loading "Checking network connectivity" network_check

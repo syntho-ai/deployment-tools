@@ -89,7 +89,7 @@ create_namespace() {
         errors+="Failed to create namespace\n"
     fi
 
-    echo -n "$errors"
+    write_and_exit "$errors" "create_namespace"
 }
 
 create_secret_for_registry_access() {
@@ -100,7 +100,7 @@ create_secret_for_registry_access() {
         errors+="Failed to create secret for image registry access\n"
     fi
 
-    echo -n "$errors"
+    write_and_exit "$errors" "create_secret_for_registry_access"
 }
 
 local_volume_provisioner() {
@@ -133,7 +133,7 @@ install_local_volume_provisioner() {
         errors+="Failed to install local volume provisioner\n"
     fi
 
-    echo -n "$errors"
+    write_and_exit "$errors" "install_local_volume_provisioner"
 }
 
 nginx_ingress_controller() {
@@ -150,7 +150,7 @@ install_nginx_ingress_controller() {
         errors+="Failed to install nginx ingress controller\n"
     fi
 
-    echo -n "$errors"
+    write_and_exit "$errors" "install_nginx_ingress_controller"
 }
 
 ssl_secret() {
@@ -178,7 +178,7 @@ install_ssl_secret() {
         errors+="Failed to install secret for ssl cert\n"
     fi
 
-    echo -n "$errors"
+    write_and_exit "$errors" "install_ssl_secret"
 }
 
 

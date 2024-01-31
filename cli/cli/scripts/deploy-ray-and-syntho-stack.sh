@@ -206,7 +206,7 @@ deploy_ray_cluster() {
         errors+="Ray Cluster health check has been unexpectedly failed\n"
     fi
 
-    echo -n "$errors"
+    write_and_exit "$errors" "deploy_ray_cluster"
 }
 
 deploy_syntho_ui() {
@@ -225,7 +225,7 @@ deploy_syntho_ui() {
         errors+="Syntho UI health check has been unexpectedly failed\n"
     fi
 
-    echo -n "$errors"
+    write_and_exit "$errors" "deploy_syntho_ui"
 }
 
 wait_local_nginx_ingress_controller() {
@@ -236,7 +236,7 @@ wait_local_nginx_ingress_controller() {
         errors+="Nginx controller health check has been unexpectedly failed\n"
     fi
 
-    echo -n "$errors"
+    write_and_exit "$errors" "wait_local_nginx_ingress_controller"
 }
 
 all_logs() {
@@ -266,7 +266,7 @@ get_all_logs() {
         errors+="Preparing all logs has been unexpectedly failed\n"
     fi
 
-    echo -n "$errors"
+    write_and_exit "$errors" "get_all_logs"
 }
 
 deployment_failure_callback() {

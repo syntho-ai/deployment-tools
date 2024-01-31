@@ -86,7 +86,7 @@ do_nothing() {
     sleep 1
     errors=""
     echo "do nothing" >/dev/null 2>&1
-    echo -n "$errors"
+    write_and_exit "$errors" "do_nothing"
 }
 
 with_loading() {
@@ -141,9 +141,11 @@ with_loading() {
     done
 
     if [[ $timedout == "false" ]]; then
-        # Process has completed, check the exit status
-        if ! wait $pid; then
-            errors=$(wait $pid 2>&1)
+        wait $pid
+        local exit_status=$?
+
+        if [[ $exit_status -ne 0 ]]; then
+            errors=$(cat $DEPLOYMENT_DIR/errors/$function_to_run)
         fi
     fi
 
@@ -170,4 +172,16 @@ with_loading() {
     else
         echo -e "\r$indentation$prefix [${BOLD_WHITE_ON_GREEN}done${NC}] $step_name $CLEARUP"
     fi
+}
+
+
+write_and_exit() {
+    local errors="$1"
+    local func_name="$2"
+    mkdir -p $DEPLOYMENT_DIR/errors
+    if [[ $errors != "" ]]; then
+        echo $errors > $DEPLOYMENT_DIR/errors/$func_name
+        exit 1
+    fi
+    exit 0
 }

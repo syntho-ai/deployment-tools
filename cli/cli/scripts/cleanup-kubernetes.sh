@@ -101,7 +101,7 @@ destroy_with_error_handling() {
         errors+="Failed to clean up components\n"
     fi
 
-    echo -n "$errors"
+    write_and_exit "$errors" "destroy_with_error_handling"
 }
 
 with_loading "Cleaning things up (destroying)" destroy_with_error_handling 300
