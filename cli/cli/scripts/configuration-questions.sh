@@ -8,6 +8,38 @@ REGISTRY_USER="$REGISTRY_USER"
 REGISTRY_PWD="$REGISTRY_PWD"
 SKIP_CONFIGURATION="$SKIP_CONFIGURATION"
 
+source $DEPLOYMENT_DIR/.k8s-cluster-info.env --source-only
+NUM_OF_NODES=$NUM_OF_NODES
+IS_MANAGED="$IS_MANAGED"
+
+STORAGE_CLASS_CREATION_QUESTION_CAN_BE_ASKED="true"
+if [[ $NUM_OF_NODES -gt 1 ]] || [[ $IS_MANAGED == "true" ]]; then
+    while true; do
+        read -p $'\t- Target cluster needs a storage class installed, and this toolkit will use it to provision a volume. I acknowledge it. (Y/n): ' ACKNOWLEDGE
+        ACKNOWLEDGE=${ACKNOWLEDGE:-Y}
+
+        case "$ACKNOWLEDGE" in
+            [nN])
+                break
+                ;;
+            [yY])
+                break
+                ;;
+            *)
+                echo "Invalid input. Please enter 'n', 'N', 'y', or 'Y'."
+                ;;
+        esac
+    done
+
+
+    if [[ "$ACKNOWLEDGE" == "N" || "$ACKNOWLEDGE" == "n" ]]; then
+        exit 1
+    else
+        echo "can't be asked"
+        STORAGE_CLASS_CREATION_QUESTION_CAN_BE_ASKED="false"
+    fi
+fi
+
 
 if [[ "$SKIP_CONFIGURATION" == "false" ]]; then
     while true; do
@@ -48,7 +80,7 @@ if [ -n "$PV_LABEL_KEY" ]; then
     STORAGE_CLASS_NAME=""
     STORAGE_ACCESS_MODE="ReadWriteMany"
 else
-    if [[ "$SKIP_CONFIGURATION" == "false" ]]; then
+    if [[ "$SKIP_CONFIGURATION" == "false" ]] && [[ "$STORAGE_CLASS_CREATION_QUESTION_CAN_BE_ASKED" == "true" ]]; then
         while true; do
             read -p $'\t- Do you want to use your own storage class for provisioning volumes (In case we create one, only a single-node k8s cluster is supported)? (Y/n): ' USE_STORAGE_CLASS
             USE_STORAGE_CLASS=${USE_STORAGE_CLASS:-Y}
@@ -67,6 +99,9 @@ else
         done
     else
         USE_STORAGE_CLASS=n
+        if [[ "$STORAGE_CLASS_CREATION_QUESTION_CAN_BE_ASKED" == "false" ]]; then
+            USE_STORAGE_CLASS=y
+        fi
     fi
 
     if [[ "$USE_STORAGE_CLASS" == "Y" || "$USE_STORAGE_CLASS" == "y" ]]; then

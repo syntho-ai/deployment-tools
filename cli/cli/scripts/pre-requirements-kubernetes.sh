@@ -8,6 +8,7 @@ source "$SCRIPT_DIR/utils.sh" --source-only
 
 source $DEPLOYMENT_DIR/.env --source-only
 KUBECONFIG="$KUBECONFIG"
+SKIP_CONFIGURATION="$SKIP_CONFIGURATION"
 GIVEN_ARCH="${ARCH}64"
 
 
@@ -85,6 +86,46 @@ kubernetes_cluster_check() {
 }
 
 
+dump_k8s_server_info() {
+    NODES=$(kubectl --kubeconfig="$KUBECONFIG" get nodes --show-labels)
+
+    NUM_OF_NODES=$(echo "${NODES}" | grep -v NAME | wc -l | tr -d ' ')
+    IS_MANAGED="false"
+    if echo "${NODES}" | grep -q -e 'gke\|aws\|aks'; then
+      IS_MANAGED="true"
+    fi
+
+    cat << EOF > "$DEPLOYMENT_DIR/.k8s-cluster-info.env"
+NUM_OF_NODES=$NUM_OF_NODES
+IS_MANAGED=$IS_MANAGED
+EOF
+}
+
+check_if_configurations_can_be_skipped() {
+    sleep 2
+    local errors=""
+
+    source $DEPLOYMENT_DIR/.k8s-cluster-info.env --source-only
+    NUM_OF_NODES=$NUM_OF_NODES
+    IS_MANAGED="$IS_MANAGED"
+
+    if [[ $SKIP_CONFIGURATION == "true" ]]; then
+        if [[ $IS_MANAGED == "true" ]]; then
+            errors+="Configuration can't be skipped as the Kubernetes cluster is a managed cluster and some default configuration is not compatible with it.\n"
+        elif [[ $NUM_OF_NODES -gt 1 ]]; then
+            errors+="Configuration can't be skipped as the Kubernetes cluster is a multi-node cluster and some default configuration is not compatible with it.\n"
+        fi
+    fi
+
+    write_and_exit "$errors" "check_if_configurations_can_be_skipped"
+}
+
 with_loading "Checking network connectivity" network_check
 with_loading "Checking developer tools" developer_tools_check
 with_loading "Checking if the given KUBECONFIG points to a valid k8s cluster" kubernetes_cluster_check
+
+dump_k8s_server_info
+
+if [[ $SKIP_CONFIGURATION == "true" ]]; then
+    with_loading "Checking if the cluster is compatible with the default configuration settings" check_if_configurations_can_be_skipped
+fi
