@@ -8,6 +8,7 @@ source "$SCRIPT_DIR/utils.sh" --source-only
 
 source $DEPLOYMENT_DIR/.env --source-only
 KUBECONFIG="$KUBECONFIG"
+GIVEN_ARCH="${ARCH}64"
 
 
 network_check() {
@@ -39,7 +40,7 @@ developer_tools_check() {
     fi
 
     # Check if kubectl exists
-    if ! command_exists "kubectlaaaaaaaa"; then
+    if ! command_exists "kubectl"; then
         errors+="Missing command line tool - kubectl\n"
     fi
 
@@ -73,6 +74,11 @@ kubernetes_cluster_check() {
     # Check if KUBECONFIG points to a valid Kubernetes cluster
     if ! kubectl --kubeconfig="$KUBECONFIG" config current-context &> /dev/null; then
         errors+="KUBECONFIG does not point to a valid Kubernetes cluster.\n"
+    fi
+
+    SERVER_ARCH=$(kubectl --kubeconfig="$KUBECONFIG" get nodes -o json | jq -r '.items[0].status.nodeInfo.architecture')
+    if [[ $GIVEN_ARCH != $SERVER_ARCH ]]; then
+        errors+="given --arch parameter isn't consistent with the kubernetes cluster's architecture($SERVER_ARCH). Supported --arch parameters are amd or arm and eventually both will be converted to amd64 or arm64. No other architectures are supported by the cli.\n"
     fi
 
     write_and_exit "$errors" "kubernetes_cluster_check"

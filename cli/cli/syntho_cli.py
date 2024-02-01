@@ -93,8 +93,12 @@ def k8s_deployment(
         raise click.ClickException(
             f"Unsupported architecture: {arch}. Only AMD/ARM is supported."
         )
+    arch_text = f"Architecture: {arch}64"
+    if arch == "arm":
+        arch_text += " - Beta"
+
     starting_text = click.style(
-        "-- Syntho stack is going to be deployed (Kubernetes) --", fg="white", blink=True, bold=True,
+        f"-- Syntho stack is going to be deployed (Kubernetes) ({arch_text}) --", fg="white", blink=True, bold=True,
     )
     click.echo(f"{starting_text}\n")
 
@@ -266,8 +270,12 @@ def dc_deployment(
         raise click.ClickException(
             f"Unsupported architecture: {arch}. Only AMD/ARM is supported."
         )
+    arch_text = f"Architecture: {arch}64"
+    if arch == "arm":
+        arch_text += " - Beta"
+
     starting_text = click.style(
-        "-- Syntho stack is going to be deployed (Docker Compose) --", fg="white", blink=True, bold=True,
+        f"-- Syntho stack is going to be deployed (Docker Compose) ({arch_text}) --", fg="white", blink=True, bold=True,
     )
     click.echo(f"{starting_text}\n")
 
