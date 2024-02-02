@@ -78,7 +78,11 @@ fi
 DEPLOY_LOCAL_VOLUME_PROVISIONER=n
 if [ -n "$PV_LABEL_KEY" ]; then
     STORAGE_CLASS_NAME=""
-    STORAGE_ACCESS_MODE="ReadWriteMany"
+    if [[ $NUM_OF_NODES -eq 1 ]]; then
+        STORAGE_ACCESS_MODE="ReadWriteOnce"
+    else
+        STORAGE_ACCESS_MODE="ReadWriteMany"
+    fi
 else
     if [[ "$SKIP_CONFIGURATION" == "false" ]] && [[ "$STORAGE_CLASS_CREATION_QUESTION_CAN_BE_ASKED" == "true" ]]; then
         while true; do
@@ -110,7 +114,11 @@ else
             if [ -z "$STORAGE_CLASS_NAME" ]; then
                 echo -e "\t- Value is mandatory. Please provide a value."
             else
-                STORAGE_ACCESS_MODE="ReadWriteMany"
+                if [[ $NUM_OF_NODES -eq 1 ]]; then
+                    STORAGE_ACCESS_MODE="ReadWriteOnce"
+                else
+                    STORAGE_ACCESS_MODE="ReadWriteMany"
+                fi
                 break
             fi
         done
