@@ -24,6 +24,10 @@ source $DEPLOYMENT_DIR/.auth.env --source-only
 UI_LOGIN_EMAIL="${UI_ADMIN_LOGIN_EMAIL}"
 UI_LOGIN_PASSWORD="${UI_ADMIN_LOGIN_PASSWORD}"
 
+source $DEPLOYMENT_DIR/.k8s-cluster-info.env --source-only
+NUM_OF_NODES=$NUM_OF_NODES
+IS_MANAGED="$IS_MANAGED"
+
 
 # for ray cluster
 LICENSE_KEY="$LICENSE_KEY"
@@ -286,14 +290,14 @@ with_loading "Deploying Syntho Stack" deploy_syntho_ui 600 deployment_failure_ca
 if [[ ($DEPLOY_INGRESS_CONTROLLER == "y" && $PROTOCOL == "http") || ($SKIP_CONFIGURATION == "true") ]]; then
     with_loading "Waiting ingress controller to be ready for accessing the UI (this might take some time)" wait_local_nginx_ingress_controller
 
-    TMP_KUBECONFIG_DIR="/tmp/.kube-for-syntho"
-    TMP_KUBECONFIG="/tmp/.kube-for-syntho/config"
-    rm -rf "$TMP_KUBECONFIG_DIR"
-    mkdir -p "$TMP_KUBECONFIG_DIR"
-    cp "$KUBECONFIG" "$TMP_KUBECONFIG"
+    if [[ $IS_MANAGED == "false" ]] && [[ $NUM_OF_NODES -eq 1 ]]; then
+        TMP_KUBECONFIG_DIR="/tmp/.kube-for-syntho"
+        TMP_KUBECONFIG="/tmp/.kube-for-syntho/config"
+        rm -rf "$TMP_KUBECONFIG_DIR"
+        mkdir -p "$TMP_KUBECONFIG_DIR"
+        cp "$KUBECONFIG" "$TMP_KUBECONFIG"
 
-
-    echo -e '
+        echo -e '
 '"${YELLOW}"'################### For Local Experimentation ################################'"${NC}"'
 
 kubectl --kubeconfig '"$TMP_KUBECONFIG"' port-forward service/syntho-ingress-nginx-controller 32282:80 -n syntho
@@ -302,6 +306,7 @@ echo "127.0.0.1    '"$DOMAIN"'" | sudo tee -a /etc/hosts
 '"${GREEN}"'visit:'"${NC}"' http://'"$DOMAIN"':32282
 '"${YELLOW}"'################### For Local Experimentation ################################'"${NC}"'
 '
+    fi
 fi
 
 echo -e '
