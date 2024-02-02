@@ -2,6 +2,7 @@
 
 DEPLOYMENT_DIR="$DEPLOYMENT_DIR"
 source $DEPLOYMENT_DIR/.env --source-only
+KUBECONFIG="$KUBECONFIG"
 
 LICENSE_KEY="$LICENSE_KEY"
 REGISTRY_USER="$REGISTRY_USER"
@@ -15,7 +16,9 @@ IS_MANAGED="$IS_MANAGED"
 STORAGE_CLASS_CREATION_QUESTION_CAN_BE_ASKED="true"
 if [[ $NUM_OF_NODES -gt 1 ]] || [[ $IS_MANAGED == "true" ]]; then
     while true; do
-        read -p $'\t- Target cluster needs a storage class installed, and this toolkit will use it to provision a volume. I acknowledge it. (Y/n): ' ACKNOWLEDGE
+        read -p $'\t- Target cluster needs either a storage class installed, and this toolkit will use it
+        to provision a volume. Or, a label value that is associated with an existing volume will need to be
+        provided. Later necessary configuration questions will be asked. I acknowledge it. (Y/n): ' ACKNOWLEDGE
         ACKNOWLEDGE=${ACKNOWLEDGE:-Y}
 
         case "$ACKNOWLEDGE" in
@@ -43,7 +46,7 @@ fi
 
 if [[ "$SKIP_CONFIGURATION" == "false" ]]; then
     while true; do
-        read -p $'\t- Do you want to use an existing volume (should be RWX supported)? (N/y): ' USE_EXISTING_VOLUMES
+        read -p $'\t- Do you want to use an existing volume for Syntho resources? (N/y): ' USE_EXISTING_VOLUMES
         USE_EXISTING_VOLUMES=${USE_EXISTING_VOLUMES:-N}
 
         case "$USE_EXISTING_VOLUMES" in
@@ -64,11 +67,16 @@ fi
 
 if [[ "$USE_EXISTING_VOLUMES" == "Y" || "$USE_EXISTING_VOLUMES" == "y" ]]; then
     while true; do
-        read -p $'\t- Please provide pv-label-key that is used in PV (mandatory)?: ' PV_LABEL_KEY
+        read -p $'\t- Please provide `pv-label-key` label value that will later be used as selector to bind volumes properly to Syntho resources (mandatory)?: ' PV_LABEL_KEY
         if [ -z "$PV_LABEL_KEY" ]; then
             echo -e "\t- Value is mandatory. Please provide a value."
         else
-            break
+            STORAGE_CLASS_NAME=$(kubectl --kubeconfig="$KUBECONFIG" get pv -l pv-label-key=$PV_LABEL_KEY -o jsonpath="{.items[*].spec.storageClassName}")
+            if [[ -n $STORAGE_CLASS_NAME ]]; then
+                break
+            else
+                echo -e "\t- There is no such a volume found with the given label value. Please provide a correct value."
+            fi
         fi
     done
 else
@@ -77,16 +85,17 @@ fi
 
 DEPLOY_LOCAL_VOLUME_PROVISIONER=n
 if [ -n "$PV_LABEL_KEY" ]; then
-    STORAGE_CLASS_NAME=""
     if [[ $NUM_OF_NODES -eq 1 ]]; then
         STORAGE_ACCESS_MODE="ReadWriteOnce"
     else
-        STORAGE_ACCESS_MODE="ReadWriteMany"
+        # TODO revisit here when ray cluster becomes multi node
+        # STORAGE_ACCESS_MODE="ReadWriteMany"
+        STORAGE_ACCESS_MODE="ReadWriteOnce"
     fi
 else
     if [[ "$SKIP_CONFIGURATION" == "false" ]] && [[ "$STORAGE_CLASS_CREATION_QUESTION_CAN_BE_ASKED" == "true" ]]; then
         while true; do
-            read -p $'\t- Do you want to use your own storage class for provisioning volumes (In case we create one, only a single-node k8s cluster is supported)? (Y/n): ' USE_STORAGE_CLASS
+            read -p $'\t- Do you want to use your own storage class for provisioning volumes? (Y/n): ' USE_STORAGE_CLASS
             USE_STORAGE_CLASS=${USE_STORAGE_CLASS:-Y}
 
             case "$USE_STORAGE_CLASS" in
@@ -110,16 +119,23 @@ else
 
     if [[ "$USE_STORAGE_CLASS" == "Y" || "$USE_STORAGE_CLASS" == "y" ]]; then
         while true; do
-            read -p $'\t- Please provide the storage class name that supports RWX that will be used in PVC (mandatory)?: ' STORAGE_CLASS_NAME
+            # read -p $'\t- Please provide the storage class name that supports RWX that will be used in PVC (mandatory)?: ' STORAGE_CLASS_NAME
+            read -p $'\t- Please provide a storage class name (Later volumes will be created for Syntho resources) (mandatory)?: ' STORAGE_CLASS_NAME
             if [ -z "$STORAGE_CLASS_NAME" ]; then
                 echo -e "\t- Value is mandatory. Please provide a value."
             else
-                if [[ $NUM_OF_NODES -eq 1 ]]; then
-                    STORAGE_ACCESS_MODE="ReadWriteOnce"
+                if kubectl --kubeconfig="$KUBECONFIG" get storageclass $STORAGE_CLASS_NAME > /dev/null 2>&1; then
+                    if [[ $NUM_OF_NODES -eq 1 ]]; then
+                        STORAGE_ACCESS_MODE="ReadWriteOnce"
+                    else
+                        # TODO revisit here when ray cluster becomes multi node
+                        # STORAGE_ACCESS_MODE="ReadWriteMany"
+                        STORAGE_ACCESS_MODE="ReadWriteOnce"
+                    fi
+                    break
                 else
-                    STORAGE_ACCESS_MODE="ReadWriteMany"
+                    echo -e "\t- There is no such a storage class found with the given name. Please provide a correct value."
                 fi
-                break
             fi
         done
     else
