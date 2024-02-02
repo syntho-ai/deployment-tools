@@ -15,6 +15,7 @@ scripts_dir = os.path.join(syntho_cli_dir, "scripts")
 
 
 @click.group()
+@click.version_option(prog_name="syntho-cli", version="0.1.0")
 def cli():
     pass
 

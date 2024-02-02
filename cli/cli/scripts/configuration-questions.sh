@@ -174,7 +174,11 @@ if [[ "$USE_INGRESS_CONTROLLER" == "Y" || "$USE_INGRESS_CONTROLLER" == "y" ]]; t
         if [ -z "$INGRESS_CLASS_NAME" ]; then
             echo -e "\t- Value is mandatory. Please provide a value."
         else
-            break
+            if kubectl --kubeconfig="$KUBECONFIG" get ingressclass $INGRESS_CLASS_NAME > /dev/null 2>&1; then
+                break
+            else
+                echo -e "\t- There is no such an ingress class found with the given name. Please provide a correct value."
+            fi
         fi
     done
 else
