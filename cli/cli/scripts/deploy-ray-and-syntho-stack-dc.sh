@@ -201,7 +201,7 @@ deployment_failure_callback() {
 }
 
 
-with_loading "Deploying Syntho Stack" deploy_syntho_stack 900 deployment_failure_callback
+with_loading "Deploying Syntho Stack" deploy_syntho_stack 1020 deployment_failure_callback
 with_loading "Waiting for Syntho UI to be healthy" wait_for_fe_health 300 deployment_failure_callback
 
 if [[ -f "${DEPLOYMENT_DIR}/.ssh-sock.env" ]] && [[ -f "${DEPLOYMENT_DIR}/.ssh-agent-pid.env" ]]; then
