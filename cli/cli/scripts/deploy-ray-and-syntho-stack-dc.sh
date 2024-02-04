@@ -84,14 +84,21 @@ deploy_docker_compose() {
 
         generate_override_remote_file "$DC_DIR/docker-compose-override-remote.yaml"
         DOCKER_FILE+=" -f $DC_DIR/docker-compose-override-remote.yaml"
-
+,
         if [[ $CLIENT_ARCH == "arm64" && $SERVER_ARCH == "amd64" ]]; then
             generate_override_amd64_file "$DC_DIR/docker-compose-override-amd64.yaml"
             DOCKER_FILE+=" -f $DC_DIR/docker-compose-override-amd64.yaml"
         fi
     fi
 
-    DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose $(echo $DOCKER_FILE) up -d
+
+    IMAGES=($(DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose $(echo $DOCKER_FILE) config | grep "image:" | grep "syntho.azurecr.io" | awk '{print $2}' | sort -u))
+    for IMAGE in "${IMAGES[@]}"; do
+        echo "Pulling Image: $IMAGE"
+        DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker pull $IMAGE
+    done
+
+    DOCKER_HOST=$DOCKER_HOST docker compose $(echo $DOCKER_FILE) up -d
 }
 
 generate_override_remote_file() {

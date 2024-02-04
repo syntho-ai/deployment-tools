@@ -20,7 +20,7 @@ fi
 
 
 destroy() {
-    DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST  docker compose -f $DC_DIR/docker-compose.yaml down --remove-orphans --volumes --rmi all
+    DOCKER_HOST=$DOCKER_HOST docker compose -f $DC_DIR/docker-compose.yaml down --remove-orphans --volumes --rmi all
 }
 
 destroy_with_error_handling() {
