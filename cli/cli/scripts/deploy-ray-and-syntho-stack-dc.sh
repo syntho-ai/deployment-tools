@@ -94,9 +94,14 @@ deploy_docker_compose() {
 
     IMAGES=($(DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose $(echo $DOCKER_FILE) config | grep "image:" | grep "syntho.azurecr.io" | awk '{print $2}' | sort -u))
     for IMAGE in "${IMAGES[@]}"; do
-        echo "Pulling Image: $IMAGE"
-        DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker pull $IMAGE
+        (
+            echo "Pulling Image: $IMAGE"
+            DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker pull $IMAGE
+        ) &
     done
+
+    # Wait for all background processes to finish
+    wait
 
     DOCKER_HOST=$DOCKER_HOST docker compose $(echo $DOCKER_FILE) up -d
 }
