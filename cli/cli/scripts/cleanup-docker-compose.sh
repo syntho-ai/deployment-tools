@@ -35,6 +35,17 @@ destroy_with_error_handling() {
 }
 
 
+
+if [[ -f "${DEPLOYMENT_DIR}/.ssh-sock.env" ]] && [[ -f "${DEPLOYMENT_DIR}/.ssh-agent-pid.env" ]]; then
+    source ${DEPLOYMENT_DIR}/.ssh-agent-pid.env --source-only
+    SSH_AGENT_PID=$SSH_AGENT_PID
+    kill $SSH_AGENT_PID
+    rm ${DEPLOYMENT_DIR}/.ssh-agent-pid.env
+    rm ${DEPLOYMENT_DIR}/.ssh-sock.env
+    unset SSH_AUTH_SOCK
+    unset SSH_AGENT_PID
+fi
+
 if [ -n "$DC_DIR" ]; then
     if [[ $DOCKER_HOST == ssh://* ]] && [[ -n $DOCKER_SSH_USER_PRIVATE_KEY ]]; then
         eval "$(ssh-agent -s)"
