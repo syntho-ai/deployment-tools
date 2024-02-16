@@ -16,12 +16,13 @@ setup(
     version=version,
     description="Syntho Stack Deployment CLI",
     long_description=README,
+    long_description_content_type='text/markdown',
     url="https://github.com/syntho-ai/syntho-cli",
     download_url="https://github.com/syntho-ai/syntho-cli/tarball/%s" % version,
-    author="Baran Bartu Demirci",
-    author_email="bbartu.demirci@gmail.com",
+    author="Syntho B.V.",
+    author_email="info@syntho.ai",
     license="MIT",
-    keywords="ray, syntho, synthetic data",
+    keywords="syntho, synthetic data, deployment",
     packages=find_packages(),
     entry_points={
         "console_scripts": ["syntho-cli = cli.syntho_cli:cli"]
