@@ -4,7 +4,7 @@ In this guide, we will walk through how to use `syntho-cli` to effectively manag
 
 ## Prerequisites
 
-* `syntho-cli` installed ([See Getting Started guide](/getting-started.md))
+* `syntho-cli` installed ([See Getting Started guide](./getting-started.md))
 * A running Kubernetes cluster
 * A KUBECONFIG env var to manage resources on Kubernetes cluster
     * Can be both in `yaml content` or a `file path` pointing the kube config

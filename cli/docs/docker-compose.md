@@ -5,7 +5,7 @@ Docker host environment.
 
 ## Prerequisites
 
-* `syntho-cli` installed ([See Getting Started guide](/getting-started.md))
+* `syntho-cli` installed ([See Getting Started guide](./getting-started.md))
 * A running Docker server
 * `docker` cli installed and properly configured
 * An active internet connection on the host where the CLI is going to run
