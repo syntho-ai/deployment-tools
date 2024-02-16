@@ -234,7 +234,7 @@ def destroy(scripts_dir: str, deployment_id: str, force: bool) -> bool:
 def generate_deployment_id(kubeconfig: str) -> str:
     kubeconfig_content = kubeconfig
     if os.path.isfile(kubeconfig):
-        with open(file_path, "r") as file:
+        with open(kubeconfig, "r") as file:
             kubeconfig_content = file.read()
 
     indicator_hash = md5(kubeconfig_content.encode()).hexdigest()
