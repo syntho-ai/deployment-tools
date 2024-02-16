@@ -28,10 +28,10 @@ You should see `syntho-cli, version x.y.z` as the output.
 `syntho-cli` provides the flexibility to manage resources in both Docker and Kubernetes ecosystems. Follow the guides below based on your specific needs:
 
 ### Docker Compose
-To learn how to manage resources in a Docker environment with `syntho-cli`, visit the [Docker Compose guide](./docker-compose.md).
+To learn how to manage resources in a Docker environment with `syntho-cli`, visit the [Docker Compose guide](/docker-compose.md).
 
 ### Kubernetes
-To learn how to manage resources in a Kubernetes environment with `syntho-cli`, visit the [Kubernetes guide](./kubernetes.md).
+To learn how to manage resources in a Kubernetes environment with `syntho-cli`, visit the [Kubernetes guide](/kubernetes.md).
 
 ## Uninstallation
 To uninstall syntho-cli, please run the following command:
