@@ -95,7 +95,7 @@ deploy_docker_compose() {
 
 
     # IMAGES=($(DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose $(echo $DOCKER_FILE) config | grep "image:" | grep "syntho.azurecr.io" | awk '{print $2}' | sort -u))
-    IMAGES=($(DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose $(echo $DOCKER_FILE) config | awk '{print $2}' | sort -u))
+    IMAGES=($(DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose $(echo $DOCKER_FILE) config | grep "image:" | awk '{print $2}' | sort -u))
     for IMAGE in "${IMAGES[@]}"; do
         (
             echo "Pulling Image: $IMAGE"
