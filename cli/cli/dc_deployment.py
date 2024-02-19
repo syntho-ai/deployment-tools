@@ -269,7 +269,7 @@ def destroy(scripts_dir: str, deployment_id: str, force: bool) -> bool:
     deployment_dir = f"{deployments_dir}/{deployment_id}"
     if not os.path.isdir(deployment_dir):
         click.echo(f"Deployment({deployment_id}) couldn't be found")
-        return
+        return True
 
     click.echo(f"Deployment({deployment_id}) will be destroyed alongside its components")
     result = cleanup_with_cleanup_level(scripts_dir, deployment_id, CleanUpLevel.FULL, force=force)

@@ -20,6 +20,8 @@ DC_DIR="$DC_DIR"
 source $DEPLOYMENT_DIR/.resources.env --source-only
 SHARED="$DEPLOYMENT_DIR/shared"
 mkdir -p "$SHARED"
+SYNTHO_CLI_PROCESS_DIR="$SHARED/process"
+mkdir -p "$SYNTHO_CLI_PROCESS_DIR"
 source $DEPLOYMENT_DIR/.auth.env --source-only
 ADMIN_USERNAME="${UI_ADMIN_LOGIN_USERNAME}"
 ADMIN_PASSWORD="${UI_ADMIN_LOGIN_PASSWORD}"
@@ -145,11 +147,13 @@ wait_for_frontend_service_health() {
 deploy_syntho_stack() {
     local errors=""
 
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/deploy_syntho_stack.logs"
+
     if ! generate_env >/dev/null 2>&1; then
         errors+=".env generation error for the Syntho Stack\n"
     fi
 
-    if ! deploy_docker_compose >/dev/null 2>&1; then
+    if ! deploy_docker_compose >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="Syntho Stack deployment has been unexpectedly failed\n"
     fi
 
