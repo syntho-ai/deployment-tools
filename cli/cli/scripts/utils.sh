@@ -3,6 +3,7 @@
 DEPLOYMENT_DIR="$DEPLOYMENT_DIR"
 SHARED="$DEPLOYMENT_DIR/shared"
 SYNTHO_CLI_PROCESS_DIR="$SHARED/process"
+BACKGROUND_PIDS="$SHARED/background.pids"
 if [[ $DEPLOYMENT_DIR != "" ]]; then
     mkdir -p "$SHARED"
 fi
@@ -26,6 +27,19 @@ cleanup() {
     # This function is called when the script is interrupted (e.g., Ctrl+C).
     if [ -n "$animation_pid" ]; then
         kill "$animation_pid"  # Terminate the loading animation
+    fi
+
+    if [ -f "$BACKGROUND_PIDS" ]; then
+        # Read pids from background.pids and kill each process
+        while IFS= read -r pid; do
+            # If the process exists, kill it
+            if kill -0 "$pid" >/dev/null 2>&1; then
+                kill "$pid"
+            fi
+        done < "$BACKGROUND_PIDS"
+
+        # Remove the PID log file
+        rm "$BACKGROUND_PIDS"
     fi
     exit 1
 }

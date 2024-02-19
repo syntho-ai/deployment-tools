@@ -21,6 +21,7 @@ source $DEPLOYMENT_DIR/.resources.env --source-only
 SHARED="$DEPLOYMENT_DIR/shared"
 mkdir -p "$SHARED"
 SYNTHO_CLI_PROCESS_DIR="$SHARED/process"
+BACKGROUND_PIDS="$SHARED/background.pids"
 mkdir -p "$SYNTHO_CLI_PROCESS_DIR"
 source $DEPLOYMENT_DIR/.auth.env --source-only
 ADMIN_USERNAME="${UI_ADMIN_LOGIN_USERNAME}"
@@ -101,6 +102,8 @@ deploy_docker_compose() {
             echo "Pulling Image: $IMAGE"
             DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker pull $IMAGE
         ) &
+
+        echo $! >> ${BACKGROUND_PIDS}
     done
 
     # Wait for all background processes to finish
