@@ -81,28 +81,31 @@ docker_host_check() {
         errors+="DOCKER_HOST is not set.\n"
     fi
 
+    CHECK_ARCH=true
     if ! DOCKER_HOST=$DOCKER_HOST docker info &> /dev/null; then
         errors+="DOCKER_HOST does not point to a valid docker host ($DOCKER_HOST).\n"
+        CHECK_ARCH=false
     fi
 
-    VERSION_INFO=$(DOCKER_HOST=$DOCKER_HOST docker version)
-    CLIENT_ARCH=$(echo "$VERSION_INFO" | grep "OS/Arch" | awk 'NR==1{print $2}' | awk -F'/' '{print $2}')
-    SERVER_ARCH=$(echo "$VERSION_INFO" | grep "OS/Arch" | awk 'NR==2{print $2}' | awk -F'/' '{print $2}')
+    if $CHECK_ARCH; then
+        VERSION_INFO=$(DOCKER_HOST=$DOCKER_HOST docker version)
+        CLIENT_ARCH=$(echo "$VERSION_INFO" | grep "OS/Arch" | awk 'NR==1{print $2}' | awk -F'/' '{print $2}')
+        SERVER_ARCH=$(echo "$VERSION_INFO" | grep "OS/Arch" | awk 'NR==2{print $2}' | awk -F'/' '{print $2}')
 
-    if [[ $GIVEN_ARCH != $SERVER_ARCH ]]; then
-        errors+="given --arch parameter isn't consistent with the docker server's architecture($SERVER_ARCH). Supported --arch parameters are amd or arm and eventually both will be converted to amd64 or arm64. No other architectures are supported by the cli.\n"
-    else
-        if [[ $CLIENT_ARCH != $SERVER_ARCH ]]; then
-            if [[ $CLIENT_ARCH != "amd64" && $CLIENT_ARCH != "arm64" ]]; then
-                errors+="Docker client's architecture($CLIENT_ARCH) isn't compatible: amd64 and arm64 is supported.\n"
-            elif [[ $SERVER_ARCH != "amd64" && $SERVER_ARCH != "arm64" ]]; then
-                errors+="Docker server's architecture(amd64) isn't compatible: amd64 and arm64 is supported.\n"
-            elif [[ $CLIENT_ARCH == "amd64" && $SERVER_ARCH == "arm64" ]]; then
-                errors+="Docker client's architecture(amd64) isn't compatible with the docker server's architecture(arm64)\n"
+        if [[ $GIVEN_ARCH != $SERVER_ARCH ]]; then
+            errors+="given --arch parameter isn't consistent with the docker server's architecture($SERVER_ARCH). Supported --arch parameters are amd or arm and eventually both will be converted to amd64 or arm64. No other architectures are supported by the cli.\n"
+        else
+            if [[ $CLIENT_ARCH != $SERVER_ARCH ]]; then
+                if [[ $CLIENT_ARCH != "amd64" && $CLIENT_ARCH != "arm64" ]]; then
+                    errors+="Docker client's architecture($CLIENT_ARCH) isn't compatible: amd64 and arm64 is supported.\n"
+                elif [[ $SERVER_ARCH != "amd64" && $SERVER_ARCH != "arm64" ]]; then
+                    errors+="Docker server's architecture(amd64) isn't compatible: amd64 and arm64 is supported.\n"
+                elif [[ $CLIENT_ARCH == "amd64" && $SERVER_ARCH == "arm64" ]]; then
+                    errors+="Docker client's architecture(amd64) isn't compatible with the docker server's architecture(arm64)\n"
+                fi
             fi
         fi
     fi
-
 
     if [ -z "$errors" ]; then
         cat << EOF > "$DEPLOYMENT_DIR/.docker-arch.env"
