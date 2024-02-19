@@ -67,9 +67,14 @@ kubernetes_cluster_check() {
     sleep 2
     local errors=""
 
-    # Check if KUBECONFIG is set
+    # Check if KUBECONFIG is unset
+    if [ -z "${KUBECONFIG+x}" ]; then
+        errors+="KUBECONFIG is unset.\n"
+    fi
+
+    # Check if KUBECONFIG is set to an empty string
     if [ -z "$KUBECONFIG" ]; then
-        errors+="KUBECONFIG is not set.\n"
+        errors+="KUBECONFIG is set to an empty string.\n"
     fi
 
     # Check if KUBECONFIG points to a valid Kubernetes cluster

@@ -14,6 +14,29 @@ syntho_cli_dir = os.path.dirname(os.path.abspath(__file__))
 scripts_dir = os.path.join(syntho_cli_dir, "scripts")
 
 
+def validate_kubeconfig(ctx, param, value):
+    if not value:
+        raise click.BadParameter("KUBECONFIG cannot be an empty string.")
+
+    try:
+        with open(value, "r") as f:
+            config = yaml.safe_load(f)
+    except Exception as e:
+        try:
+            config = yaml.safe_load(value)
+        except Exception as e:
+            raise click.BadParameter("KUBECONFIG is neither a valid YAML string nor a path to a valid YAML file.")
+
+    if not isinstance(config, dict):
+        raise click.BadParameter("KUBECONFIG is neither a valid YAML string nor a path to a valid YAML file.")
+
+    # Check if the key components of the KUBECONFIG are present
+    if not (config.get('clusters', False) and config.get('contexts', False) and config.get('users', False)):
+        raise click.BadParameter("KUBECONFIG is not valid. It should have 'clusters', 'contexts', and 'users' fields.")
+
+    return value
+
+
 @click.group()
 @click.version_option(prog_name="syntho-cli", version="0.1.0")
 def cli():
@@ -59,7 +82,8 @@ def dc():
     help=("Specify a kubeconfig in which the Syntho"
           " stack will be deployed into. It can be both kubeconfig content, or a file path that"
           " points to a valid kubconfig content file"),
-    required=True
+    required=True,
+    callback=validate_kubeconfig
 )
 @click.option(
     "--arch",
