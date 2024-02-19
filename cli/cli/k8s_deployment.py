@@ -1,6 +1,7 @@
 import os
 import shutil
 import yaml
+import time
 import click
 
 from typing import Dict, NoReturn, List
@@ -194,6 +195,7 @@ def cleanup_with_cleanup_level(scripts_dir: str, deployment_id: str, cleanup_lev
         if not result.succeeded:
             return False
 
+    time.sleep(2)
     shutil.rmtree(deployment_dir)
 
     deployments_state = get_deployments_state(deployments_dir)
