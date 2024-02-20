@@ -48,6 +48,7 @@ def start(scripts_dir: str,
           docker_ssh_user_private_key,
           arch_value: str,
           version: str,
+          docker_config_json_path: str,
           skip_configuration: bool) -> str:
 
 
@@ -85,6 +86,7 @@ def start(scripts_dir: str,
         docker_ssh_user_private_key,
         arch_value,
         version,
+        docker_config_json_path,
         skip_configuration,
     )
 
@@ -297,6 +299,7 @@ def prepare_env(deployment_id: str,
                 docker_ssh_user_private_key: str,
                 arch_value: str,
                 version: str,
+                docker_config_json_path: str,
                 skip_configuration: bool):
 
     set_state(deployment_id, deployments_dir, DeploymentStatus.PREPARING_ENV)
@@ -305,6 +308,25 @@ def prepare_env(deployment_id: str,
     base64_registry_creds = base64.b64encode(
         f"{registry_user}:{registry_pwd}".encode()
     ).decode()
+
+    secondary_docker_config = {}
+    docker_config_json_path = os.path.expanduser(docker_config_json_path)
+
+    if os.path.exists(docker_config_json_path):
+        with open(docker_config_json_path, "r") as file:
+            try:
+                config_data = json.load(file)
+                creds_store = config_data.get("credsStore")
+                if creds_store:
+                    secondary_docker_config = {
+                        "auths": {
+                            "https://index.docker.io/v1/": {},
+                        },
+                        "credsStore": creds_store
+                    }
+
+            except ValueError:
+                pass
 
     docker_config = {
         "auths": {
@@ -324,6 +346,17 @@ def prepare_env(deployment_id: str,
     with open(docker_config_file_path, "w") as docker_config_file:
         docker_config_file.write(docker_config_json)
 
+    secondary_docker_config_file_path = docker_config_file_path
+    if secondary_docker_config:
+        secondary_docker_dir = f"{deployment_dir}/.docker-secondary"
+        if not os.path.exists(secondary_docker_dir):
+            os.makedirs(secondary_docker_dir)
+
+        secondary_docker_config_json = json.dumps(secondary_docker_config, indent=2)
+        secondary_docker_config_file_path = f"{secondary_docker_dir}/config.json"
+
+        with open(secondary_docker_config_file_path, "w") as secondary_docker_config_file:
+            secondary_docker_config_file.write(secondary_docker_config_json)
 
     env = {
         "LICENSE_KEY": license_key,
@@ -331,6 +364,7 @@ def prepare_env(deployment_id: str,
         "REGISTRY_PWD": registry_pwd,
         "ARCH": arch_value,
         "DOCKER_CONFIG": docker_config_file_path.replace("/config.json", ""),
+        "SECONDARY_DOCKER_CONFIG": secondary_docker_config_file_path.replace("/config.json", ""),
         "DOCKER_HOST": docker_host,
         "DOCKER_SSH_USER_PRIVATE_KEY": docker_ssh_user_private_key,
         "VERSION": version,

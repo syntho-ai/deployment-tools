@@ -7,6 +7,7 @@ source "$SCRIPT_DIR/utils.sh" --source-only
 DEPLOYMENT_DIR="$DEPLOYMENT_DIR"
 source $DEPLOYMENT_DIR/.env --source-only
 DOCKER_CONFIG="$DOCKER_CONFIG"
+SECONDARY_DOCKER_CONFIG="$SECONDARY_DOCKER_CONFIG"
 DOCKER_HOST="$DOCKER_HOST"
 SKIP_CONFIGURATION="$SKIP_CONFIGURATION"
 source $DEPLOYMENT_DIR/.config.env --source-only
@@ -103,19 +104,19 @@ deploy_docker_compose() {
     fi
 
 
-    # IMAGES=($(DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose $(echo $DOCKER_FILE) config | grep "image:" | grep "syntho.azurecr.io" | awk '{print $2}' | sort -u))
     IMAGES=($(DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose $(echo $DOCKER_FILE) config | grep "image:" | awk '{print $2}' | sort -u))
     for IMAGE in "${IMAGES[@]}"; do
-        (
-            echo "Pulling Image: $IMAGE"
+        echo "Pulling Image: $IMAGE"
+        if [[ $IMAGE == *"syntho.azurecr.io"* ]]; then
+          echo "Image contains 'syntho.azurecr.io'. DOCKER_CONFIG will be used"
+            echo "DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker pull $IMAGE"
             DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker pull $IMAGE
-        ) &
-
-        echo $! >> ${BACKGROUND_PIDS}
+        else
+          echo "Image does not contain 'syntho.azurecr.io'. SECONDARY_DOCKER_CONFIG will be used"
+            echo "DOCKER_CONFIG=$SECONDARY_DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker pull $IMAGE"
+            DOCKER_CONFIG=$SECONDARY_DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker pull $IMAGE
+        fi
     done
-
-    # Wait for all background processes to finish
-    wait
 
     DOCKER_HOST=$DOCKER_HOST docker compose $(echo $DOCKER_FILE) up -d
 }

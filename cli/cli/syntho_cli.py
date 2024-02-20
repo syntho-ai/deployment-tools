@@ -8,6 +8,7 @@ from typing import Optional
 from cli import utils
 from cli import k8s_deployment as k8s_deployment_manager
 from cli import dc_deployment as dc_deployment_manager
+from cli.utilities import prepull_images as prepull_images_manager
 
 
 syntho_cli_dir = os.path.dirname(os.path.abspath(__file__))
@@ -37,6 +38,18 @@ def validate_kubeconfig(ctx, param, value):
     return value
 
 
+def validate_docker_config(ctx, param, value):
+    if value == "":
+        value = "~/.docker/config.json"
+    original_docker_config_path = os.path.expanduser(value)
+    if not os.path.exists(original_docker_config_path):
+        if not value == "~/.docker/config.json":
+            raise click.BadParameter(f"given docker config.json path {value} is not valid, please "
+                                     "provide the config.json that current docker contex's "
+                                     "daemon is using")
+    return value
+
+
 @click.group()
 @click.version_option(prog_name="syntho-cli", version="0.1.0")
 def cli():
@@ -49,6 +62,11 @@ def k8s():
 
 @cli.group(help="Manages Docker Compose Deployment")
 def dc():
+    pass
+
+
+@cli.group(help="Utilities to streamline manual operations")
+def utilities():
     pass
 
 
@@ -276,6 +294,14 @@ def k8s_deployments():
     required=False
 )
 @click.option(
+    "--docker-config",
+    type=str,
+    help=("Specify the default docker config.json path. Default: ~/.docker/config.json"),
+    default="",
+    required=False,
+    callback=validate_docker_config
+)
+@click.option(
     "--skip-configuration",
     is_flag=True,
     help="Skip configuration, and use default configuration params for deployment",
@@ -288,6 +314,7 @@ def dc_deployment(
     docker_ssh_user_private_key: str,
     arch: Optional[str],
     version: Optional[str],
+    docker_config: str,
     skip_configuration: bool,
 ):
     arch = arch.lower()
@@ -313,6 +340,7 @@ def dc_deployment(
         docker_ssh_user_private_key,
         arch,
         version,
+        docker_config,
         skip_configuration,
     )
 
@@ -403,6 +431,87 @@ def k8s_deployments():
     deployments = dc_deployment_manager.get_deployments(scripts_dir)
     as_yaml = yaml.dump(deployments, default_flow_style=False)
     click.echo(as_yaml)
+
+
+@utilities.command(name="prepull-images", help="Pulls Syntho's images into a trusted registry")
+@click.option(
+    "--trusted-registry",
+    type=str,
+    help="Specify the registry for images to be pulled into",
+    required=True
+)
+@click.option(
+    "--syntho-registry-user",
+    type=str,
+    help="Specify the Syntho docker image registry user that is provided by Syntho team",
+    required=True
+)
+@click.option(
+    "--syntho-registry-pwd",
+    type=str,
+    help="Specify the Syntho docker image registry password that is provided by Syntho team",
+    required=True
+)
+@click.option(
+    "--version",
+    type=str,
+    help=("Specify a version for Syntho stack. Default: stable"),
+    default="stable",
+    required=False
+)
+@click.option(
+    "--arch",
+    type=str,
+    help=("Specify the architecture. Default: amd"),
+    default="amd",
+    required=False
+)
+@click.option(
+    "--docker-config",
+    type=str,
+    help=("Specify the default docker config.json path. Default: ~/.docker/config.json"),
+    default="",
+    required=False,
+    callback=validate_docker_config
+)
+def prepull_images(trusted_registry: str,
+                   syntho_registry_user: str,
+                   syntho_registry_pwd: str,
+                   version: str,
+                   arch: str,
+                   docker_config: str):
+    arch = arch.lower()
+    if not utils.is_arch_supported(arch):
+        raise click.ClickException(
+            f"Unsupported architecture: {arch}. Only AMD/ARM is supported."
+        )
+
+    arch_text = f"Architecture: {arch}64"
+    if arch == "arm":
+        arch_text += " - Beta"
+
+    starting_text = click.style(
+        f"-- Syntho stack is going to be pulling images into a trusted registry ({arch_text}) --",
+        fg="white",
+        blink=True,
+        bold=True,
+    )
+    click.echo(f"{starting_text}\n")
+
+    result, err = prepull_images_manager.start(
+        scripts_dir,
+        version,
+        arch,
+        trusted_registry,
+        syntho_registry_user,
+        syntho_registry_pwd,
+        docker_config,
+    )
+    if not result:
+        pull_failed_text = click.style(
+            f"Error pulling images. Error: {err}\n", fg="red"
+        )
+        click.echo(f"\n\n{pull_failed_text}", err=True)
 
 
 
