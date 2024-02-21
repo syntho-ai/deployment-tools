@@ -18,6 +18,11 @@ else
     DC_DIR=
 fi
 
+SHARED="$DEPLOYMENT_DIR/shared"
+mkdir -p "$SHARED"
+SYNTHO_CLI_PROCESS_DIR="$SHARED/process"
+mkdir -p "$SYNTHO_CLI_PROCESS_DIR"
+
 
 destroy() {
     DOCKER_HOST=$DOCKER_HOST docker compose -f $DC_DIR/docker-compose.yaml down --remove-orphans --volumes --rmi all
@@ -26,8 +31,9 @@ destroy() {
 destroy_with_error_handling() {
     local errors=""
 
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/destroy_with_error_handling.logs"
 
-    if ! destroy >/dev/null 2>&1; then
+    if ! destroy >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="Failed to clean up components\n"
     fi
 
