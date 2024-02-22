@@ -33,7 +33,7 @@ utilities:
 
 ### Pulling Images Into a Trusted Image Registry
 
-As mentioned in (Applicable Scenarios)[applicable-scenarios] - scenario 1, below command can be ran
+As mentioned in [Applicable Scenarios](applicable-scenarios) - scenario 1, below command can be ran
 to get necessary images pulled in a trusted image registry.
 
 
