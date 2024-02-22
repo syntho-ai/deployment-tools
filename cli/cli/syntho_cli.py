@@ -289,9 +289,8 @@ def k8s_deployments():
 @click.option(
     "--version",
     type=str,
-    help=("Specify a version for Syntho stack. Default: stable"),
-    default="stable",
-    required=False
+    help=("Specify a version for Syntho stack."),
+    required=True
 )
 @click.option(
     "--docker-config",
@@ -455,9 +454,8 @@ def k8s_deployments():
 @click.option(
     "--version",
     type=str,
-    help=("Specify a version for Syntho stack. Default: stable"),
-    default="stable",
-    required=False
+    help=("Specify a version for Syntho stack."),
+    required=True
 )
 @click.option(
     "--arch",

@@ -33,6 +33,9 @@ To learn how to manage resources in a Docker environment with `syntho-cli`, visi
 ### Kubernetes
 To learn how to manage resources in a Kubernetes environment with `syntho-cli`, visit the [Kubernetes guide](./kubernetes.md).
 
+### Utilites
+To learn how to use utilities introduced by the CLI, visit the [Utilities guide](./utilities.md).
+
 ## Uninstallation
 To uninstall syntho-cli, please run the following command:
 

@@ -38,8 +38,9 @@ syntho-cli dc deployment \
     --registry-user <syntho-image-registry-user> \
     --registry-pwd <syntho-image-registry-password> \
     --version <syntho-stack-version> \
-    --docker-host ssh://<user>@<ip> \ # optional: only for remote docker deployment
-    --docker-ssh-user-private-key <path-to-your-private-key> \ # optional: only for remote docker deployment
+    --docker-host ssh://<user>@<ip> \ # optional - default: unix:///var/run/docker.sock
+    --docker-ssh-user-private-key <path-to-your-private-key> \ # optional - only for remote docker deployment
+    --docker-config <path-to-docker-config-json> # optional - default: ~/.docker/config.json
 ```
 
 > Ask Syntho team to fetch your credentials and the version for Syntho resources
