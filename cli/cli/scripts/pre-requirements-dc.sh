@@ -8,6 +8,16 @@ DOCKER_HOST="$DOCKER_HOST"
 DOCKER_SSH_USER_PRIVATE_KEY="$DOCKER_SSH_USER_PRIVATE_KEY"
 GIVEN_ARCH="${ARCH}64"
 
+SHARED="$DEPLOYMENT_DIR/shared"
+mkdir -p "$SHARED"
+SYNTHO_CLI_PROCESS_DIR="$SHARED/process"
+mkdir -p "$SYNTHO_CLI_PROCESS_DIR"
+
+docker_info() {
+    echo "command: DOCKER_HOST=$DOCKER_HOST docker info"
+    DOCKER_HOST=$DOCKER_HOST docker info
+}
+
 network_check() {
     sleep 2
     local errors=""
@@ -76,13 +86,15 @@ docker_host_check() {
     sleep 2
     local errors=""
 
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/docker_host_check.logs"
+
     # Check if DOCKER_HOST is set
     if [ -z "$DOCKER_HOST" ]; then
         errors+="DOCKER_HOST is not set.\n"
     fi
 
     CHECK_ARCH=true
-    if ! DOCKER_HOST=$DOCKER_HOST docker info &> /dev/null; then
+    if ! docker_info >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="DOCKER_HOST does not point to a valid docker host ($DOCKER_HOST).\n"
         CHECK_ARCH=false
     fi

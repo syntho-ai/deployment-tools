@@ -96,7 +96,7 @@ deploy_docker_compose() {
 
         generate_override_remote_file "$DC_DIR/docker-compose-override-remote.yaml"
         DOCKER_FILE+=" -f $DC_DIR/docker-compose-override-remote.yaml"
-,
+
         if [[ $CLIENT_ARCH == "arm64" && $SERVER_ARCH == "amd64" ]]; then
             generate_override_amd64_file "$DC_DIR/docker-compose-override-amd64.yaml"
             DOCKER_FILE+=" -f $DC_DIR/docker-compose-override-amd64.yaml"
