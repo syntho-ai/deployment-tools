@@ -178,12 +178,12 @@ with_loading() {
                 $timeout_callback_function
             fi
         else
-            SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/$function_to_run.logs"
+            SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/$function_to_run.log"
             PROCESS_LOGS_MESSAGE_SUFFIX=""
             if [ -f "$SYNTHO_CLI_PROCESS_LOGS" ]; then
                 mkdir -p /tmp/syntho
                 cp "$SYNTHO_CLI_PROCESS_LOGS" /tmp/syntho/.
-                PROCESS_LOGS_MESSAGE_SUFFIX=" (More detail can be found here: /tmp/syntho/$function_to_run.logs)"
+                PROCESS_LOGS_MESSAGE_SUFFIX=" (More detail can be found here: /tmp/syntho/$function_to_run.log)"
             fi
 
             echo -e "\r$indentation$prefix [${BOLD_WHITE_ON_RED}failed${NC}] $step_name$PROCESS_LOGS_MESSAGE_SUFFIX $CLEARUP"

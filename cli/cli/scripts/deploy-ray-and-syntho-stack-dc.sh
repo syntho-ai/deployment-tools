@@ -160,7 +160,8 @@ wait_for_frontend_service_health() {
 deploy_syntho_stack() {
     local errors=""
 
-    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/deploy_syntho_stack.logs"
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/deploy_syntho_stack.log"
+    echo "deploy_syntho_stack has been started" >> $SYNTHO_CLI_PROCESS_LOGS
 
     if ! generate_env >/dev/null 2>&1; then
         errors+=".env generation error for the Syntho Stack\n"
@@ -197,7 +198,7 @@ all_logs() {
 
     echo "$services" | while IFS= read -r service; do
         echo "Processing logs for service: $service"
-        DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose -f $DC_DIR/docker-compose.yaml logs $service > "$LOGS_DIR/$service.logs"
+        DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose -f $DC_DIR/docker-compose.yaml logs $service > "$LOGS_DIR/$service.log"
     done
 
     tar -czvf "$TARBALL" -C "$LOGS_DIR" .

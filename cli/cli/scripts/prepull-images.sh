@@ -57,7 +57,7 @@ pull_images_into_trusted_registry() {
     sleep 1
     local errors=""
 
-    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/pull_images_into_trusted_registry.logs"
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/pull_images_into_trusted_registry.log"
 
     if ! prepare_final_versions >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="An unexpected error occured when preparing final image versions\n"

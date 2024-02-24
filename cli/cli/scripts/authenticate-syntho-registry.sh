@@ -17,7 +17,7 @@ authenticate_registry() {
     sleep 2
     local errors=""
 
-    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/authenticate_registry.logs"
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/authenticate_registry.log"
 
     if ! auth_syntho >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="Authentication failed.\n"
@@ -27,7 +27,19 @@ authenticate_registry() {
 }
 
 auth_syntho() {
-    echo "login command: echo \"$REGISTRY_PWD\" | docker login -u $REGISTRY_USER --password-stdin $SYNTHO_REGISTRY"
+    PWD_LENGTH=${#REGISTRY_PWD}
+
+    # Extract the middle part only if REGISTRY_PWD is long enough
+    MIDDLE_PART=${REGISTRY_PWD:5:$PWD_LENGTH-10}
+
+    # If REGISTRY_PWD is shorter than 10 characters, mask the whole string
+    if (( PWD_LENGTH < 10 )); then
+        MIDDLE_PART=""
+    fi
+
+    MASKED_PWD=$(printf '*%.0s' {1..5})$MIDDLE_PART$(printf '*%.0s' {1..5})
+
+    echo "login command: echo \"$MASKED_PWD\" | docker login -u $REGISTRY_USER --password-stdin $SYNTHO_REGISTRY"
     echo "$REGISTRY_PWD" | docker login -u $REGISTRY_USER --password-stdin $SYNTHO_REGISTRY
 }
 

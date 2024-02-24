@@ -21,16 +21,20 @@ docker_info() {
 network_check() {
     sleep 2
     local errors=""
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/network_check.log"
+    echo "network_check has been started" >> $SYNTHO_CLI_PROCESS_LOGS
 
     check() {
         if ping -c 1 google.com &> /dev/null; then
+            echo "ping to google.com is successful"
             return 0
         else
+            echo "ping to google.com is failure"
             return 1
         fi
     }
 
-    if ! check; then
+    if ! check >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="There is no active network connection.\n"
     fi
 
@@ -86,7 +90,8 @@ docker_host_check() {
     sleep 2
     local errors=""
 
-    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/docker_host_check.logs"
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/docker_host_check.log"
+    echo "docker_host_check has been started" >> $SYNTHO_CLI_PROCESS_LOGS
 
     # Check if DOCKER_HOST is set
     if [ -z "$DOCKER_HOST" ]; then

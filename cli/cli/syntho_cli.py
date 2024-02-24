@@ -246,6 +246,38 @@ def k8s_deployments():
     click.echo(as_yaml)
 
 
+@k8s.command(name="logs",
+            help="Show background process logs (it can be used for troubleshooting purposes)")
+@click.option(
+    "--deployment-id",
+    type=str,
+    help="Specify the deployment id",
+    required=True
+)
+@click.option(
+    "-n",
+    type=int,
+    help="Number of lines. Default: 1000",
+    required=False,
+    default=1000
+)
+@click.option(
+    "-f", is_flag=True,
+    help="Follow the process's logs"
+)
+def k8s_logs(deployment_id: str, n: int, f: bool):
+    # function body here
+    exists = utils.deployment_exists(scripts_dir, deployment_id)
+    if not exists:
+        not_found_text = click.style(
+            f"Deployment ({deployment_id}) couldn't not be found\n", fg="red"
+        )
+        click.echo(f"\n\n{not_found_text}", err=True)
+        return
+
+    utils.logs(scripts_dir, deployment_id, n, f)
+
+
 @dc.command(name="deployment", help="Deploys the Syntho Stack into the given host's docker environment")
 @click.option(
     "--license-key",
@@ -426,10 +458,42 @@ def dc_deployment_destroy(deployment_id: str, force: bool):
 
 
 @dc.command(name="deployments", help="Shows existing deployments and their statuses")
-def k8s_deployments():
+def dc_deployments():
     deployments = dc_deployment_manager.get_deployments(scripts_dir)
     as_yaml = yaml.dump(deployments, default_flow_style=False)
     click.echo(as_yaml)
+
+
+@dc.command(name="logs",
+            help="Show background process logs (it can be used for troubleshooting purposes)")
+@click.option(
+    "--deployment-id",
+    type=str,
+    help="Specify the deployment id",
+    required=True
+)
+@click.option(
+    "-n",
+    type=int,
+    help="Number of lines. Default: 1000",
+    required=False,
+    default=1000
+)
+@click.option(
+    "-f", is_flag=True,
+    help="Follow the process's logs"
+)
+def dc_logs(deployment_id: str, n: int, f: bool):
+    # function body here
+    exists = utils.deployment_exists(scripts_dir, deployment_id)
+    if not exists:
+        not_found_text = click.style(
+            f"Deployment ({deployment_id}) couldn't not be found\n", fg="red"
+        )
+        click.echo(f"\n\n{not_found_text}", err=True)
+        return
+
+    utils.logs(scripts_dir, deployment_id, n, f)
 
 
 @utilities.command(name="prepull-images", help="Pulls Syntho's images into a trusted registry")
@@ -510,6 +574,37 @@ def prepull_images(trusted_registry: str,
             f"Error pulling images. Error: {err}\n", fg="red"
         )
         click.echo(f"\n\n{pull_failed_text}", err=True)
+
+
+@utilities.command(name="logs",
+            help="Show background process logs (it can be used for troubleshooting purposes)")
+@click.option(
+    "--utility-name",
+    type=str,
+    help="Specify the utility name. Eg. prepull-images",
+    required=True
+)
+@click.option(
+    "-n",
+    type=int,
+    help="Number of lines. Default: 1000",
+    required=False,
+    default=1000
+)
+@click.option(
+    "-f", is_flag=True,
+    help="Follow the process's logs"
+)
+def utility_logs(utility_name: str, n: int, f: bool):
+    exists = utils.utility_exists(scripts_dir, utility_name)
+    if not exists:
+        not_found_text = click.style(
+            f"Active or existing process ({utility_name}) couldn't not be found\n", fg="red"
+        )
+        click.echo(f"\n\n{not_found_text}", err=True)
+        return
+
+    utils.logs(scripts_dir, utility_name, n, f, is_deployment=False)
 
 
 

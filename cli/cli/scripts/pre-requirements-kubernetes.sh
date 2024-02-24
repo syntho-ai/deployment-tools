@@ -11,20 +11,29 @@ KUBECONFIG="$KUBECONFIG"
 SKIP_CONFIGURATION="$SKIP_CONFIGURATION"
 GIVEN_ARCH="${ARCH}64"
 
+SHARED="$DEPLOYMENT_DIR/shared"
+mkdir -p "$SHARED"
+SYNTHO_CLI_PROCESS_DIR="$SHARED/process"
+mkdir -p "$SYNTHO_CLI_PROCESS_DIR"
+
 
 network_check() {
     sleep 2
     local errors=""
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/network_check.log"
+    echo "network_check has been started" >> $SYNTHO_CLI_PROCESS_LOGS
 
     check() {
         if ping -c 1 google.com &> /dev/null; then
-            return 0  # Success, network connection exists
+            echo "ping to google.com is successful"
+            return 0
         else
-            return 1  # Failure, no network connection
+            echo "ping to google.com is failure"
+            return 1
         fi
     }
 
-    if ! check; then
+    if ! check >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="There is no active network connection.\n"
     fi
 
@@ -67,6 +76,9 @@ kubernetes_cluster_check() {
     sleep 2
     local errors=""
 
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/kubernetes_cluster_check.log"
+    echo "kubernetes_cluster_check has been started" >> $SYNTHO_CLI_PROCESS_LOGS
+
     # Check if KUBECONFIG is unset
     if [ -z "${KUBECONFIG+x}" ]; then
         errors+="KUBECONFIG is unset.\n"
@@ -78,7 +90,7 @@ kubernetes_cluster_check() {
     fi
 
     # Check if KUBECONFIG points to a valid Kubernetes cluster
-    if ! kubectl --kubeconfig="$KUBECONFIG" config current-context &> /dev/null; then
+    if ! kubectl --kubeconfig="$KUBECONFIG" config current-context >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="KUBECONFIG does not point to a valid Kubernetes cluster.\n"
     fi
 
@@ -104,6 +116,10 @@ dump_k8s_server_info() {
 NUM_OF_NODES=$NUM_OF_NODES
 IS_MANAGED=$IS_MANAGED
 EOF
+
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/dump_k8s_server_info.log"
+    echo "k8s cluster info:" >> $SYNTHO_CLI_PROCESS_LOGS
+    echo $(cat "$DEPLOYMENT_DIR/.k8s-cluster-info.env") >> $SYNTHO_CLI_PROCESS_LOGS
 }
 
 check_if_configurations_can_be_skipped() {

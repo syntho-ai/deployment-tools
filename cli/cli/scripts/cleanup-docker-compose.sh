@@ -31,7 +31,7 @@ destroy() {
 destroy_with_error_handling() {
     local errors=""
 
-    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/destroy_with_error_handling.logs"
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/destroy_with_error_handling.log"
 
     if ! destroy >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="Failed to clean up components\n"

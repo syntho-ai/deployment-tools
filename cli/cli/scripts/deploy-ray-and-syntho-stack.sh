@@ -28,6 +28,11 @@ source $DEPLOYMENT_DIR/.k8s-cluster-info.env --source-only
 NUM_OF_NODES=$NUM_OF_NODES
 IS_MANAGED="$IS_MANAGED"
 
+SHARED="$DEPLOYMENT_DIR/shared"
+mkdir -p "$SHARED"
+SYNTHO_CLI_PROCESS_DIR="$SHARED/process"
+mkdir -p "$SYNTHO_CLI_PROCESS_DIR"
+
 
 # for ray cluster
 LICENSE_KEY="$LICENSE_KEY"
@@ -196,7 +201,7 @@ wait_local_nginx() {
     }
 
     while ! is_200; do
-        echo "no"
+        echo "ingress controller is not ready yet"
         sleep 5
     done
     echo "yes"
@@ -206,47 +211,64 @@ deploy_ray_cluster() {
     local errors=""
     sleep 2
 
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/deploy_ray_cluster.log"
+
+    echo "deploy_ray_cluster:generate_ray_values has been started" >> $SYNTHO_CLI_PROCESS_LOGS
     if ! generate_ray_values >/dev/null 2>&1; then
         errors+="values.yaml generation error for the Ray Cluster\n"
     fi
+    echo "deploy_ray_cluster:generate_ray_values has been done" >> $SYNTHO_CLI_PROCESS_LOGS
 
-    if ! deploy_ray >/dev/null 2>&1; then
+
+    echo "deploy_ray_cluster:deploy_ray has been started" >> $SYNTHO_CLI_PROCESS_LOGS
+    if ! deploy_ray >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="Ray Cluster deployment has been unexpectedly failed\n"
     fi
+    echo "deploy_ray_cluster:deploy_ray has been done" >> $SYNTHO_CLI_PROCESS_LOGS
 
-    if ! wait_for_ray_cluster_health >/dev/null 2>&1; then
+    echo "deploy_ray_cluster:wait_for_ray_cluster_health has been started" >> $SYNTHO_CLI_PROCESS_LOGS
+    if ! wait_for_ray_cluster_health >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="Ray Cluster health check has been unexpectedly failed\n"
     fi
+    echo "deploy_ray_cluster:wait_for_ray_cluster_health has been done" >> $SYNTHO_CLI_PROCESS_LOGS
 
     write_and_exit "$errors" "deploy_ray_cluster"
 }
 
 deploy_syntho_ui() {
     local errors=""
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/deploy_syntho_ui.log"
 
-
+    echo "deploy_syntho_ui:generate_synthoui_values has been started" >> $SYNTHO_CLI_PROCESS_LOGS
     if ! generate_synthoui_values >/dev/null 2>&1; then
         errors+="values.yaml generation error for the Syntho Stack\n"
     fi
+    echo "deploy_syntho_ui:generate_synthoui_values has been done" >> $SYNTHO_CLI_PROCESS_LOGS
 
-    if ! deploy_synthoui >/dev/null 2>&1; then
+    echo "deploy_syntho_ui:deploy_synthoui has been started" >> $SYNTHO_CLI_PROCESS_LOGS
+    if ! deploy_synthoui >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="Syntho Stack deployment has been unexpectedly failed\n"
     fi
+    echo "deploy_syntho_ui:deploy_synthoui has been done" >> $SYNTHO_CLI_PROCESS_LOGS
 
-    if ! wait_for_synthoui_health >/dev/null 2>&1; then
+    echo "deploy_syntho_ui:wait_for_synthoui_health has been started" >> $SYNTHO_CLI_PROCESS_LOGS
+    if ! wait_for_synthoui_health >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="Syntho UI health check has been unexpectedly failed\n"
     fi
+    echo "deploy_syntho_ui:wait_for_synthoui_health has been done" >> $SYNTHO_CLI_PROCESS_LOGS
 
     write_and_exit "$errors" "deploy_syntho_ui"
 }
 
 wait_local_nginx_ingress_controller() {
     local errors=""
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/wait_local_nginx_ingress_controller.log"
 
-
-    if ! wait_local_nginx >/dev/null 2>&1; then
+    echo "wait_local_nginx_ingress_controller:wait_local_nginx has been started" >> $SYNTHO_CLI_PROCESS_LOGS
+    if ! wait_local_nginx >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="Nginx controller health check has been unexpectedly failed\n"
     fi
+    echo "wait_local_nginx_ingress_controller:wait_local_nginx has been done" >> $SYNTHO_CLI_PROCESS_LOGS
 
     write_and_exit "$errors" "wait_local_nginx_ingress_controller"
 }
@@ -265,7 +287,7 @@ all_logs() {
     echo "${PODS[@]}" > "$LOGS_DIR/pods"
 
     for POD in "${PODS[@]}"; do
-        kubectl --kubeconfig $KUBECONFIG logs $POD -n $NAMESPACE --all-containers > "$LOGS_DIR/$POD.logs"
+        kubectl --kubeconfig $KUBECONFIG logs $POD -n $NAMESPACE --all-containers > "$LOGS_DIR/$POD.log"
         kubectl --kubeconfig $KUBECONFIG describe pod $POD -n $NAMESPACE > "$LOGS_DIR/$POD.describe"
     done
 

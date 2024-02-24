@@ -15,7 +15,7 @@ deauthenticate_registry() {
     sleep 2
     local errors=""
 
-    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/deauthenticate_registry.logs"
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/deauthenticate_registry.log"
 
     if ! deauth_syntho >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="Removing authentication credentials failed.\n"
