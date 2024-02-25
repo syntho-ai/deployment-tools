@@ -50,6 +50,24 @@ def validate_docker_config(ctx, param, value):
     return value
 
 
+def validate_trusted_registry(ctx, param, value):
+    prepull_images_file_dir = prepull_images_manager.generate_prepull_images_dir(scripts_dir)
+    if not os.path.exists(scripts_dir):
+        raise click.BadParameter(f"syntho-cli is not ready to deploy Syntho resources from a "
+                                 "trusted registry yet. Please run "
+                                 "'syntho-cli utilities prepull-images --help' first "
+                                 "for more info")
+
+    status = prepull_images_manager.get_status(scripts_dir)
+    if status != "completed":
+        raise click.BadParameter(f"syntho-cli is not ready to deploy Syntho resources from a "
+                                 "trusted registry yet. Please run "
+                                 "'syntho-cli utilities prepull-images --help' first "
+                                 "for more info")
+
+    return value
+
+
 @click.group()
 @click.version_option(prog_name="syntho-cli", version="0.1.0")
 def cli():
@@ -120,7 +138,7 @@ def utilities():
 @click.option(
     "--skip-configuration",
     is_flag=True,
-    help="Skip configuration, and use default configuration params for deployment",
+    help="Skips configuration, and uses default configuration params for deployment",
 )
 def k8s_deployment(
     license_key: str,
@@ -335,7 +353,14 @@ def k8s_logs(deployment_id: str, n: int, f: bool):
 @click.option(
     "--skip-configuration",
     is_flag=True,
-    help="Skip configuration, and use default configuration params for deployment",
+    help="Skips configuration, and uses default configuration params for deployment",
+)
+@click.option(
+    "--use-trusted-registry",
+    is_flag=True,
+    help=("Uses trusted registry instead "
+          "- 'syntho-cli utilities prepull-images --help' for more info"),
+    callback=validate_trusted_registry
 )
 def dc_deployment(
     license_key: str,
@@ -347,6 +372,7 @@ def dc_deployment(
     version: Optional[str],
     docker_config: str,
     skip_configuration: bool,
+    use_trusted_registry: bool,
 ):
     arch = arch.lower()
     if not utils.is_arch_supported(arch):
@@ -373,6 +399,7 @@ def dc_deployment(
         version,
         docker_config,
         skip_configuration,
+        use_trusted_registry,
     )
 
     if result.succeeded:

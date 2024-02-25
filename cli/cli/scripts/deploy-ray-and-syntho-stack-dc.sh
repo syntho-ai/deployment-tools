@@ -10,6 +10,7 @@ DOCKER_CONFIG="$DOCKER_CONFIG"
 SECONDARY_DOCKER_CONFIG="$SECONDARY_DOCKER_CONFIG"
 DOCKER_HOST="$DOCKER_HOST"
 SKIP_CONFIGURATION="$SKIP_CONFIGURATION"
+USE_TRUSTED_REGISTRY="$USE_TRUSTED_REGISTRY"
 source $DEPLOYMENT_DIR/.config.env --source-only
 source $DEPLOYMENT_DIR/.images.env --source-only
 ARCH="$ARCH"
@@ -28,6 +29,21 @@ source $DEPLOYMENT_DIR/.auth.env --source-only
 ADMIN_USERNAME="${UI_ADMIN_LOGIN_USERNAME}"
 ADMIN_PASSWORD="${UI_ADMIN_LOGIN_PASSWORD}"
 ADMIN_EMAIL="${UI_ADMIN_LOGIN_EMAIL}"
+
+SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/trusted_image_registry_usage.log"
+echo "USE_TRUSTED_REGISTRY: $USE_TRUSTED_REGISTRY" >> $SYNTHO_CLI_PROCESS_LOGS
+if [[ "$USE_TRUSTED_REGISTRY" == "true" ]]; then
+    echo "using trusted image registry instead" >> $SYNTHO_CLI_PROCESS_LOGS
+    PREPULL_IMAGES_DIR="$PREPULL_IMAGES_DIR"
+    # Read the .image-trusted.env file line by line
+    while IFS='=' read -r key value; do
+        # Remove the "TRUSTED_" prefix
+        new_key=${key#TRUSTED_}
+        # Export the variable with the new name
+        export $new_key="$value"
+    done < $PREPULL_IMAGES_DIR/.images-trusted.env
+    echo "env vars are overridden with trusted registry info" >> $SYNTHO_CLI_PROCESS_LOGS
+fi
 
 
 LICENSE_KEY="$LICENSE_KEY"

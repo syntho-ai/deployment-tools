@@ -13,6 +13,7 @@ from enum import Enum
 
 from cli.utils import (thread_safe, with_working_directory, DeploymentResult,
                        get_deployments_dir, CleanUpLevel, run_script)
+from cli.utilities.prepull_images import generate_prepull_images_dir
 
 
 class DeploymentStatus(Enum):
@@ -49,7 +50,8 @@ def start(scripts_dir: str,
           arch_value: str,
           version: str,
           docker_config_json_path: str,
-          skip_configuration: bool) -> str:
+          skip_configuration: bool,
+          use_trusted_registry: bool) -> str:
 
 
     deployments_dir = get_deployments_dir(scripts_dir)
@@ -88,6 +90,7 @@ def start(scripts_dir: str,
         version,
         docker_config_json_path,
         skip_configuration,
+        use_trusted_registry,
     )
 
     succeeded = pre_requirements_check(scripts_dir, deployment_id)
@@ -300,8 +303,10 @@ def prepare_env(deployment_id: str,
                 arch_value: str,
                 version: str,
                 docker_config_json_path: str,
-                skip_configuration: bool):
+                skip_configuration: bool,
+                use_trusted_registry: bool):
 
+    scripts_dir = deployments_dir.replace("/deployments", "")
     set_state(deployment_id, deployments_dir, DeploymentStatus.PREPARING_ENV)
 
 
@@ -317,6 +322,8 @@ def prepare_env(deployment_id: str,
             try:
                 config_data = json.load(file)
                 creds_store = config_data.get("credsStore")
+                cred_helpers = config_data.get("credHelpers")
+                auths = config_data.get("auths")
                 if creds_store:
                     secondary_docker_config = {
                         "auths": {
@@ -324,6 +331,10 @@ def prepare_env(deployment_id: str,
                         },
                         "credsStore": creds_store
                     }
+                if cred_helpers:
+                    secondary_docker_config.update({"credHelpers": cred_helpers})
+                if auths:
+                    secondary_docker_config["auths"].update(auths)
 
             except ValueError:
                 pass
@@ -369,6 +380,8 @@ def prepare_env(deployment_id: str,
         "DOCKER_SSH_USER_PRIVATE_KEY": docker_ssh_user_private_key,
         "VERSION": version,
         "SKIP_CONFIGURATION": "true" if skip_configuration else "false",
+        "USE_TRUSTED_REGISTRY": "true" if use_trusted_registry else "false",
+        "PREPULL_IMAGES_DIR": generate_prepull_images_dir(scripts_dir),
     }
     env_file_path = f"{deployment_dir}/.env"
     with open(env_file_path, "w") as file:
