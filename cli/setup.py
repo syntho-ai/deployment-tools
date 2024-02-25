@@ -45,5 +45,6 @@ setup(
         "click==8.1.7",
         "pyyaml==6.0.1",
         "ipdb",
+        "watchdog==4.0.0",
     ]
 )
