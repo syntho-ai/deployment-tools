@@ -136,9 +136,23 @@ def utilities():
     required=False
 )
 @click.option(
+    "--trusted-registry-image-pull-secret",
+    type=str,
+    help=("Specify an image pull secret name for trusted registry access. Default: \"\""),
+    default="",
+    required=False
+)
+@click.option(
     "--skip-configuration",
     is_flag=True,
     help="Skips configuration, and uses default configuration params for deployment",
+)
+@click.option(
+    "--use-trusted-registry",
+    is_flag=True,
+    help=("Uses trusted registry instead "
+          "- 'syntho-cli utilities prepull-images --help' for more info"),
+    callback=validate_trusted_registry
 )
 def k8s_deployment(
     license_key: str,
@@ -147,7 +161,9 @@ def k8s_deployment(
     kubeconfig: str,
     arch: str,
     version: Optional[str],
+    trusted_registry_image_pull_secret: Optional[str],
     skip_configuration: bool,
+    use_trusted_registry: bool,
 ):
     arch = arch.lower()
     if not utils.is_arch_supported(arch):
@@ -171,7 +187,9 @@ def k8s_deployment(
         kubeconfig,
         arch,
         version,
+        trusted_registry_image_pull_secret,
         skip_configuration,
+        use_trusted_registry,
     )
 
     if result.succeeded:

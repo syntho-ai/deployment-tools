@@ -8,6 +8,8 @@ DEPLOYMENT_DIR="$DEPLOYMENT_DIR"
 source $DEPLOYMENT_DIR/.env --source-only
 KUBECONFIG="$KUBECONFIG"
 SKIP_CONFIGURATION="$SKIP_CONFIGURATION"
+USE_TRUSTED_REGISTRY="$USE_TRUSTED_REGISTRY"
+IMAGE_PULL_SECRET="$IMAGE_PULL_SECRET"
 source $DEPLOYMENT_DIR/.config.env --source-only
 source $DEPLOYMENT_DIR/.images.env --source-only
 ARCH="$ARCH"
@@ -33,11 +35,41 @@ mkdir -p "$SHARED"
 SYNTHO_CLI_PROCESS_DIR="$SHARED/process"
 mkdir -p "$SYNTHO_CLI_PROCESS_DIR"
 
+if [[ "$USE_TRUSTED_REGISTRY" == "true" ]]; then
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/override_image_urls_and_tags_with_trusted_registry.log"
+
+    # using trusted registry
+    echo "USE_TRUSTED_REGISTRY: $USE_TRUSTED_REGISTRY" >> $SYNTHO_CLI_PROCESS_LOGS
+    if [[ "$USE_TRUSTED_REGISTRY" == "true" ]]; then
+        echo "using trusted image registry instead" >> $SYNTHO_CLI_PROCESS_LOGS
+        echo $(cat $PREPULL_IMAGES_DIR/.images-trusted.env) >> $SYNTHO_CLI_PROCESS_LOGS
+        PREPULL_IMAGES_DIR="$PREPULL_IMAGES_DIR"
+        # Read the .image-trusted.env file line by line
+        while IFS='=' read -r key value; do
+            # Remove the "TRUSTED_" prefix
+            new_key=${key#TRUSTED_}
+            # Export the variable with the new name
+            export $new_key="$value"
+        done < $PREPULL_IMAGES_DIR/.images-trusted.env
+        echo "env vars are overridden with trusted registry info" >> $SYNTHO_CLI_PROCESS_LOGS
+    fi
+fi
+
+SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/active_image_pull_secret_info.log"
+ACTIVE_IMAGE_PULL_SECRET="syntho-cr-secret"
+if [[ "$USE_TRUSTED_REGISTRY" == "true" ]]; then
+    ACTIVE_IMAGE_PULL_SECRET=""
+    if [[ "$IMAGE_PULL_SECRET" != "" ]]; then
+        ACTIVE_IMAGE_PULL_SECRET="$IMAGE_PULL_SECRET"
+    fi
+fi
+echo "final image pull secret is: $ACTIVE_IMAGE_PULL_SECRET" >> $SYNTHO_CLI_PROCESS_LOGS
+
 
 # for ray cluster
 LICENSE_KEY="$LICENSE_KEY"
 RAY_OPERATOR_IMG_REPO="$RAY_OPERATOR_IMG_REPO"
-RAY_OPEARATOR_IMG_TAG="$RAY_OPEARATOR_IMG_TAG"
+RAY_OPERATOR_IMG_TAG="$RAY_OPERATOR_IMG_TAG"
 RAY_IMAGE_IMG_REPO="$RAY_IMAGE_IMG_REPO"
 RAY_IMAGE_IMG_TAG="$RAY_IMAGE_IMG_TAG"
 RAY_HEAD_CPU_LIMIT="$RAY_HEAD_CPU_LIMIT"
@@ -78,7 +110,7 @@ generate_ray_values() {
 
     sed "s|{{ LICENSE_KEY }}|$LICENSE_KEY|g; \
          s|{{ RAY_OPERATOR_IMG_REPO }}|$RAY_OPERATOR_IMG_REPO|g; \
-         s|{{ RAY_OPEARATOR_IMG_TAG }}|$RAY_OPEARATOR_IMG_TAG|g; \
+         s|{{ RAY_OPERATOR_IMG_TAG }}|$RAY_OPERATOR_IMG_TAG|g; \
          s|{{ RAY_IMAGE_IMG_REPO }}|$RAY_IMAGE_IMG_REPO|g; \
          s|{{ RAY_IMAGE_IMG_TAG }}|$RAY_IMAGE_IMG_TAG|g; \
          s|{{ RAY_HEAD_CPU_LIMIT }}|$RAY_HEAD_CPU_LIMIT|g; \
@@ -90,6 +122,7 @@ generate_ray_values() {
          s|{{ RAY_WORKER_CPU_REQUESTS }}|$RAY_WORKER_CPU_REQUESTS|g; \
          s|{{ RAY_WORKER_MEMORY_REQUESTS }}|$RAY_WORKER_MEMORY_REQUESTS|g; \
          s|{{ PV_LABEL_KEY }}|$PV_LABEL_KEY|g; \
+         s|{{ IMAGE_PULL_SECRET }}|$ACTIVE_IMAGE_PULL_SECRET|g; \
          s|{{ STORAGE_CLASS_NAME }}|$STORAGE_CLASS_NAME|g; \
          s|{{ STORAGE_ACCESS_MODE }}|$STORAGE_ACCESS_MODE|g" "$TEMPLATE_FILE" > "$OUTPUT_FILE"
 }
@@ -145,6 +178,7 @@ generate_synthoui_values() {
          s|{{ REDIS_IMG_REPO }}|$REDIS_IMG_REPO|g; \
          s|{{ REDIS_IMG_TAG }}|$REDIS_IMG_TAG|g; \
          s|{{ INGRESS_CONTROLLER }}|$INGRESS_CONTROLLER|g; \
+         s|{{ IMAGE_PULL_SECRET }}|$ACTIVE_IMAGE_PULL_SECRET|g; \
          s|{{ TLS_ENABLED }}|$TLS_ENABLED|g; \
          s|{{ STORAGE_CLASS_NAME }}|$STORAGE_CLASS_NAME|g; \
          s|{{ PV_LABEL_KEY }}|$PV_LABEL_KEY|g" "$TEMPLATE_FILE" > "$OUTPUT_FILE"
@@ -205,6 +239,41 @@ wait_local_nginx() {
         sleep 5
     done
     echo "yes"
+}
+
+generate_image_pull_secrets_from_original() {
+    SECRET_NAME="$IMAGE_PULL_SECRET"
+    SECRET_NAMESPACE=$(kubectl --kubeconfig $KUBECONFIG get secrets --all-namespaces | grep $SECRET_NAME | awk '{print $1}')
+    echo "secret name: $SECRET_NAME"
+    echo "secret namespace: $SECRET_NAMESPACE"
+
+    NEW_SECRET_NAMESPACE=syntho
+    echo "new secret namespace: $NEW_SECRET_NAMESPACE"
+
+    echo "secret for image pulling is being created"
+    kubectl --kubeconfig $KUBECONFIG get secret $SECRET_NAME -n $SECRET_NAMESPACE -o yaml | \
+        grep -v '^  resourceVersion:' | \
+        grep -v '^  selfLink:' | \
+        grep -v '^  uid:' | \
+        grep -v '^  creationTimestamp:' | \
+        sed "s/namespace: ${SECRET_NAMESPACE}/namespace: ${NEW_SECRET_NAMESPACE}/g" > $DEPLOYMENT_DIR/trusted-registry-image-pull-secret.yaml
+
+    kubectl --kubeconfig $KUBECONFIG --namespace $NEW_SECRET_NAMESPACE apply -f $DEPLOYMENT_DIR/trusted-registry-image-pull-secret.yaml
+    echo "secret for image pulling was created successfully"
+}
+
+prepare_for_trusted_registry() {
+    local errors=""
+    sleep 2
+
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/prepare_for_trusted_registry.log"
+
+    echo "prepare_for_trusted_registry:generate_image_pull_secrets_from_original has been started" >> $SYNTHO_CLI_PROCESS_LOGS
+    if ! generate_image_pull_secrets_from_original >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
+        errors+="image pull secrets couldn't be copied under syntho namespace\n"
+    fi
+    echo "prepare_for_trusted_registry:generate_image_pull_secrets_from_original has been done" >> $SYNTHO_CLI_PROCESS_LOGS
+
 }
 
 deploy_ray_cluster() {
@@ -309,6 +378,9 @@ deployment_failure_callback() {
 }
 
 
+if [[ "$USE_TRUSTED_REGISTRY" == "true"  && "$IMAGE_PULL_SECRET" != "" ]]; then
+    with_loading "Preparing Deployment Ecosystem for Trusted Registry Usage" prepare_for_trusted_registry
+fi
 with_loading "Deploying Ray Cluster" deploy_ray_cluster 600 deployment_failure_callback
 with_loading "Deploying Syntho Stack" deploy_syntho_ui 600 deployment_failure_callback
 

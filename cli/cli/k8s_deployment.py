@@ -11,6 +11,7 @@ from enum import Enum
 
 from cli.utils import (thread_safe, with_working_directory, DeploymentResult,
                        get_deployments_dir, CleanUpLevel, run_script)
+from cli.utilities.prepull_images import generate_prepull_images_dir
 
 
 class DeploymentStatus(Enum):
@@ -56,7 +57,9 @@ def start(scripts_dir: str,
           kubeconfig: str,
           arch_value: str,
           version: str,
-          skip_configuration: bool) -> str:
+          trusted_registry_image_pull_secret: str,
+          skip_configuration: bool,
+          use_trusted_registry: bool) -> str:
 
     deployments_dir = get_deployments_dir(scripts_dir)
     deployment_id = generate_deployment_id(kubeconfig)
@@ -91,7 +94,9 @@ def start(scripts_dir: str,
         arch_value,
         kubeconfig,
         version,
+        trusted_registry_image_pull_secret,
         skip_configuration,
+        use_trusted_registry,
     )
 
     succeeded = pre_requirements_check(scripts_dir, deployment_id)
@@ -315,8 +320,11 @@ def prepare_env(deployment_id: str,
                 arch_value: str,
                 kubeconfig: str,
                 version: str,
-                skip_configuration: bool):
+                trusted_registry_image_pull_secret: str,
+                skip_configuration: bool,
+                use_trusted_registry: bool):
 
+    scripts_dir = deployments_dir.replace("/deployments", "")
     set_state(deployment_id, deployments_dir, DeploymentStatus.PREPARING_ENV)
 
 
@@ -340,6 +348,9 @@ def prepare_env(deployment_id: str,
         "KUBECONFIG": kubeconfig_file_path,
         "VERSION": version,
         "SKIP_CONFIGURATION": "true" if skip_configuration else "false",
+        "USE_TRUSTED_REGISTRY": "true" if use_trusted_registry else "false",
+        "PREPULL_IMAGES_DIR": generate_prepull_images_dir(scripts_dir),
+        "IMAGE_PULL_SECRET": trusted_registry_image_pull_secret,
     }
     env_file_path = f"{deployment_dir}/.env"
     with open(env_file_path, "w") as file:
