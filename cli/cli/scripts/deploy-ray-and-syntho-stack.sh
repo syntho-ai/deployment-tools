@@ -244,6 +244,13 @@ wait_local_nginx() {
 generate_image_pull_secrets_from_original() {
     SECRET_NAME="$IMAGE_PULL_SECRET"
     SECRET_NAMESPACE=$(kubectl --kubeconfig $KUBECONFIG get secrets --all-namespaces | grep $SECRET_NAME | awk '{print $1}')
+
+    # Check if the SECRET_NAMESPACE is empty
+    if [ -z "$SECRET_NAMESPACE" ]; then
+        echo "Error: secret '$SECRET_NAME' does not exist in any namespace"
+        return 1
+    fi
+
     echo "secret name: $SECRET_NAME"
     echo "secret namespace: $SECRET_NAMESPACE"
 
@@ -270,9 +277,11 @@ prepare_for_trusted_registry() {
 
     echo "prepare_for_trusted_registry:generate_image_pull_secrets_from_original has been started" >> $SYNTHO_CLI_PROCESS_LOGS
     if ! generate_image_pull_secrets_from_original >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
-        errors+="image pull secrets couldn't be copied under syntho namespace\n"
+        errors+="image pull secrets for trusted registry access couldn't be copied under syntho namespace\n"
     fi
     echo "prepare_for_trusted_registry:generate_image_pull_secrets_from_original has been done" >> $SYNTHO_CLI_PROCESS_LOGS
+
+    write_and_exit "$errors" "prepare_for_trusted_registry"
 
 }
 

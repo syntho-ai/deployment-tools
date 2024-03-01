@@ -68,6 +68,31 @@ def validate_trusted_registry(ctx, param, value):
     return value
 
 
+def validate_input_params(registry_user, registry_pwd, use_trusted_registry):
+
+    # Verify either registry-user and registry-pwd are provided or use-trusted-registry is provided
+    if (registry_user == "u" or registry_pwd == "p") and not use_trusted_registry:
+        raise click.BadParameter(
+            "Either provide '--registry-user' and '--registry-pwd' or "
+            "use '--use-trusted-registry'."
+        )
+
+    if use_trusted_registry:
+        prepull_images_file_dir = prepull_images_manager.generate_prepull_images_dir(scripts_dir)
+        if not os.path.exists(scripts_dir):
+            raise click.BadParameter(f"syntho-cli is not ready to deploy Syntho resources from a "
+                                     "trusted registry yet. Please run "
+                                     "'syntho-cli utilities prepull-images --help' first "
+                                     "for more info")
+
+        status = prepull_images_manager.get_status(scripts_dir)
+        if status != "completed":
+            raise click.BadParameter(f"syntho-cli is not ready to deploy Syntho resources from a "
+                                     "trusted registry yet. Please run "
+                                     "'syntho-cli utilities prepull-images --help' first "
+                                     "for more info")
+
+
 @click.group()
 @click.version_option(prog_name="syntho-cli", version="0.1.0")
 def cli():
@@ -88,12 +113,8 @@ def utilities():
     pass
 
 
-# @k8s.command(name="preparation", help="Helps to prepare kubeconfig before proceeding with a deployment")
-# def k8s_preparation():
-#     k8s_deployment_manager.deployment_preparation(scripts_dir)
-
-
-@k8s.command(name="deployment", help="Deploys the Syntho Stack into the given cluster")
+@k8s.command(name="deployment",
+             help="Deploys the Syntho Stack into the given cluster")
 @click.option(
     "--license-key",
     type=str,
@@ -104,13 +125,15 @@ def utilities():
     "--registry-user",
     type=str,
     help="Specify the docker image registry user that is provided by Syntho team",
-    required=True
+    required=False,
+    default="u"
 )
 @click.option(
     "--registry-pwd",
     type=str,
     help="Specify the docker image registry password that is provided by Syntho team",
-    required=True
+    required=False,
+    default="p"
 )
 @click.option(
     "--kubeconfig",
@@ -153,6 +176,7 @@ def utilities():
     help=("Uses trusted registry instead "
           "- 'syntho-cli utilities prepull-images --help' for more info"),
     callback=validate_trusted_registry
+
 )
 def k8s_deployment(
     license_key: str,
@@ -165,6 +189,11 @@ def k8s_deployment(
     skip_configuration: bool,
     use_trusted_registry: bool,
 ):
+    try:
+        validate_input_params(registry_user, registry_pwd, use_trusted_registry)
+    except click.BadParameter as exc:
+        raise click.UsageError(str(exc))
+
     arch = arch.lower()
     if not utils.is_arch_supported(arch):
         raise click.ClickException(
