@@ -68,7 +68,11 @@ def validate_trusted_registry(ctx, param, value):
     return value
 
 
-def validate_input_params(registry_user, registry_pwd, use_trusted_registry):
+def validate_input_params(registry_user,
+                          registry_pwd,
+                          use_trusted_registry,
+                          trusted_registry_image_pull_secret=None,
+                          is_k8s=False):
 
     # Verify either registry-user and registry-pwd are provided or use-trusted-registry is provided
     if (registry_user == "u" or registry_pwd == "p") and not use_trusted_registry:
@@ -91,6 +95,11 @@ def validate_input_params(registry_user, registry_pwd, use_trusted_registry):
                                      "trusted registry yet. Please run "
                                      "'syntho-cli utilities prepull-images --help' first "
                                      "for more info")
+
+        if is_k8s:
+            if not trusted_registry_image_pull_secret:
+                raise click.BadParameter("--trusted-registry-image-pull-secret should be provided "
+                                         "when --use-trusted-registry is used")
 
 
 @click.group()
@@ -190,7 +199,13 @@ def k8s_deployment(
     use_trusted_registry: bool,
 ):
     try:
-        validate_input_params(registry_user, registry_pwd, use_trusted_registry)
+        validate_input_params(
+            registry_user,
+            registry_pwd,
+            use_trusted_registry,
+            trusted_registry_image_pull_secret=trusted_registry_image_pull_secret,
+            is_k8s=True
+        )
     except click.BadParameter as exc:
         raise click.UsageError(str(exc))
 
@@ -354,13 +369,15 @@ def k8s_logs(deployment_id: str, n: int, f: bool):
     "--registry-user",
     type=str,
     help="Specify the docker image registry user that is provided by Syntho team",
-    required=True
+    required=False,
+    default="u"
 )
 @click.option(
     "--registry-pwd",
     type=str,
     help="Specify the docker image registry password that is provided by Syntho team",
-    required=True
+    required=False,
+    default="p"
 )
 @click.option(
     "--docker-host",
@@ -421,6 +438,17 @@ def dc_deployment(
     skip_configuration: bool,
     use_trusted_registry: bool,
 ):
+    try:
+        validate_input_params(
+            registry_user,
+            registry_pwd,
+            use_trusted_registry,
+            trusted_registry_image_pull_secret=None,
+            is_k8s=False
+        )
+    except click.BadParameter as exc:
+        raise click.UsageError(str(exc))
+
     arch = arch.lower()
     if not utils.is_arch_supported(arch):
         raise click.ClickException(

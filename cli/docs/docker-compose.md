@@ -32,6 +32,7 @@ Below are examples of common tasks you might want to perform with `syntho-cli` i
 To deploy a new resource:
 
 
+Option 1;
 ```
 syntho-cli dc deployment \
     --license-key <license-key> \
@@ -42,6 +43,18 @@ syntho-cli dc deployment \
     --docker-ssh-user-private-key <path-to-your-private-key> \ # optional - only for remote docker deployment
     --docker-config <path-to-docker-config-json> # optional - default: ~/.docker/config.json
 ```
+
+Option 2;
+- Pre-requirement: Pre pulling images to a [trusted image registry](./utilities.md#pulling-images-into-a-trusted-image-registry)
+
+syntho-cli dc deployment \
+    --license-key <license-key> \
+    --version <syntho-stack-version> \
+    --docker-host ssh://<user>@<ip> \ # optional - default: unix:///var/run/docker.sock
+    --docker-ssh-user-private-key <path-to-your-private-key> \ # optional - only for remote docker deployment
+    --docker-config <path-to-docker-config-json> # optional - default: ~/.docker/config.json
+    --use-trusted-registry
+
 
 > Ask Syntho team to fetch your credentials and the version for Syntho resources
 
