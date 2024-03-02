@@ -51,19 +51,20 @@ def validate_docker_config(ctx, param, value):
 
 
 def validate_trusted_registry(ctx, param, value):
-    prepull_images_file_dir = prepull_images_manager.generate_prepull_images_dir(scripts_dir)
-    if not os.path.exists(scripts_dir):
-        raise click.BadParameter(f"syntho-cli is not ready to deploy Syntho resources from a "
-                                 "trusted registry yet. Please run "
-                                 "'syntho-cli utilities prepull-images --help' first "
-                                 "for more info")
+    if value:
+        prepull_images_file_dir = prepull_images_manager.generate_prepull_images_dir(scripts_dir)
+        if not os.path.exists(scripts_dir):
+            raise click.BadParameter(f"syntho-cli is not ready to deploy Syntho resources from a "
+                                     "trusted registry yet. Please run "
+                                     "'syntho-cli utilities prepull-images --help' first "
+                                     "for more info")
 
-    status = prepull_images_manager.get_status(scripts_dir)
-    if status != "completed":
-        raise click.BadParameter(f"syntho-cli is not ready to deploy Syntho resources from a "
-                                 "trusted registry yet. Please run "
-                                 "'syntho-cli utilities prepull-images --help' first "
-                                 "for more info")
+        status = prepull_images_manager.get_status(scripts_dir)
+        if status != "completed":
+            raise click.BadParameter(f"syntho-cli is not ready to deploy Syntho resources from a "
+                                     "trusted registry yet. Please run "
+                                     "'syntho-cli utilities prepull-images --help' first "
+                                     "for more info")
 
     return value
 
