@@ -19,3 +19,5 @@ include cli/scripts/validate-prepull-images-process.sh
 include cli/scripts/prepull-images.sh
 include cli/scripts/authenticate-syntho-registry.sh
 include cli/scripts/deauthenticate-syntho-registry.sh
+include cli/scripts/create-offline-registry.sh
+include cli/scripts/package-offline-registry.sh

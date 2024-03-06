@@ -2,6 +2,7 @@ import sys
 import os
 import click
 import yaml
+import pkg_resources
 from typing import Optional
 
 
@@ -9,6 +10,7 @@ from cli import utils
 from cli import k8s_deployment as k8s_deployment_manager
 from cli import dc_deployment as dc_deployment_manager
 from cli.utilities import prepull_images as prepull_images_manager
+from cli.utilities import offline_ops as offline_ops_manager
 
 
 syntho_cli_dir = os.path.dirname(os.path.abspath(__file__))
@@ -69,6 +71,46 @@ def validate_trusted_registry(ctx, param, value):
     return value
 
 
+def validate_dc_deployment_id(ctx, param, value):
+    if value == "":
+        deployments = dc_deployment_manager.get_deployments(scripts_dir)
+        if deployments:
+            first_line = "--deployment-id isn't provided! Please see active deployments below.\n\n"
+            second_line = yaml.dump(deployments, default_flow_style=False)
+            raise click.BadParameter(first_line + second_line)
+        else:
+            first_line = ("--deployment-id isn't provided! Also, there is currently "
+                          "no active deployment.")
+            raise click.BadParameter(first_line)
+
+    return value
+
+
+def validate_k8s_deployment_id(ctx, param, value):
+    if value == "":
+        deployments = k8s_deployment_manager.get_deployments(scripts_dir)
+        if deployments:
+            first_line = "--deployment-id isn't provided! Please see active deployments below.\n\n"
+            second_line = yaml.dump(deployments, default_flow_style=False)
+            raise click.BadParameter(first_line + second_line)
+        else:
+            first_line = ("--deployment-id isn't provided! Also, there is currently "
+                          "no active deployment.")
+            raise click.BadParameter(first_line)
+
+    return value
+
+
+def validate_utility_name(ctx, param, value):
+    if value == "":
+        utilities = ["prepull-images", "activate-offline-mode"]
+        first_line = "--utility-name isn't provided! Please see active utilities below.\n\n"
+        second_line = yaml.dump(utilities, default_flow_style=False)
+        raise click.BadParameter(first_line + second_line)
+
+    return value
+
+
 def validate_input_params(registry_user,
                           registry_pwd,
                           use_trusted_registry,
@@ -103,10 +145,19 @@ def validate_input_params(registry_user,
                                          "when --use-trusted-registry is used")
 
 
+def get_version(package_name: str):
+    try:
+        version = pkg_resources.get_distribution(package_name).version
+    except pkg_resources.DistributionNotFound:
+        version = "Package not found"
+    return version
+
+
 @click.group()
-@click.version_option(prog_name="syntho-cli", version="0.1.0")
+@click.version_option(prog_name="syntho-cli", version=get_version("syntho-cli"))
 def cli():
     pass
+
 
 @cli.group(help="Manages Kubernetes Deployments")
 def k8s():
@@ -285,7 +336,9 @@ def k8s_deployment(
     "--deployment-id",
     type=str,
     help="Specify the deployment id to be status checked",
-    required=True
+    required=False,
+    default="",
+    callback=validate_k8s_deployment_id
 )
 def k8s_deployment_status(deployment_id: str):
     deployment = k8s_deployment_manager.get_deployment(scripts_dir, deployment_id)
@@ -299,7 +352,9 @@ def k8s_deployment_status(deployment_id: str):
     "--deployment-id",
     type=str,
     help="Specify the deployment id to be destroyed",
-    required=True
+    required=False,
+    default="",
+    callback=validate_k8s_deployment_id
 )
 @click.option(
     "--force",
@@ -323,8 +378,25 @@ def k8s_deployment_destroy(deployment_id: str, force: bool):
 @k8s.command(name="deployments", help="Shows existing deployments and their statuses")
 def k8s_deployments():
     deployments = k8s_deployment_manager.get_deployments(scripts_dir)
-    as_yaml = yaml.dump(deployments, default_flow_style=False)
-    click.echo(as_yaml)
+    if deployments:
+        as_yaml = yaml.dump(deployments, default_flow_style=False)
+        click.echo(as_yaml)
+    else:
+        successful_text = click.style(
+            "There is no deployment yet. See helpful commands below.",
+            fg="white",
+            bold=True,
+        )
+        extra_info_text = click.style(
+            "Kubernetes: syntho-cli k8s --help",
+            fg="white",
+            bold=True,
+        )
+        click.echo(
+            "\n"
+            f"{successful_text}\n\n"
+            f"{extra_info_text}\n"
+        )
 
 
 @k8s.command(name="logs",
@@ -333,7 +405,9 @@ def k8s_deployments():
     "--deployment-id",
     type=str,
     help="Specify the deployment id",
-    required=True
+    required=False,
+    default="",
+    callback=validate_k8s_deployment_id
 )
 @click.option(
     "-n",
@@ -526,7 +600,9 @@ def dc_deployment(
     "--deployment-id",
     type=str,
     help="Specify the deployment id to be status checked",
-    required=True
+    required=False,
+    default="",
+    callback=validate_dc_deployment_id
 )
 def dc_deployment_status(deployment_id: str):
     deployment = dc_deployment_manager.get_deployment(scripts_dir, deployment_id)
@@ -540,7 +616,9 @@ def dc_deployment_status(deployment_id: str):
     "--deployment-id",
     type=str,
     help="Specify the deployment id to be destroyed",
-    required=True
+    required=False,
+    default="",
+    callback=validate_dc_deployment_id
 )
 @click.option(
     "--force",
@@ -563,8 +641,25 @@ def dc_deployment_destroy(deployment_id: str, force: bool):
 @dc.command(name="deployments", help="Shows existing deployments and their statuses")
 def dc_deployments():
     deployments = dc_deployment_manager.get_deployments(scripts_dir)
-    as_yaml = yaml.dump(deployments, default_flow_style=False)
-    click.echo(as_yaml)
+    if deployments:
+        as_yaml = yaml.dump(deployments, default_flow_style=False)
+        click.echo(as_yaml)
+    else:
+        successful_text = click.style(
+            "There is no deployment yet. See helpful commands below.",
+            fg="white",
+            bold=True,
+        )
+        extra_info_text = click.style(
+            "Docker compose: syntho-cli dc --help",
+            fg="white",
+            bold=True,
+        )
+        click.echo(
+            "\n"
+            f"{successful_text}\n\n"
+            f"{extra_info_text}\n"
+        )
 
 
 @dc.command(name="logs",
@@ -573,7 +668,9 @@ def dc_deployments():
     "--deployment-id",
     type=str,
     help="Specify the deployment id",
-    required=True
+    required=False,
+    default="",
+    callback=validate_dc_deployment_id
 )
 @click.option(
     "-n",
@@ -677,6 +774,119 @@ def prepull_images(trusted_registry: str,
             f"Error pulling images. Error: {err}\n", fg="red"
         )
         click.echo(f"\n\n{pull_failed_text}", err=True)
+    else:
+        successful_text = click.style(
+            "Images have been pulled into the given trusted registry. See helpful commands below.",
+            fg="white",
+            bold=True,
+        )
+        extra_info_text1 = click.style(
+            "Kubernetes deployment from a trusted registry: syntho-cli k8s deployment --help",
+            fg="white",
+            bold=True,
+        )
+        extra_info_text2 = click.style(
+            "Docker compose deployment from a trusted registry: syntho-cli dc deployment --help",
+            fg="white",
+            bold=True,
+        )
+        click.echo(
+            "\n"
+            f"{successful_text}\n\n"
+            f"{extra_info_text1}\n"
+            f"{extra_info_text2}\n"
+        )
+
+
+@utilities.command(name="activate-offline-mode",
+                   help=("Activates CLI to make deployments to (later) offline ecosystems. "
+                         "eg. a docker host with no outbound internet access"))
+@click.option(
+    "--syntho-registry-user",
+    type=str,
+    help="Specify the Syntho docker image registry user that is provided by Syntho team",
+    required=True
+)
+@click.option(
+    "--syntho-registry-pwd",
+    type=str,
+    help="Specify the Syntho docker image registry password that is provided by Syntho team",
+    required=True
+)
+@click.option(
+    "--version",
+    type=str,
+    help=("Specify a version for Syntho stack."),
+    required=True
+)
+@click.option(
+    "--arch",
+    type=str,
+    help=("Specify the architecture. Default: amd"),
+    default="amd",
+    required=False
+)
+@click.option(
+    "--docker-config",
+    type=str,
+    help=("Specify the default docker config.json path. Default: ~/.docker/config.json"),
+    default="",
+    required=False,
+    callback=validate_docker_config
+)
+def activate_offline_mode(syntho_registry_user: str,
+                          syntho_registry_pwd: str,
+                          version: str,
+                          arch: str,
+                          docker_config: str):
+    arch = arch.lower()
+    if not utils.is_arch_supported(arch):
+        raise click.ClickException(
+            f"Unsupported architecture: {arch}. Only AMD/ARM is supported."
+        )
+
+    arch_text = f"Architecture: {arch}64"
+    if arch == "arm":
+        arch_text += " - Beta"
+
+    starting_text = click.style(
+        f"-- Syntho stack is going to be activating offline mode ({arch_text}) --",
+        fg="white",
+        blink=True,
+        bold=True,
+    )
+    click.echo(f"{starting_text}\n")
+
+    result, err = offline_ops_manager.create_offline_registry(
+        scripts_dir,
+        version,
+        arch,
+        syntho_registry_user,
+        syntho_registry_pwd,
+        docker_config,
+    )
+    if not result:
+        failed_text = click.style(
+            f"Error activating offline mode. Error: {err}\n", fg="red"
+        )
+        click.echo(f"\n\n{failed_text}", err=True)
+    else:
+        successful_text = click.style(
+            "Offline registry has been prepared and now it can be deployed to a docker host that "
+            "doesn't have an active internet connection. See helpful commands below.",
+            fg="white",
+            bold=True,
+        )
+        extra_info_text1 = click.style(
+            "Docker compose deployment from an offline registry: syntho-cli dc deployment --help",
+            fg="white",
+            bold=True,
+        )
+        click.echo(
+            "\n"
+            f"{successful_text}\n\n"
+            f"{extra_info_text1}\n"
+        )
 
 
 @utilities.command(name="logs",
@@ -685,7 +895,9 @@ def prepull_images(trusted_registry: str,
     "--utility-name",
     type=str,
     help="Specify the utility name. Eg. prepull-images",
-    required=True
+    required=False,
+    default="",
+    callback=validate_utility_name
 )
 @click.option(
     "-n",

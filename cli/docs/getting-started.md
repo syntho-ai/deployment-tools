@@ -12,6 +12,9 @@ This document provides a quick start guide on how to install and use `syntho-cli
 > eg. pip install syntho-cli==1.5.0 && syntho-cli k8s deployment ...... --version 1.9.7 .....
 
 ## Installation
+
+> Currently, CLI is only compatible with Linux and Mac OS environments.
+
 To install syntho-cli, please run the following command:
 
 > Before installing the CLI, make sure that `python` and `pip` is installed.

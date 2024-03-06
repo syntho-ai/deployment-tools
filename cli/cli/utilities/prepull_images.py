@@ -7,7 +7,8 @@ import json
 
 
 from cli.utils import (thread_safe, with_working_directory, DeploymentResult,
-                       get_deployments_dir, CleanUpLevel, run_script)
+                       get_deployments_dir, CleanUpLevel, run_script, make_utilities_dir,
+                       generate_utilities_dir, check_acquired, acquire, release, set_status)
 
 
 def start(
@@ -74,12 +75,6 @@ def start(
     return True, None
 
 
-def make_utilities_dir(scripts_dir):
-    utilities_dir = generate_utilities_dir(scripts_dir)
-    if not os.path.exists(utilities_dir):
-        os.makedirs(utilities_dir)
-
-
 def make_prepull_images_dir(scripts_dir):
     prepull_images_file_dir = generate_prepull_images_dir(scripts_dir)
     if os.path.exists(prepull_images_file_dir):
@@ -114,16 +109,6 @@ def make_env_file(
     return env_file_path
 
 
-def set_status(prepull_images_file_dir, status):
-    status_file_path = f"{prepull_images_file_dir}/status"
-    with open(status_file_path, "w") as file:
-        file.write(status)
-
-
-def generate_utilities_dir(scripts_dir):
-    return f"{scripts_dir}/utilities"
-
-
 def generate_prepull_images_dir(scripts_dir):
     return f"{generate_utilities_dir(scripts_dir)}/prepull-images"
 
@@ -141,24 +126,6 @@ def get_status(scripts_dir):
         status = file.read()
 
     return status
-
-
-def check_acquired(file_dir):
-    path = f"{file_dir}/.lock"
-    if os.path.exists(path):
-        return True
-    return False
-
-
-def acquire(file_dir):
-    path = f"{file_dir}/.lock"
-    with open(path, "a") as _:
-        pass
-
-
-def release(file_dir):
-    path = f"{file_dir}/.lock"
-    os.remove(path)
 
 
 def validate(scripts_dir, env_file_path):

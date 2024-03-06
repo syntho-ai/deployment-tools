@@ -52,3 +52,24 @@ syntho-cli utilities prepull-images \
 > When the process is completed, CLI can be ran to deploy Syntho Stack via this trusted image
 > registry. Please visit [kubernetes](./kubernetes) or [docker-compose](./docker-compose.md) guide
 > for more details.
+
+
+### Activating Offline Mode
+
+As mentioned in [Applicable Scenarios](applicable-scenarios) - scenario 2, below command can be ran
+to enable CLI for deployments to offline ecosystems.
+
+
+```
+syntho-cli utilities activate-offline-mode \
+    --syntho-registry-user <syntho-image-registry-user> \
+    --syntho-registry-pwd <syntho-image-registry-password> \
+    --version <syntho-stack-version>
+```
+
+> Ask Syntho team to fetch your credentials and the version for Syntho resources
+
+> This process takes roughly 10 mins as it is going to be pulling and pushing images accordingly.
+> When the process is completed, CLI can be ran to deploy Syntho Stack via this offline image
+> registry. Please visit [kubernetes](./kubernetes) or [docker-compose](./docker-compose.md) guide
+> for more details.
