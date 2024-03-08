@@ -20,7 +20,6 @@ package_registry() {
 
     SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/package_registry.log"
 
-
     if ! archive_registry >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="An unexpected error occured when archiving the offline registry files\n"
     fi
@@ -30,7 +29,10 @@ package_registry() {
 
 archive_registry() {
     echo "archiving all the offline registry files"
-    tar -czvf "$ARCHIVE_FILE_NAME" -C "$DEPLOYMENT_DIR" .
+    tar --exclude='./shared/process/*.log' -czvf "$ARCHIVE_FILE_NAME" -C "$DEPLOYMENT_DIR" .
+    local exit_status=$?
+    echo "Tar exit status: $exit_status"
+    return $exit_status
 }
 
 
