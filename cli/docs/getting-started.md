@@ -9,7 +9,7 @@ This document provides a quick start guide on how to install and use `syntho-cli
 
 > RECOMMENDED syntho-cli version is `1.6.1`, and Syntho stack version is `1.9.7`
 
-> eg. pip install syntho-cli==1.5.0 && syntho-cli k8s deployment ...... --version 1.9.7 .....
+> eg. pip install syntho-cli==1.6.1 && syntho-cli k8s deployment ...... --version 1.9.7 .....
 
 ## Installation
 
