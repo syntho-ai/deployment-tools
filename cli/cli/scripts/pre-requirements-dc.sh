@@ -71,6 +71,11 @@ developer_tools_check() {
         errors+="Missing command line tool - awk\n"
     fi
 
+    # Check if jq exists
+    if ! command_exists "jq"; then
+        errors+="Missing command line tool - jq\n"
+    fi
+
     if [[ $DOCKER_HOST == ssh://* ]] && [[ -n $DOCKER_SSH_USER_PRIVATE_KEY ]]; then
         # Check if ssh-agent exists
         if ! command_exists "ssh-agent"; then

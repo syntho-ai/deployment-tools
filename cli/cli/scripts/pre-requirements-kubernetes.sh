@@ -69,6 +69,11 @@ developer_tools_check() {
         errors+="Missing command line tool - awk\n"
     fi
 
+    # Check if jq exists
+    if ! command_exists "jq"; then
+        errors+="Missing command line tool - jq\n"
+    fi
+
     write_and_exit "$errors" "developer_tools_check"
 }
 
