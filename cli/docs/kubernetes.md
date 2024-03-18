@@ -11,7 +11,7 @@ In this guide, we will walk through how to use `syntho-cli` to effectively manag
 * `kubectl` installed and properly configured
 * `helm` installed and properly configured
 * An active internet connection on the host where the CLI is going to run
-* Other command line utilities: `tar`, `awk`, `curl or wget`
+* Other command line utilities: `tar`, `awk`, `curl or wget` and `jq`
 * The nodes within the Kubernetes cluster must be of the `amd64` architecture
 
 

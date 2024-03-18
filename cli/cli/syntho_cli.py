@@ -71,6 +71,27 @@ def validate_trusted_registry(ctx, param, value):
     return value
 
 
+def validate_offline_registry(ctx, param, value):
+    if value:
+        offline_registry_file_dir = offline_ops_manager.generate_offline_registry_archive_path(
+            scripts_dir
+        )
+        if not os.path.exists(scripts_dir):
+            raise click.BadParameter(f"syntho-cli is not ready to deploy Syntho resources from the "
+                                     "offline registry yet. Please run "
+                                     "'syntho-cli utilities activate-offline-mode --help' first "
+                                     "for more info")
+
+        status = offline_ops_manager.get_status(scripts_dir)
+        if status != "completed":
+            raise click.BadParameter(f"syntho-cli is not ready to deploy Syntho resources from the "
+                                     "offline registry yet. Please run "
+                                     "'syntho-cli utilities activate-offline-mode --help' first "
+                                     "for more info")
+
+    return value
+
+
 def validate_dc_deployment_id(ctx, param, value):
     if value == "":
         deployments = dc_deployment_manager.get_deployments(scripts_dir)
@@ -114,35 +135,36 @@ def validate_utility_name(ctx, param, value):
 def validate_input_params(registry_user,
                           registry_pwd,
                           use_trusted_registry,
+                          use_offline_registry,
                           trusted_registry_image_pull_secret=None,
                           is_k8s=False):
 
-    # Verify either registry-user and registry-pwd are provided or use-trusted-registry is provided
-    if (registry_user == "u" or registry_pwd == "p") and not use_trusted_registry:
+    if use_trusted_registry and use_offline_registry:
         raise click.BadParameter(
-            "Either provide '--registry-user' and '--registry-pwd' or "
-            "use '--use-trusted-registry'."
+            "Either provide '--use-trusted-registry' or '--use-offline-registry'. Please check:\n"
+            "'syntho-cli utilities prepull-images --help'\n"
+            "'syntho-cli utilities activate-offline-mode --help'"
         )
 
-    if use_trusted_registry:
-        prepull_images_file_dir = prepull_images_manager.generate_prepull_images_dir(scripts_dir)
-        if not os.path.exists(scripts_dir):
-            raise click.BadParameter(f"syntho-cli is not ready to deploy Syntho resources from a "
-                                     "trusted registry yet. Please run "
-                                     "'syntho-cli utilities prepull-images --help' first "
-                                     "for more info")
+    # Verify either registry-user and registry-pwd are provided or use-trusted-registry is provided
+    if not use_offline_registry:
+        if (registry_user == "u" or registry_pwd == "p") and not use_trusted_registry:
+            raise click.BadParameter(
+                "Either provide '--registry-user' and '--registry-pwd' or "
+                "use '--use-trusted-registry'."
+            )
 
-        status = prepull_images_manager.get_status(scripts_dir)
-        if status != "completed":
-            raise click.BadParameter(f"syntho-cli is not ready to deploy Syntho resources from a "
-                                     "trusted registry yet. Please run "
-                                     "'syntho-cli utilities prepull-images --help' first "
-                                     "for more info")
+    # Verify either registry-user and registry-pwd are provided or use-offline-registry is provided
+    if not use_trusted_registry:
+        if (registry_user == "u" or registry_pwd == "p") and not use_offline_registry:
+            raise click.BadParameter(
+                "Either provide '--registry-user' and '--registry-pwd' or "
+                "use '--use-offline-registry'."
+            )
 
-        if is_k8s:
-            if not trusted_registry_image_pull_secret:
-                raise click.BadParameter("--trusted-registry-image-pull-secret should be provided "
-                                         "when --use-trusted-registry is used")
+    if use_trusted_registry and is_k8s and not trusted_registry_image_pull_secret:
+        raise click.BadParameter("--trusted-registry-image-pull-secret should be provided "
+                                 "when --use-trusted-registry is used")
 
 
 def get_version(package_name: str):
@@ -255,6 +277,7 @@ def k8s_deployment(
             registry_user,
             registry_pwd,
             use_trusted_registry,
+            False,
             trusted_registry_image_pull_secret=trusted_registry_image_pull_secret,
             is_k8s=True
         )
@@ -501,6 +524,13 @@ def k8s_logs(deployment_id: str, n: int, f: bool):
           "- 'syntho-cli utilities prepull-images --help' for more info"),
     callback=validate_trusted_registry
 )
+@click.option(
+    "--use-offline-registry",
+    is_flag=True,
+    help=("Uses offline registry instead "
+          "- 'syntho-cli utilities activate-offline-mode --help' for more info"),
+    callback=validate_offline_registry
+)
 def dc_deployment(
     license_key: str,
     registry_user: str,
@@ -512,12 +542,14 @@ def dc_deployment(
     docker_config: str,
     skip_configuration: bool,
     use_trusted_registry: bool,
+    use_offline_registry: bool,
 ):
     try:
         validate_input_params(
             registry_user,
             registry_pwd,
             use_trusted_registry,
+            use_offline_registry,
             trusted_registry_image_pull_secret=None,
             is_k8s=False
         )
@@ -550,6 +582,7 @@ def dc_deployment(
         docker_config,
         skip_configuration,
         use_trusted_registry,
+        use_offline_registry,
     )
 
     if result.succeeded:
@@ -722,13 +755,6 @@ def dc_logs(deployment_id: str, n: int, f: bool):
     required=True
 )
 @click.option(
-    "--arch",
-    type=str,
-    help=("Specify the architecture. Default: amd"),
-    default="amd",
-    required=False
-)
-@click.option(
     "--docker-config",
     type=str,
     help=("Specify the default docker config.json path. Default: ~/.docker/config.json"),
@@ -740,9 +766,8 @@ def prepull_images(trusted_registry: str,
                    syntho_registry_user: str,
                    syntho_registry_pwd: str,
                    version: str,
-                   arch: str,
                    docker_config: str):
-    arch = arch.lower()
+    arch = utils.get_architecture()
     if not utils.is_arch_supported(arch):
         raise click.ClickException(
             f"Unsupported architecture: {arch}. Only AMD/ARM is supported."
@@ -820,13 +845,6 @@ def prepull_images(trusted_registry: str,
     required=True
 )
 @click.option(
-    "--arch",
-    type=str,
-    help=("Specify the architecture. Default: amd"),
-    default="amd",
-    required=False
-)
-@click.option(
     "--docker-config",
     type=str,
     help=("Specify the default docker config.json path. Default: ~/.docker/config.json"),
@@ -837,9 +855,8 @@ def prepull_images(trusted_registry: str,
 def activate_offline_mode(syntho_registry_user: str,
                           syntho_registry_pwd: str,
                           version: str,
-                          arch: str,
                           docker_config: str):
-    arch = arch.lower()
+    arch = utils.get_architecture()
     if not utils.is_arch_supported(arch):
         raise click.ClickException(
             f"Unsupported architecture: {arch}. Only AMD/ARM is supported."

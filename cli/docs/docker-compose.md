@@ -9,7 +9,7 @@ Docker host environment.
 * A running Docker server
 * `docker` cli installed and properly configured
 * An active internet connection on the host where the CLI is going to run
-* Other command line utilities: `tar`, `awk`, `curl or wget`, `grep`
+* Other command line utilities: `tar`, `awk`, `curl or wget`,`jq` and `grep`
 * The docker node must be of the `amd64` architecture
 * For remote docker deployment
     * ssh-agent

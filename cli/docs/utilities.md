@@ -18,7 +18,7 @@ to make your life easier.
 * An active internet connection on the host where the CLI is going to run
 * No firewall or any other custom network setup that prevents host to access Syntho's image
   registry (syntho.azurecr.io)
-* Other command line utilities: `tar`, `awk`, `curl or wget`, `grep`
+* Other command line utilities: `tar`, `awk`, `curl or wget`,`jq`, `grep`
 * The docker node must be of the `amd64` architecture
 
 

@@ -31,12 +31,17 @@ def create_offline_registry(
     acquire(offline_registry_dir)
     time.sleep(2)
 
+    available_port = find_available_port(5020, 5050)
+    if not available_port:
+        return False, f"There is no available port between 5000-5050"
+
     env_file_path = make_env_file(
         offline_registry_dir,
         version,
         arch,
         syntho_registry_user,
         syntho_registry_pwd,
+        available_port,
     )
 
     # step 1 authenticating with syntho registry
@@ -48,7 +53,9 @@ def create_offline_registry(
 
     # step 2 creating an offline image registry
     set_status(offline_registry_dir, "creating-offline-registry")
-    result, err = create_offline_image_registry(scripts_dir, env_file_path, docker_config_json_path)
+    result, err = create_offline_image_registry(
+        scripts_dir, env_file_path, docker_config_json_path, available_port,
+    )
     if not result:
         release(offline_registry_dir)
         return False, "Offline registry creation has been failed, please retry" if not err else err
@@ -100,13 +107,18 @@ def make_env_file(
     arch,
     syntho_registry_user,
     syntho_registry_pwd,
+    available_port,
 ):
+
+    offline_registry = f"localhost:{available_port}"
     env = {
         "ARCH": arch,
         "REGISTRY_USER": syntho_registry_user,
         "REGISTRY_PWD": syntho_registry_pwd,
         "SYNTHO_REGISTRY": "syntho.azurecr.io",
         "VERSION": version,
+        "AVAILABLE_PORT": available_port,
+        "OFFLINE_REGISTRY": offline_registry,
     }
     env_file_path = f"{offline_registry_dir}/.env"
     with open(env_file_path, "w") as file:
@@ -145,7 +157,8 @@ def deauthenticate_syntho_registry(scripts_dir, env_file_path):
 
 
 @with_working_directory
-def create_offline_image_registry(scripts_dir, env_file_path, docker_config_json_path):
+def create_offline_image_registry(scripts_dir, env_file_path, docker_config_json_path,
+                                  available_port):
     click.echo("Step 2: Creating an offline image registry;")
     offline_registry_dir = generate_offline_registry_dir(scripts_dir)
     os.chdir(offline_registry_dir)
@@ -155,10 +168,6 @@ def create_offline_image_registry(scripts_dir, env_file_path, docker_config_json
     if not os.path.exists(docker_config):
         return False, f"There is no docker config found in this path: {docker_config_json_path}"
 
-    available_port = find_available_port(5000, 5050)
-    if not available_port:
-        return False, f"There is no available port between 5000-5050"
-
     offline_registry = f"localhost:{available_port}"
     result = run_script(
         scripts_dir,
@@ -166,8 +175,6 @@ def create_offline_image_registry(scripts_dir, env_file_path, docker_config_json
         "create-offline-registry.sh",
         **{
             "DOCKER_CONFIG": docker_config,
-            "OFFLINE_REGISTRY": offline_registry,
-            "AVAILABLE_PORT": str(available_port),
         }
     )
     return result.exitcode == 0, None
@@ -188,3 +195,18 @@ def package_syntho_registry(scripts_dir, env_file_path):
     )
 
     return result.exitcode == 0
+
+
+def get_status(scripts_dir):
+    offline_registry_dir = generate_offline_registry_dir(scripts_dir)
+    if not os.path.exists(offline_registry_dir):
+        return "unknown"
+
+    status_file_path = f"{offline_registry_dir}/status"
+    if not os.path.exists(status_file_path):
+        return "unknown"
+
+    with open(status_file_path, "r") as file:
+        status = file.read()
+
+    return status

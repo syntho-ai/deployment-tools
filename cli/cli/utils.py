@@ -9,6 +9,7 @@ import sys
 import glob
 import socket
 import tarfile
+import platform
 
 from queue import Queue, Empty
 from functools import wraps
@@ -375,3 +376,14 @@ def find_available_port(start_port, end_port, host="localhost"):
 def make_tarfile(output_filename, source_dir):
     with tarfile.open(output_filename, "w:gz") as tar:
         tar.add(source_dir, arcname=os.path.basename(source_dir))
+
+
+def get_architecture():
+    arch_info = platform.machine()
+
+    if "x86" in arch_info:
+        return "amd"
+    elif "arm" in arch_info or "aarch" in arch_info:
+        return "arm"
+    else:
+        return arch_info

@@ -28,12 +28,28 @@ destroy() {
     DOCKER_HOST=$DOCKER_HOST docker compose -f $DC_DIR/docker-compose.yaml down --remove-orphans --volumes --rmi all
 }
 
+destroy_offline_registry_if_exists() {
+    CONTAINER_NAME="syntho-offline-registry"
+
+    if [ "$(DOCKER_HOST=$DOCKER_HOST docker ps -q -f name=$CONTAINER_NAME)" ]; then
+        echo "Container $CONTAINER_NAME exists. Stopping and removing it..."
+        DOCKER_HOST=$DOCKER_HOST docker stop $CONTAINER_NAME
+        DOCKER_HOST=$DOCKER_HOST docker rm $CONTAINER_NAME
+    else
+        echo "Offline registry container $CONTAINER_NAME does not exist and moving on"
+    fi
+}
+
 destroy_with_error_handling() {
     local errors=""
 
     SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/destroy_with_error_handling.log"
 
     if ! destroy >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
+        errors+="Failed to clean up components\n"
+    fi
+
+    if ! destroy_offline_registry_if_exists >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="Failed to clean up components\n"
     fi
 

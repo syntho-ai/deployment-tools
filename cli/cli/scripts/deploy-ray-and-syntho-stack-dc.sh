@@ -11,6 +11,7 @@ SECONDARY_DOCKER_CONFIG="$SECONDARY_DOCKER_CONFIG"
 DOCKER_HOST="$DOCKER_HOST"
 SKIP_CONFIGURATION="$SKIP_CONFIGURATION"
 USE_TRUSTED_REGISTRY="$USE_TRUSTED_REGISTRY"
+USE_OFFLINE_REGISTRY="$USE_OFFLINE_REGISTRY"
 source $DEPLOYMENT_DIR/.config.env --source-only
 source $DEPLOYMENT_DIR/.images.env --source-only
 ARCH="$ARCH"
@@ -43,6 +44,22 @@ if [[ "$USE_TRUSTED_REGISTRY" == "true" ]]; then
         export $new_key="$value"
     done < $PREPULL_IMAGES_DIR/.images-trusted.env
     echo "env vars are overridden with trusted registry info" >> $SYNTHO_CLI_PROCESS_LOGS
+fi
+
+SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/offline_image_registry_usage.log"
+echo "USE_OFFLINE_REGISTRY: $USE_OFFLINE_REGISTRY" >> $SYNTHO_CLI_PROCESS_LOGS
+if [[ "$USE_OFFLINE_REGISTRY" == "true" ]]; then
+    echo "using offline image registry instead" >> $SYNTHO_CLI_PROCESS_LOGS
+    ACTIVATE_OFFLINE_MODE_DIR="$ACTIVATE_OFFLINE_MODE_DIR"
+    ACTIVATE_OFFLINE_MODE_ARCHIVE_PATH="$ACTIVATE_OFFLINE_MODE_ARCHIVE_PATH"
+    # Read the .image-offline.env file line by line
+    while IFS='=' read -r key value; do
+        # Remove the "OFFLINE_" prefix
+        new_key=${key#OFFLINE_}
+        # Export the variable with the new name
+        export $new_key="$value"
+    done < $ACTIVATE_OFFLINE_MODE_DIR/.images-offline.env
+    echo "env vars are overridden with offline registry info" >> $SYNTHO_CLI_PROCESS_LOGS
 fi
 
 
@@ -234,6 +251,62 @@ deployment_failure_callback() {
     with_loading "Please share this file (/tmp/syntho/diagnosis-dc.tar.gz) with support@syntho.ai" do_nothing "" "" 2
 }
 
+deploy_offline_image_registry() {
+    local errors=""
+
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/deploy_offline_image_registry.log"
+    echo "deploy_offline_image_registry has been started" >> $SYNTHO_CLI_PROCESS_LOGS
+
+    if ! do_deploy_offline_image_registry >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
+        errors+="Deploying an offline image registry process has been unexpectedly failed\n"
+    fi
+
+    write_and_exit "$errors" "deploy_offline_image_registry"
+}
+
+do_deploy_offline_image_registry() {
+    AVAILABLE_PORT=$(grep AVAILABLE_PORT $ACTIVATE_OFFLINE_MODE_DIR/.env | cut -d '=' -f2)
+    if [ "$IS_REMOTE_DOCKER" = "true" ]; then
+         # TODO test
+        echo "deployment dir: $DEPLOYMENT_DIR"
+        echo "available port: $AVAILABLE_PORT"
+        echo "offline archive: $ACTIVATE_OFFLINE_MODE_ARCHIVE_PATH"
+        echo "docker config: $DOCKER_CONFIG"
+        echo "docker host: $DOCKER_HOST"
+        echo "sleeping forever"
+        sleep 999999999
+        SSH_ENDPOINT=${DOCKER_HOST#*//}
+        ssh $SSH_ENDPOINT mkdir -p /tmp/syntho
+        ssh $SSH_ENDPOINT rm -rf /tmp/syntho/activate-offline-mode
+        ssh $SSH_ENDPOINT mkdir -p /tmp/syntho/activate-offline-mode
+        scp $ACTIVATE_OFFLINE_MODE_ARCHIVE_PATH $SSH_ENDPOINT:/tmp/syntho/activate-offline-mode/activate-offline-mode.tar.gz
+        ssh $SSH_ENDPOINT tar -xzf /tmp/syntho/activate-offline-mode/activate-offline-mode.tar.gz -C /tmp/syntho/activate-offline-mode/
+
+        ssh $SSH_ENDPOINT docker load -i /tmp/syntho/activate-offline-mode/syntho-offline-registry.tar
+        ssh $SSH_ENDPOINT mkdir -p /tmp/syntho/activate-offline-mode/registry-lib
+        ssh $SSH_ENDPOINT tar -xzf /tmp/syntho/activate-offline-mode/registry-lib.tar.gz -C /tmp/syntho/activate-offline-mode/registry-lib
+
+        ssh $SSH_ENDPOINT docker run -d -p $AVAILABLE_PORT:5000 --restart=always --name syntho-offline-registry -v /tmp/syntho/activate-offline-mode/registry-lib:/var/lib/registry syntho-offline-registry:latest
+    else
+        mkdir -p /tmp/syntho
+        rm -rf /tmp/syntho/activate-offline-mode
+        mkdir -p /tmp/syntho/activate-offline-mode
+        cp $ACTIVATE_OFFLINE_MODE_ARCHIVE_PATH /tmp/syntho/activate-offline-mode/activate-offline-mode.tar.gz
+        tar -xzf /tmp/syntho/activate-offline-mode/activate-offline-mode.tar.gz -C /tmp/syntho/activate-offline-mode/
+
+        DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker load -i /tmp/syntho/activate-offline-mode/syntho-offline-registry.tar
+        mkdir -p /tmp/syntho/activate-offline-mode/registry
+        tar -xzf /tmp/syntho/activate-offline-mode/registry-lib.tar.gz -C /tmp/syntho/activate-offline-mode/registry
+
+        DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker run -d -p $AVAILABLE_PORT:5000 --name syntho-offline-registry syntho-offline-registry:latest
+        DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker cp /tmp/syntho/activate-offline-mode/registry syntho-offline-registry:/var/lib/
+    fi
+}
+
+
+if [[ "$USE_OFFLINE_REGISTRY" == "true" ]]; then
+    with_loading "Deploying offline image registry with necessary images in it" deploy_offline_image_registry
+fi
 
 with_loading "Deploying Syntho Stack" deploy_syntho_stack 1200 deployment_failure_callback
 with_loading "Waiting for Syntho UI to be healthy" wait_for_fe_health 300 deployment_failure_callback

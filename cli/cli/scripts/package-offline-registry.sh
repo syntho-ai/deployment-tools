@@ -28,8 +28,9 @@ package_registry() {
 }
 
 archive_registry() {
-    echo "archiving all the offline registry files"
-    tar --exclude='./shared/process/*.log' -czvf "$ARCHIVE_FILE_NAME" -C "$DEPLOYMENT_DIR" .
+    OFFLINE_MODE_DATASOURCE="$DEPLOYMENT_DIR/activate-offline-mode"
+    echo "archiving all the offline registry files from here ($OFFLINE_MODE_DATASOURCE) to here ($ARCHIVE_FILE_NAME)"
+    tar --exclude='./shared/process/*.log' -czvf "$ARCHIVE_FILE_NAME" -C "$OFFLINE_MODE_DATASOURCE" .
     local exit_status=$?
     echo "Tar exit status: $exit_status"
     return $exit_status

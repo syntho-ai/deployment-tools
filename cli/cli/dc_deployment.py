@@ -14,6 +14,8 @@ from enum import Enum
 from cli.utils import (thread_safe, with_working_directory, DeploymentResult,
                        get_deployments_dir, CleanUpLevel, run_script)
 from cli.utilities.prepull_images import generate_prepull_images_dir
+from cli.utilities.offline_ops import (generate_offline_registry_dir,
+                                       generate_offline_registry_archive_path)
 
 
 class DeploymentStatus(Enum):
@@ -51,7 +53,8 @@ def start(scripts_dir: str,
           version: str,
           docker_config_json_path: str,
           skip_configuration: bool,
-          use_trusted_registry: bool) -> str:
+          use_trusted_registry: bool,
+          use_offline_registry: bool) -> str:
 
 
     deployments_dir = get_deployments_dir(scripts_dir)
@@ -91,6 +94,7 @@ def start(scripts_dir: str,
         docker_config_json_path,
         skip_configuration,
         use_trusted_registry,
+        use_offline_registry,
     )
 
     succeeded = pre_requirements_check(scripts_dir, deployment_id)
@@ -304,7 +308,8 @@ def prepare_env(deployment_id: str,
                 version: str,
                 docker_config_json_path: str,
                 skip_configuration: bool,
-                use_trusted_registry: bool):
+                use_trusted_registry: bool,
+                use_offline_registry: bool):
 
     scripts_dir = deployments_dir.replace("/deployments", "")
     set_state(deployment_id, deployments_dir, DeploymentStatus.PREPARING_ENV)
@@ -381,7 +386,10 @@ def prepare_env(deployment_id: str,
         "VERSION": version,
         "SKIP_CONFIGURATION": "true" if skip_configuration else "false",
         "USE_TRUSTED_REGISTRY": "true" if use_trusted_registry else "false",
+        "USE_OFFLINE_REGISTRY": "true" if use_offline_registry else "false",
         "PREPULL_IMAGES_DIR": generate_prepull_images_dir(scripts_dir),
+        "ACTIVATE_OFFLINE_MODE_DIR": generate_offline_registry_dir(scripts_dir),
+        "ACTIVATE_OFFLINE_MODE_ARCHIVE_PATH" : generate_offline_registry_archive_path(scripts_dir),
     }
     env_file_path = f"{deployment_dir}/.env"
     with open(env_file_path, "w") as file:

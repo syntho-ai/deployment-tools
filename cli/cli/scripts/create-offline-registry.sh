@@ -126,10 +126,15 @@ delete_registry2() {
 archive_offline_registry() {
     echo "archiving syntho-offline-registry container"
     echo "copying registry lib in the host machine"
-    DOCKER_CONFIG=$DOCKER_CONFIG docker cp syntho-offline-registry:/var/lib/registry $DEPLOYMENT_DIR/registry-backup
+    OFFLINE_MODE_DATASOURCE="$DEPLOYMENT_DIR/activate-offline-mode"
+    mkdir -p $OFFLINE_MODE_DATASOURCE
+    DOCKER_CONFIG=$DOCKER_CONFIG docker cp syntho-offline-registry:/var/lib/registry $OFFLINE_MODE_DATASOURCE/registry-backup
 
-    # echo "archiving registry lib backup in the host machine"
-    # tar -czf $DEPLOYMENT_DIR/registry-backup.tar.gz -C $DEPLOYMENT_DIR/registry-backup .
+    echo "archiving registry lib backup in the host machine"
+    tar -czf $OFFLINE_MODE_DATASOURCE/registry-lib.tar.gz -C $OFFLINE_MODE_DATASOURCE/registry-backup .
+
+    echo "removing the backup dir again because it was archived"
+    rm -rf $OFFLINE_MODE_DATASOURCE/registry-backup
 
     echo "stopping container"
     DOCKER_CONFIG=$DOCKER_CONFIG docker stop syntho-offline-registry
@@ -138,7 +143,7 @@ archive_offline_registry() {
     DOCKER_CONFIG=$DOCKER_CONFIG docker commit syntho-offline-registry syntho-offline-registry:latest
 
     echo "archiving the new syntho-offline-registry:latest image"
-    DOCKER_CONFIG=$DOCKER_CONFIG docker save -o $DEPLOYMENT_DIR/syntho-offline-registry.tar syntho-offline-registry:latest
+    DOCKER_CONFIG=$DOCKER_CONFIG docker save -o $OFFLINE_MODE_DATASOURCE/syntho-offline-registry.tar syntho-offline-registry:latest
 }
 
 
