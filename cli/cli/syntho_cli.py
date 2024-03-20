@@ -492,13 +492,6 @@ def k8s_logs(deployment_id: str, n: int, f: bool):
     required=False
 )
 @click.option(
-    "--arch",
-    type=str,
-    help=("Specify the architecture. Default: amd"),
-    default="amd",
-    required=False
-)
-@click.option(
     "--version",
     type=str,
     help=("Specify a version for Syntho stack."),
@@ -537,7 +530,6 @@ def dc_deployment(
     registry_pwd: str,
     docker_host: str,
     docker_ssh_user_private_key: str,
-    arch: Optional[str],
     version: Optional[str],
     docker_config: str,
     skip_configuration: bool,
@@ -556,7 +548,7 @@ def dc_deployment(
     except click.BadParameter as exc:
         raise click.UsageError(str(exc))
 
-    arch = arch.lower()
+    arch = utils.get_architecture()
     if not utils.is_arch_supported(arch):
         raise click.ClickException(
             f"Unsupported architecture: {arch}. Only AMD/ARM is supported."
