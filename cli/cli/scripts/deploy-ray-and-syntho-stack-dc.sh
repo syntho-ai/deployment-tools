@@ -267,15 +267,17 @@ deploy_offline_image_registry() {
 do_deploy_offline_image_registry() {
     AVAILABLE_PORT=$(grep AVAILABLE_PORT $ACTIVATE_OFFLINE_MODE_DIR/.env | cut -d '=' -f2)
     if [ "$IS_REMOTE_DOCKER" = "true" ]; then
-         # TODO test
+        SSH_ENDPOINT=${DOCKER_HOST#*//}
+
         echo "deployment dir: $DEPLOYMENT_DIR"
         echo "available port: $AVAILABLE_PORT"
         echo "offline archive: $ACTIVATE_OFFLINE_MODE_ARCHIVE_PATH"
         echo "docker config: $DOCKER_CONFIG"
         echo "docker host: $DOCKER_HOST"
-        echo "sleeping forever"
-        sleep 999999999
-        SSH_ENDPOINT=${DOCKER_HOST#*//}
+        echo "ssh endpoint: $SSH_ENDPOINT"
+        # echo "sleeping forever"
+        # sleep 999999999
+
         ssh $SSH_ENDPOINT mkdir -p /tmp/syntho
         ssh $SSH_ENDPOINT rm -rf /tmp/syntho/activate-offline-mode
         ssh $SSH_ENDPOINT mkdir -p /tmp/syntho/activate-offline-mode
@@ -283,10 +285,13 @@ do_deploy_offline_image_registry() {
         ssh $SSH_ENDPOINT tar -xzf /tmp/syntho/activate-offline-mode/activate-offline-mode.tar.gz -C /tmp/syntho/activate-offline-mode/
 
         ssh $SSH_ENDPOINT docker load -i /tmp/syntho/activate-offline-mode/syntho-offline-registry.tar
-        ssh $SSH_ENDPOINT mkdir -p /tmp/syntho/activate-offline-mode/registry-lib
-        ssh $SSH_ENDPOINT tar -xzf /tmp/syntho/activate-offline-mode/registry-lib.tar.gz -C /tmp/syntho/activate-offline-mode/registry-lib
+        ssh $SSH_ENDPOINT mkdir -p /tmp/syntho/activate-offline-mode/registry
+        ssh $SSH_ENDPOINT tar -xzf /tmp/syntho/activate-offline-mode/registry-lib.tar.gz -C /tmp/syntho/activate-offline-mode/registry
 
-        ssh $SSH_ENDPOINT docker run -d -p $AVAILABLE_PORT:5000 --restart=always --name syntho-offline-registry -v /tmp/syntho/activate-offline-mode/registry-lib:/var/lib/registry syntho-offline-registry:latest
+        ssh $SSH_ENDPOINT docker run -d -p $AVAILABLE_PORT:5000 --name syntho-offline-registry syntho-offline-registry:latest
+        ssh $SSH_ENDPOINT docker cp /tmp/syntho/activate-offline-mode/registry syntho-offline-registry:/var/lib/
+        # echo "sleeping forever"
+        # sleep 999999999
     else
         mkdir -p /tmp/syntho
         rm -rf /tmp/syntho/activate-offline-mode
