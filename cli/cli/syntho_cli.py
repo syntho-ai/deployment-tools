@@ -24,18 +24,25 @@ def validate_kubeconfig(ctx, param, value):
     try:
         with open(value, "r") as f:
             config = yaml.safe_load(f)
-    except Exception as e:
+    except Exception:
         try:
             config = yaml.safe_load(value)
-        except Exception as e:
-            raise click.BadParameter("KUBECONFIG is neither a valid YAML string nor a path to a valid YAML file.")
+        except Exception:
+            raise click.BadParameter(
+                "KUBECONFIG is neither a valid YAML string nor a path to a valid YAML file."
+            )
 
     if not isinstance(config, dict):
-        raise click.BadParameter("KUBECONFIG is neither a valid YAML string nor a path to a valid YAML file.")
+        raise click.BadParameter(
+            "KUBECONFIG is neither a valid YAML string nor a path to a valid YAML file."
+        )
 
     # Check if the key components of the KUBECONFIG are present
-    if not (config.get('clusters', False) and config.get('contexts', False) and config.get('users', False)):
-        raise click.BadParameter("KUBECONFIG is not valid. It should have 'clusters', 'contexts', and 'users' fields.")
+    if not (config.get('clusters', False) and config.get(
+            'contexts', False) and config.get('users', False)):
+        raise click.BadParameter(
+            "KUBECONFIG is not valid. It should have 'clusters', 'contexts', and 'users' fields."
+        )
 
     return value
 
@@ -55,15 +62,15 @@ def validate_docker_config(ctx, param, value):
 def validate_trusted_registry(ctx, param, value):
     if value:
         prepull_images_file_dir = prepull_images_manager.generate_prepull_images_dir(scripts_dir)
-        if not os.path.exists(scripts_dir):
-            raise click.BadParameter(f"syntho-cli is not ready to deploy Syntho resources from a "
+        if not os.path.exists(prepull_images_file_dir):
+            raise click.BadParameter("syntho-cli is not ready to deploy Syntho resources from a "
                                      "trusted registry yet. Please run "
                                      "'syntho-cli utilities prepull-images --help' first "
                                      "for more info")
 
         status = prepull_images_manager.get_status(scripts_dir)
         if status != "completed":
-            raise click.BadParameter(f"syntho-cli is not ready to deploy Syntho resources from a "
+            raise click.BadParameter("syntho-cli is not ready to deploy Syntho resources from a "
                                      "trusted registry yet. Please run "
                                      "'syntho-cli utilities prepull-images --help' first "
                                      "for more info")
@@ -76,15 +83,15 @@ def validate_offline_registry(ctx, param, value):
         offline_registry_file_dir = offline_ops_manager.generate_offline_registry_archive_path(
             scripts_dir
         )
-        if not os.path.exists(scripts_dir):
-            raise click.BadParameter(f"syntho-cli is not ready to deploy Syntho resources from the "
+        if not os.path.exists(offline_registry_file_dir):
+            raise click.BadParameter("syntho-cli is not ready to deploy Syntho resources from the "
                                      "offline registry yet. Please run "
                                      "'syntho-cli utilities activate-offline-mode --help' first "
                                      "for more info")
 
         status = offline_ops_manager.get_status(scripts_dir)
         if status != "completed":
-            raise click.BadParameter(f"syntho-cli is not ready to deploy Syntho resources from the "
+            raise click.BadParameter("syntho-cli is not ready to deploy Syntho resources from the "
                                      "offline registry yet. Please run "
                                      "'syntho-cli utilities activate-offline-mode --help' first "
                                      "for more info")
@@ -294,7 +301,10 @@ def k8s_deployment(
         arch_text += " - Beta"
 
     starting_text = click.style(
-        f"-- Syntho stack is going to be deployed (Kubernetes) ({arch_text}) --", fg="white", blink=True, bold=True,
+        f"-- Syntho stack is going to be deployed (Kubernetes) ({arch_text}) --",
+        fg="white",
+        blink=True,
+        bold=True,
     )
     click.echo(f"{starting_text}\n")
 
@@ -341,10 +351,12 @@ def k8s_deployment(
             "Cleaning things up", fg="red"
         )
         click.echo(f"\n\n{deployment_failed_text} - {cleaningthingsup_text}", err=True)
-        is_destroyed = k8s_deployment_manager.cleanup(scripts_dir, result.deployment_id, result.deployment_status)
+        is_destroyed = k8s_deployment_manager.cleanup(
+            scripts_dir, result.deployment_id, result.deployment_status
+        )
         if not is_destroyed:
             destroy_failed_text = click.style(
-                f"Error destroying deployment\n", fg="red"
+                "Error destroying deployment\n", fg="red"
             )
             next_command_text = click.style(
                 f"Please run `syntho-cli k8s destroy --deployment-id {result.deployment_id} "
@@ -388,14 +400,13 @@ def k8s_deployment_destroy(deployment_id: str, force: bool):
     is_destroyed = k8s_deployment_manager.destroy(scripts_dir, deployment_id, force)
     if not is_destroyed:
         destroy_failed_text = click.style(
-            f"Error destroying deployment\n", fg="red"
+            "Error destroying deployment\n", fg="red"
         )
         next_command_text = click.style(
             f"Please run `syntho-cli k8s destroy --deployment-id {deployment_id} "
             "--force` to forcefully destroy the deployment", fg="red"
         )
         click.echo(f"\n\n{destroy_failed_text}{next_command_text}", err=True)
-
 
 
 @k8s.command(name="deployments", help="Shows existing deployments and their statuses")
@@ -423,7 +434,7 @@ def k8s_deployments():
 
 
 @k8s.command(name="logs",
-            help="Show background process logs (it can be used for troubleshooting purposes)")
+             help="Show background process logs (it can be used for troubleshooting purposes)")
 @click.option(
     "--deployment-id",
     type=str,
@@ -456,7 +467,8 @@ def k8s_logs(deployment_id: str, n: int, f: bool):
     utils.logs(scripts_dir, deployment_id, n, f)
 
 
-@dc.command(name="deployment", help="Deploys the Syntho Stack into the given host's docker environment")
+@dc.command(name="deployment",
+            help="Deploys the Syntho Stack into the given host's docker environment")
 @click.option(
     "--license-key",
     type=str,
@@ -558,7 +570,9 @@ def dc_deployment(
         arch_text += " - Beta"
 
     starting_text = click.style(
-        f"-- Syntho stack is going to be deployed (Docker Compose) ({arch_text}) --", fg="white", blink=True, bold=True,
+        f"-- Syntho stack is going to be deployed (Docker Compose) ({arch_text}) --", fg="white",
+        blink=True,
+        bold=True,
     )
     click.echo(f"{starting_text}\n")
 
@@ -607,11 +621,11 @@ def dc_deployment(
             "Cleaning things up", fg="red"
         )
         click.echo(f"\n\n{deployment_failed_text} - {cleaningthingsup_text}", err=True)
-        is_destroyed = dc_deployment_manager.cleanup(scripts_dir, result.deployment_id, result.deployment_status)
+        is_destroyed = dc_deployment_manager.cleanup(
+            scripts_dir, result.deployment_id, result.deployment_status
+        )
         if not is_destroyed:
-            destroy_failed_text = click.style(
-                f"Error destroying deployment\n", fg="red"
-            )
+            destroy_failed_text = click.style("Error destroying deployment\n", fg="red")
             next_command_text = click.style(
                 f"Please run `syntho-cli dc destroy --deployment-id {result.deployment_id} "
                 "--force` to forcefully destroy the deployment", fg="red"
@@ -653,9 +667,7 @@ def dc_deployment_status(deployment_id: str):
 def dc_deployment_destroy(deployment_id: str, force: bool):
     is_destroyed = dc_deployment_manager.destroy(scripts_dir, deployment_id, force)
     if not is_destroyed:
-        destroy_failed_text = click.style(
-            f"Error destroying deployment\n", fg="red"
-        )
+        destroy_failed_text = click.style("Error destroying deployment\n", fg="red")
         next_command_text = click.style(
             f"Please run `syntho-cli dc destroy --deployment-id {deployment_id} "
             "--force` to forcefully destroy the deployment", fg="red"
@@ -898,8 +910,10 @@ def activate_offline_mode(syntho_registry_user: str,
         )
 
 
-@utilities.command(name="logs",
-            help="Show background process logs (it can be used for troubleshooting purposes)")
+@utilities.command(
+    name="logs",
+    help="Show background process logs (it can be used for troubleshooting purposes)"
+)
 @click.option(
     "--utility-name",
     type=str,
@@ -931,7 +945,5 @@ def utility_logs(utility_name: str, n: int, f: bool):
     utils.logs(scripts_dir, utility_name, n, f, is_deployment=False)
 
 
-
 if __name__ == '__main__':
     cli()
-

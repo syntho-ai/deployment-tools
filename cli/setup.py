@@ -9,6 +9,10 @@ README = open(os.path.join(os.path.dirname(__file__), "README.md")).read()
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
+# Read dependencies from requirements.txt
+with open(os.path.join(os.path.dirname(__file__), "requirements.txt")) as f:
+    requirements = f.read().splitlines()
+
 version = "{{VERSION_PLACEHOLDER}}"
 
 setup(
@@ -41,10 +45,5 @@ setup(
                           "scripts/download-syntho-charts-release-dc.sh",
                           "scripts/deploy-ray-and-syntho-stack-dc.sh"]},
     include_package_data=True,
-    install_requires=[
-        "click==8.1.7",
-        "pyyaml==6.0.1",
-        "ipdb",
-        "watchdog==4.0.0",
-    ]
+    install_requires=requirements,
 )

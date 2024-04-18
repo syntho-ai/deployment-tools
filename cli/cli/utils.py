@@ -1,11 +1,8 @@
 import os
 import fcntl
 import subprocess
-import click
 import time
-import select
 import threading
-import sys
 import glob
 import socket
 import tarfile
@@ -15,7 +12,6 @@ from queue import Queue, Empty
 from functools import wraps
 from enum import Enum
 from collections import namedtuple
-from typing import Dict, NoReturn
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -57,41 +53,6 @@ def thread_safe(func):
     return wrapper
 
 
-class ProgressBar:
-    def __init__(self, message: str, total_steps: int, style: Dict = None):
-        self.message = message
-        self.total_steps = total_steps
-        self.current_step = 0
-        self.length = 20
-        self.style = style
-
-    def start(self):
-        self.update_progress(0.1)
-        final_message = self.make_final_message()
-        click.echo(final_message)
-
-    def update_progress(self, current_step: int):
-        self.current_step = min(current_step, self.total_steps)
-
-    def update(self, current_step: int):
-        self.update_progress(current_step)
-        self.current_step = min(current_step, self.total_steps)
-        final_message = self.make_final_message()
-        click.echo(f"\r{final_message}", nl=False)
-
-    def get_progress_str(self):
-        progress = self.current_step / self.total_steps
-        progress_str = f"[{'#' * int(progress * self.length)}{'.' * (self.length - int(progress * self.length))}] [{int(progress * 100)}%]"
-        return progress_str
-
-    def make_final_message(self):
-        final_message = f"{self.message}  -  {self.get_progress_str()}"
-        if self.style is not None and isinstance(self.style, dict):
-            final_message = click.style(f"{final_message}", **self.style)
-
-        return final_message
-
-
 def with_working_directory(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -124,7 +85,7 @@ SubprocessResult = namedtuple("SubprocessResult", [
 
 
 def get_deployments_dir(scripts_dir: str) -> str:
-    deployments_dir = f"{scripts_dir}/deployments" 
+    deployments_dir = f"{scripts_dir}/deployments"
     if not os.path.exists(deployments_dir):
         os.makedirs(deployments_dir)
 
@@ -137,7 +98,7 @@ class CleanUpLevel(Enum):
     NA = "not-applicable"
 
 
-def run_script(scripts_dir:str,
+def run_script(scripts_dir: str,
                deployment_dir: str,
                script_name: str,
                capture_output: bool = False,
@@ -165,7 +126,7 @@ def run_script(scripts_dir:str,
         return SubprocessResult(succeeded=False, output=e.stderr, exitcode=e.returncode)
     except KeyboardInterrupt:
         return SubprocessResult(succeeded=False, output="", exitcode=1)
-    except Exception as e:
+    except Exception:
         return SubprocessResult(succeeded=False, output="", exitcode=1)
 
 
@@ -245,7 +206,7 @@ class LogEventHandler(FileSystemEventHandler):
                  **kwargs):
         self.lines = lines
         self.follow = follow
-        self.deployment_id_or_process_name=deployment_id_or_process_name
+        self.deployment_id_or_process_name = deployment_id_or_process_name
         super().__init__(*args, **kwargs)
 
     def on_any_event(self, event):

@@ -4,7 +4,26 @@ For detailed information on this topic, please refer to the [relevant section in
 
 ## For Developers
 
-After cloning the repo, it can be installed via below command.
+Developers can approach this project with two different ways, as production code doesn't need some
+testing/linting/formatting libraries in place
+
+1. Development Mode
+2. Playing Mode
+
+
+### Development Mode
+
+When developing the CLI
+
+> A virtual env is recommended.
+
+```
+pip install -r requirements-dev.txt
+```
+
+### Playing Mode
+
+When testing the CLI locally
 
 > A virtual env is recommended.
 

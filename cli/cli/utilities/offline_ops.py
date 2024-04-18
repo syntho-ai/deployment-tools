@@ -2,14 +2,12 @@ import os
 import shutil
 import time
 import click
-import base64
-import json
 
 
-from cli.utils import (thread_safe, with_working_directory, DeploymentResult,
-                       get_deployments_dir, CleanUpLevel, run_script, make_utilities_dir,
+from cli.utils import (with_working_directory,
+                       run_script, make_utilities_dir,
                        generate_utilities_dir, check_acquired, acquire, release, set_status,
-                       find_available_port, make_tarfile)
+                       find_available_port)
 
 
 def create_offline_registry(
@@ -33,7 +31,7 @@ def create_offline_registry(
 
     available_port = find_available_port(5020, 5050)
     if not available_port:
-        return False, f"There is no available port between 5000-5050"
+        return False, "There is no available port between 5000-5050"
 
     env_file_path = make_env_file(
         offline_registry_dir,
@@ -168,7 +166,6 @@ def create_offline_image_registry(scripts_dir, env_file_path, docker_config_json
     if not os.path.exists(docker_config):
         return False, f"There is no docker config found in this path: {docker_config_json_path}"
 
-    offline_registry = f"localhost:{available_port}"
     result = run_script(
         scripts_dir,
         offline_registry_dir,

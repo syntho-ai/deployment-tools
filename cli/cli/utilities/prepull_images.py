@@ -2,12 +2,10 @@ import os
 import shutil
 import time
 import click
-import base64
-import json
 
 
-from cli.utils import (thread_safe, with_working_directory, DeploymentResult,
-                       get_deployments_dir, CleanUpLevel, run_script, make_utilities_dir,
+from cli.utils import (with_working_directory,
+                       run_script, make_utilities_dir,
                        generate_utilities_dir, check_acquired, acquire, release, set_status)
 
 

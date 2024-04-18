@@ -56,7 +56,6 @@ def start(scripts_dir: str,
           use_trusted_registry: bool,
           use_offline_registry: bool) -> str:
 
-
     deployments_dir = get_deployments_dir(scripts_dir)
     deployment_id = generate_deployment_id(docker_host)
     deployment_dir = f"{deployments_dir}/{deployment_id}"
@@ -140,6 +139,7 @@ def start(scripts_dir: str,
         error=None,
         deployment_status=DeploymentStatus.COMPLETED,
     )
+
 
 def generate_deployment_id(docker_host: str) -> str:
     deployment_indicator = f"host:{docker_host}"
@@ -314,7 +314,6 @@ def prepare_env(deployment_id: str,
     scripts_dir = deployments_dir.replace("/deployments", "")
     set_state(deployment_id, deployments_dir, DeploymentStatus.PREPARING_ENV)
 
-
     base64_registry_creds = base64.b64encode(
         f"{registry_user}:{registry_pwd}".encode()
     ).decode()
@@ -389,7 +388,7 @@ def prepare_env(deployment_id: str,
         "USE_OFFLINE_REGISTRY": "true" if use_offline_registry else "false",
         "PREPULL_IMAGES_DIR": generate_prepull_images_dir(scripts_dir),
         "ACTIVATE_OFFLINE_MODE_DIR": generate_offline_registry_dir(scripts_dir),
-        "ACTIVATE_OFFLINE_MODE_ARCHIVE_PATH" : generate_offline_registry_archive_path(scripts_dir),
+        "ACTIVATE_OFFLINE_MODE_ARCHIVE_PATH": generate_offline_registry_archive_path(scripts_dir),
     }
     env_file_path = f"{deployment_dir}/.env"
     with open(env_file_path, "w") as file:
@@ -442,11 +441,15 @@ def configuration_questions(scripts_dir: str, deployment_id: str, skip_configura
 
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
-    set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS)
+    set_state(
+        deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS
+    )
 
     result = run_script(scripts_dir, deployment_dir, "configuration-questions-dc.sh")
     if not result.succeeded:
-        set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED)
+        set_state(
+            deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED
+        )
 
     return result.succeeded
 
@@ -455,11 +458,15 @@ def download_syntho_charts_release(scripts_dir: str, deployment_id: str) -> bool
     click.echo("Step 3: Downloading the release;")
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
-    set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS)
+    set_state(
+        deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS
+    )
 
     result = run_script(scripts_dir, deployment_dir, "download-syntho-charts-release-dc.sh")
     if not result.succeeded:
-        set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED)
+        set_state(
+            deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED
+        )
 
     if result.succeeded:
         set_state(

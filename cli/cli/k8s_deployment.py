@@ -41,8 +41,6 @@ class DeploymentStatus(Enum):
         return self.value[1]
 
 
-
-
 @with_working_directory
 def deployment_preparation(scripts_dir: str):
     click.echo("Step 0: Deployment Preparation;")
@@ -133,7 +131,8 @@ def start(scripts_dir: str,
         return DeploymentResult(
             succeeded=False,
             deployment_id=deployment_id,
-            error=("Pre deployment operations failed - Setting up major pre-deployment components"),
+            error=("Pre deployment operations failed "
+                   "- Setting up major pre-deployment components"),
             deployment_status=DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED,
         )
 
@@ -238,6 +237,7 @@ def destroy(scripts_dir: str, deployment_id: str, force: bool) -> bool:
 
     return result
 
+
 def generate_deployment_id(kubeconfig: str) -> str:
     kubeconfig_content = kubeconfig
     if os.path.isfile(kubeconfig):
@@ -326,7 +326,6 @@ def prepare_env(deployment_id: str,
 
     scripts_dir = deployments_dir.replace("/deployments", "")
     set_state(deployment_id, deployments_dir, DeploymentStatus.PREPARING_ENV)
-
 
     kube_dir = f"{deployment_dir}/.kube"
     if not os.path.exists(kube_dir):
@@ -452,11 +451,17 @@ def configuration_questions(scripts_dir: str, deployment_id: str, skip_configura
 
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
-    set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS)
+    set_state(
+        deployment_id,
+        deployments_dir,
+        DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS
+    )
 
     result = run_script(scripts_dir, deployment_dir, "configuration-questions.sh")
     if not result.succeeded:
-        set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED)
+        set_state(
+            deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED
+        )
 
     return result.succeeded
 
@@ -465,11 +470,15 @@ def download_syntho_charts_release(scripts_dir: str, deployment_id: str) -> bool
     click.echo("Step 3: Downloading the release;")
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
-    set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS)
+    set_state(
+        deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS
+    )
 
     result = run_script(scripts_dir, deployment_dir, "download-syntho-charts-release.sh")
     if not result.succeeded:
-        set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED)
+        set_state(
+            deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED
+        )
 
     return result.succeeded
 
@@ -478,10 +487,14 @@ def major_predeployment_operations(scripts_dir: str, deployment_id: str) -> bool
     click.echo("Step 4: Major pre-deployment operations;")
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
-    set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS)
+    set_state(
+        deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS
+    )
 
     result = run_script(scripts_dir, deployment_dir, "major-pre-deployment-operations.sh")
     if not result.succeeded:
-        set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED)
+        set_state(
+            deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED
+        )
 
     return result.succeeded
