@@ -21,6 +21,16 @@ When developing the CLI
 pip install -r requirements-dev.txt
 ```
 
+#### Enabling pre-commit hooks
+
+pre-commit ensures that our code adheres to specific quality standards, enhancing the overall
+quality and maintainability of our projects.
+Please ensure that you have pre-commit installed to benefit from these automated checks.
+
+```
+pre-commit install
+```
+
 ### Playing Mode
 
 When testing the CLI locally
