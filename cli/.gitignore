@@ -6,3 +6,6 @@ build/
 
 cli/scripts/not-ready-yet/*
 .kube
+
+**/__pycache__/
+.coverage
