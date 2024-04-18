@@ -7,9 +7,9 @@ With `syntho-cli`, you can effortlessly deploy, manage, and uninstall a variety 
 
 This document provides a quick start guide on how to install and use `syntho-cli`, as well as instructions for uninstallation.
 
-> RECOMMENDED syntho-cli version is `1.6.1`, and Syntho stack version is `1.9.7`
+> RECOMMENDED syntho-cli version is `1.7.0`, and Syntho stack version is `1.9.7`
 
-> eg. pip install syntho-cli==1.6.1 && syntho-cli k8s deployment ...... --version 1.9.7 .....
+> eg. pip install syntho-cli==1.7.0 && syntho-cli k8s deployment ...... --version 1.9.7 .....
 
 ## Installation
 
