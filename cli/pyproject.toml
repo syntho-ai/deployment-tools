@@ -1,0 +1,50 @@
+[tool.poetry]
+name = "syntho-cli"
+version = "0.1.0"
+description = "Syntho Stack Deployment CLI"
+authors = [
+    "info@syntho.ai",
+    "Younes Moustaghfir <younes@syntho.ai>",
+]
+readme = "README.md"
+homepage = "https://github.com/syntho-ai/syntho-cli"
+repository = "https://github.com/syntho-ai/syntho-cli"
+license = "MIT License"
+keywords = ["syntho", "synthetic data", "deployment"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+click = "^8.1.7"
+pyyaml = "^6.0.1"
+watchdog = "^4.0.0"
+
+
+[tool.poetry.group.dev.dependencies]
+ipdb = "^0.13.13"
+ipython = "^8.23.0"
+flake8 = "^7.0.0"
+pre-commit = "^3.7.0"
+coverage = "^7.4.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.setuptools.package-data]
+cli = ["scripts/deploy-kubernetes.sh", "scripts/pre-requirements-kubernetes.sh",
+        "scripts/utils.sh", "scripts/cleanup-kubernetes.sh",
+        "scripts/get-k8s-cluster-context-name.sh",
+        "scripts/configuration-questions.sh",
+        "scripts/download-syntho-charts-release.sh",
+        "scripts/major-pre-deployment-operations.sh",
+        "scripts/deploy-ray-and-syntho-stack.sh",
+        "scripts/k8s-deployment-preparation.sh",
+        "scripts/cleanup-docker-compose.sh",
+        "scripts/pre-requirements-dc.sh",
+        "scripts/configuration-questions-dc.sh",
+        "scripts/download-syntho-charts-release-dc.sh",
+        "scripts/deploy-ray-and-syntho-stack-dc.sh"
+        ]
+
+[project.scripts]
+syntho-cli = "cli.syntho_cli:cli"

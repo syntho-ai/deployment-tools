@@ -9,3 +9,5 @@ cli/scripts/not-ready-yet/*
 
 **/__pycache__/
 .coverage
+
+.pytest_cache
