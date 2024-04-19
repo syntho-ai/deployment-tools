@@ -25,6 +25,8 @@ ipython = "^8.23.0"
 flake8 = "^7.0.0"
 pre-commit = "^3.7.0"
 coverage = "^7.4.4"
+ruff = "^0.4.0"
+bandit = "^1.7.8"
 
 [build-system]
 requires = ["poetry-core"]
@@ -48,3 +50,25 @@ cli = ["scripts/deploy-kubernetes.sh", "scripts/pre-requirements-kubernetes.sh",
 
 [project.scripts]
 syntho-cli = "cli.syntho_cli:cli"
+
+[tool.ruff]
+# Same as Black.
+line-length = 120
+extend-include = ["*.ipynb"]
+
+[tool.ruff.lint]
+# E = pycodestyles (default)
+# F = pyflakes (default)
+# B = flake8-bugbear (extra)
+# I = isort (extra)
+select = ["E", "F", "B", "I"]
+
+[tool.bandit]
+exclude_dirs = ["/tests/"]
+skips = [
+    "B101",
+    "B108",
+    "B404",
+    "B603",
+    "B607",
+]

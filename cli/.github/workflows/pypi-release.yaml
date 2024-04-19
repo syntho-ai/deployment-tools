@@ -9,7 +9,7 @@ jobs:
   build-n-publish:
     name: Build and publish Python package to PyPI
     permissions:
-      id-token: write 
+      id-token: write
     environment: release
     runs-on: ubuntu-latest
     steps:

@@ -1,21 +1,25 @@
+import base64
+import json
 import os
 import shutil
-import yaml
-import base64
-import click
-import json
-
-from typing import Dict, NoReturn, List
-from hashlib import md5
 from datetime import datetime
 from enum import Enum
+from hashlib import md5
+from typing import Dict, List, NoReturn
 
+import click
+import yaml
 
-from cli.utils import (thread_safe, with_working_directory, DeploymentResult,
-                       get_deployments_dir, CleanUpLevel, run_script)
+from cli.utilities.offline_ops import generate_offline_registry_archive_path, generate_offline_registry_dir
 from cli.utilities.prepull_images import generate_prepull_images_dir
-from cli.utilities.offline_ops import (generate_offline_registry_dir,
-                                       generate_offline_registry_archive_path)
+from cli.utils import (
+    CleanUpLevel,
+    DeploymentResult,
+    get_deployments_dir,
+    run_script,
+    thread_safe,
+    with_working_directory,
+)
 
 
 class DeploymentStatus(Enum):
@@ -25,10 +29,8 @@ class DeploymentStatus(Enum):
     PRE_REQ_CHECK_IN_PROGRESS = ("pre-req-check-in-progress", CleanUpLevel.DIR)
     PRE_REQ_CHECK_SUCCEEDED = ("pre-req-check-succeeded", CleanUpLevel.DIR)
     PRE_REQ_CHECK_FAILED = ("pre-req-check-failed", CleanUpLevel.DIR)
-    PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS = ("pre-deployment-operations-in-progress",
-                                             CleanUpLevel.FULL)
-    PRE_DEPLOYMENT_OPERATIONS_SUCCEEDED = ("pre-deployment-operations-succeeded",
-                                           CleanUpLevel.FULL)
+    PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS = ("pre-deployment-operations-in-progress", CleanUpLevel.FULL)
+    PRE_DEPLOYMENT_OPERATIONS_SUCCEEDED = ("pre-deployment-operations-succeeded", CleanUpLevel.FULL)
     PRE_DEPLOYMENT_OPERATIONS_FAILED = ("pre-deployment-operations-failed", CleanUpLevel.FULL)
     DEPLOYMENT_IN_PROGRESS = ("deployment-in-progress", CleanUpLevel.FULL)
     DEPLOYMENT_SUCCEEDED = ("deployment-succeeded", CleanUpLevel.FULL)
@@ -43,19 +45,20 @@ class DeploymentStatus(Enum):
 
 
 @with_working_directory
-def start(scripts_dir: str,
-          license_key: str,
-          registry_user: str,
-          registry_pwd: str,
-          docker_host,
-          docker_ssh_user_private_key,
-          arch_value: str,
-          version: str,
-          docker_config_json_path: str,
-          skip_configuration: bool,
-          use_trusted_registry: bool,
-          use_offline_registry: bool) -> str:
-
+def start(
+    scripts_dir: str,
+    license_key: str,
+    registry_user: str,
+    registry_pwd: str,
+    docker_host,
+    docker_ssh_user_private_key,
+    arch_value: str,
+    version: str,
+    docker_config_json_path: str,
+    skip_configuration: bool,
+    use_trusted_registry: bool,
+    use_offline_registry: bool,
+) -> str:
     deployments_dir = get_deployments_dir(scripts_dir)
     deployment_id = generate_deployment_id(docker_host)
     deployment_dir = f"{deployments_dir}/{deployment_id}"
@@ -143,13 +146,11 @@ def start(scripts_dir: str,
 
 def generate_deployment_id(docker_host: str) -> str:
     deployment_indicator = f"host:{docker_host}"
-    indicator_hash = md5(deployment_indicator.encode()).hexdigest()
+    indicator_hash = md5(deployment_indicator.encode(), usedforsecurity=False).hexdigest()
     return f"dc-{indicator_hash}"
 
 
-def get_deployment_status(deployments_dir: str,
-                          deployment_dir: str,
-                          deployment_id: str) -> DeploymentStatus:
+def get_deployment_status(deployments_dir: str, deployment_dir: str, deployment_id: str) -> DeploymentStatus:
     exists = os.path.exists(deployment_dir)
     if not exists:
         return None
@@ -181,14 +182,13 @@ def cleanup(scripts_dir: str, deployment_id: str, status: DeploymentStatus) -> b
     click.echo(f"Deployment({deployment_id}) will be destroyed alongside its components")
     result = cleanup_with_cleanup_level(scripts_dir, deployment_id, status.cleanup_level())
     if result:
-        click.echo(
-            f"Deployment({deployment_id}) is destroyed and all its components have been removed"
-        )
+        click.echo(f"Deployment({deployment_id}) is destroyed and all its components have been removed")
     return result
 
 
-def cleanup_with_cleanup_level(scripts_dir: str, deployment_id: str, cleanup_level: CleanUpLevel,
-                               force: bool = False) -> bool:
+def cleanup_with_cleanup_level(
+    scripts_dir: str, deployment_id: str, cleanup_level: CleanUpLevel, force: bool = False
+) -> bool:
     if cleanup_level == CleanUpLevel.NA:
         return
 
@@ -200,12 +200,7 @@ def cleanup_with_cleanup_level(scripts_dir: str, deployment_id: str, cleanup_lev
 
     if cleanup_level == CleanUpLevel.FULL:
         os.chdir(deployment_dir)
-        result = run_script(
-            scripts_dir,
-            deployment_dir,
-            "cleanup-docker-compose.sh",
-            **{"FORCE": str(force).lower()}
-        )
+        result = run_script(scripts_dir, deployment_dir, "cleanup-docker-compose.sh", **{"FORCE": str(force).lower()})
         if not result.succeeded:
             return False
 
@@ -236,12 +231,9 @@ def update_deployments_state(deployments_dir: str, deployments_state: Dict) -> N
         yaml.dump(deployments_state, file, default_flow_style=False)
 
 
-def initialize_deployment(deployment_id: str,
-                          deployment_dir: str,
-                          deployments_dir: str,
-                          version: str,
-                          host_name: str) -> NoReturn:
-
+def initialize_deployment(
+    deployment_id: str, deployment_dir: str, deployments_dir: str, version: str, host_name: str
+) -> NoReturn:
     deployments_state = get_deployments_state(deployments_dir)
 
     started_at = datetime.utcnow().isoformat()
@@ -283,9 +275,7 @@ def destroy(scripts_dir: str, deployment_id: str, force: bool) -> bool:
     click.echo(f"Deployment({deployment_id}) will be destroyed alongside its components")
     result = cleanup_with_cleanup_level(scripts_dir, deployment_id, CleanUpLevel.FULL, force=force)
     if result:
-        click.echo(
-            f"Deployment({deployment_id}) is destroyed and all its components have been removed"
-        )
+        click.echo(f"Deployment({deployment_id}) is destroyed and all its components have been removed")
 
     return result
 
@@ -296,27 +286,26 @@ def get_deployments(scripts_dir: str) -> List[Dict]:
     return deployments_state["deployments"]
 
 
-def prepare_env(deployment_id: str,
-                deployment_dir: str,
-                deployments_dir: str,
-                license_key: str,
-                registry_user: str,
-                registry_pwd: str,
-                docker_host: str,
-                docker_ssh_user_private_key: str,
-                arch_value: str,
-                version: str,
-                docker_config_json_path: str,
-                skip_configuration: bool,
-                use_trusted_registry: bool,
-                use_offline_registry: bool):
-
+def prepare_env(
+    deployment_id: str,
+    deployment_dir: str,
+    deployments_dir: str,
+    license_key: str,
+    registry_user: str,
+    registry_pwd: str,
+    docker_host: str,
+    docker_ssh_user_private_key: str,
+    arch_value: str,
+    version: str,
+    docker_config_json_path: str,
+    skip_configuration: bool,
+    use_trusted_registry: bool,
+    use_offline_registry: bool,
+):
     scripts_dir = deployments_dir.replace("/deployments", "")
     set_state(deployment_id, deployments_dir, DeploymentStatus.PREPARING_ENV)
 
-    base64_registry_creds = base64.b64encode(
-        f"{registry_user}:{registry_pwd}".encode()
-    ).decode()
+    base64_registry_creds = base64.b64encode(f"{registry_user}:{registry_pwd}".encode()).decode()
 
     secondary_docker_config = {}
     docker_config_json_path = os.path.expanduser(docker_config_json_path)
@@ -333,7 +322,7 @@ def prepare_env(deployment_id: str,
                         "auths": {
                             "https://index.docker.io/v1/": {},
                         },
-                        "credsStore": creds_store
+                        "credsStore": creds_store,
                     }
                 if cred_helpers:
                     secondary_docker_config.update({"credHelpers": cred_helpers})
@@ -343,13 +332,7 @@ def prepare_env(deployment_id: str,
             except ValueError:
                 pass
 
-    docker_config = {
-        "auths": {
-            "syntho.azurecr.io": {
-                "auth": base64_registry_creds
-            }
-        }
-    }
+    docker_config = {"auths": {"syntho.azurecr.io": {"auth": base64_registry_creds}}}
 
     docker_dir = f"{deployment_dir}/.docker"
     if not os.path.exists(docker_dir):
@@ -401,10 +384,7 @@ def prepare_env(deployment_id: str,
     set_state(deployment_id, deployments_dir, DeploymentStatus.INITIALIZED)
 
 
-def set_state(deployment_id: str,
-              deployments_dir: str,
-              status: DeploymentStatus,
-              is_completed: bool = False):
+def set_state(deployment_id: str, deployments_dir: str, status: DeploymentStatus, is_completed: bool = False):
     deployments_state = get_deployments_state(deployments_dir)
     for deployment in deployments_state["deployments"]:
         if deployment["id"] == deployment_id:
@@ -441,15 +421,11 @@ def configuration_questions(scripts_dir: str, deployment_id: str, skip_configura
 
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
-    set_state(
-        deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS
-    )
+    set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS)
 
     result = run_script(scripts_dir, deployment_dir, "configuration-questions-dc.sh")
     if not result.succeeded:
-        set_state(
-            deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED
-        )
+        set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED)
 
     return result.succeeded
 
@@ -458,20 +434,14 @@ def download_syntho_charts_release(scripts_dir: str, deployment_id: str) -> bool
     click.echo("Step 3: Downloading the release;")
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
-    set_state(
-        deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS
-    )
+    set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS)
 
     result = run_script(scripts_dir, deployment_dir, "download-syntho-charts-release-dc.sh")
     if not result.succeeded:
-        set_state(
-            deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED
-        )
+        set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED)
 
     if result.succeeded:
-        set_state(
-            deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_SUCCEEDED
-        )
+        set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_SUCCEEDED)
 
     return result.succeeded
 

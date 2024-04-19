@@ -1,13 +1,20 @@
 import os
 import shutil
 import time
+
 import click
 
-
-from cli.utils import (with_working_directory,
-                       run_script, make_utilities_dir,
-                       generate_utilities_dir, check_acquired, acquire, release, set_status,
-                       find_available_port)
+from cli.utils import (
+    acquire,
+    check_acquired,
+    find_available_port,
+    generate_utilities_dir,
+    make_utilities_dir,
+    release,
+    run_script,
+    set_status,
+    with_working_directory,
+)
 
 
 def create_offline_registry(
@@ -22,8 +29,10 @@ def create_offline_registry(
     offline_registry_dir = generate_offline_registry_dir(scripts_dir)
     acquired = check_acquired(offline_registry_dir)
     if acquired:
-        return False, ("There is an active activate-offline-mode process, "
-                       "please wait until it is done, or terminate the existing process")
+        return False, (
+            "There is an active activate-offline-mode process, "
+            "please wait until it is done, or terminate the existing process"
+        )
 
     make_offline_registry_dir(scripts_dir)
     acquire(offline_registry_dir)
@@ -52,7 +61,10 @@ def create_offline_registry(
     # step 2 creating an offline image registry
     set_status(offline_registry_dir, "creating-offline-registry")
     result, err = create_offline_image_registry(
-        scripts_dir, env_file_path, docker_config_json_path, available_port,
+        scripts_dir,
+        env_file_path,
+        docker_config_json_path,
+        available_port,
     )
     if not result:
         release(offline_registry_dir)
@@ -107,7 +119,6 @@ def make_env_file(
     syntho_registry_pwd,
     available_port,
 ):
-
     offline_registry = f"localhost:{available_port}"
     env = {
         "ARCH": arch,
@@ -133,11 +144,7 @@ def authenticate_syntho_registry(scripts_dir, env_file_path):
     click.echo("Step 1: Authentication;")
     offline_registry_dir = generate_offline_registry_dir(scripts_dir)
     os.chdir(offline_registry_dir)
-    result = run_script(
-        scripts_dir,
-        offline_registry_dir,
-        "authenticate-syntho-registry.sh"
-    )
+    result = run_script(scripts_dir, offline_registry_dir, "authenticate-syntho-registry.sh")
     return result.exitcode == 0
 
 
@@ -146,17 +153,12 @@ def deauthenticate_syntho_registry(scripts_dir, env_file_path):
     click.echo("Step 3: Removing authentication credentials;")
     offline_registry_dir = generate_offline_registry_dir(scripts_dir)
     os.chdir(offline_registry_dir)
-    result = run_script(
-        scripts_dir,
-        offline_registry_dir,
-        "deauthenticate-syntho-registry.sh"
-    )
+    result = run_script(scripts_dir, offline_registry_dir, "deauthenticate-syntho-registry.sh")
     return result.exitcode == 0
 
 
 @with_working_directory
-def create_offline_image_registry(scripts_dir, env_file_path, docker_config_json_path,
-                                  available_port):
+def create_offline_image_registry(scripts_dir, env_file_path, docker_config_json_path, available_port):
     click.echo("Step 2: Creating an offline image registry;")
     offline_registry_dir = generate_offline_registry_dir(scripts_dir)
     os.chdir(offline_registry_dir)
@@ -172,7 +174,7 @@ def create_offline_image_registry(scripts_dir, env_file_path, docker_config_json
         "create-offline-registry.sh",
         **{
             "DOCKER_CONFIG": docker_config,
-        }
+        },
     )
     return result.exitcode == 0, None
 
@@ -185,10 +187,7 @@ def package_syntho_registry(scripts_dir, env_file_path):
     archive_file_name = generate_offline_registry_archive_path(scripts_dir)
 
     result = run_script(
-        scripts_dir,
-        offline_registry_dir,
-        "package-offline-registry.sh",
-        **{"ARCHIVE_FILE_NAME": archive_file_name}
+        scripts_dir, offline_registry_dir, "package-offline-registry.sh", **{"ARCHIVE_FILE_NAME": archive_file_name}
     )
 
     return result.exitcode == 0

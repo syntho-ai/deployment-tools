@@ -76,7 +76,7 @@ pull_images_into_trusted_registry() {
 
 
 prepare_final_versions() {
-    # Initially store all env keys in an array 
+    # Initially store all env keys in an array
     initial_keys=($(env | cut -d= -f1))
 
     # Apply the default values from the .images.env file
@@ -202,7 +202,7 @@ pull_images() {
 
         echo "DOCKER_CONFIG=$DOCKER_CONFIG docker tag ${repo}:${original_tag} ${trusted_repo}:${trusted_tag}"
         DOCKER_CONFIG=$DOCKER_CONFIG docker tag ${repo}:${original_tag} ${trusted_repo}:${trusted_tag}
-        
+
         echo "DOCKER_CONFIG=$DOCKER_CONFIG docker push ${trusted_repo}:${trusted_tag}"
         DOCKER_CONFIG=$DOCKER_CONFIG docker push ${trusted_repo}:${trusted_tag}
 

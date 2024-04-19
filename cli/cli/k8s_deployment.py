@@ -1,17 +1,23 @@
 import os
 import shutil
-import yaml
 import time
-import click
-
-from typing import Dict, NoReturn, List
-from hashlib import md5
 from datetime import datetime
 from enum import Enum
+from hashlib import md5
+from typing import Dict, List, NoReturn
 
-from cli.utils import (thread_safe, with_working_directory, DeploymentResult,
-                       get_deployments_dir, CleanUpLevel, run_script)
+import click
+import yaml
+
 from cli.utilities.prepull_images import generate_prepull_images_dir
+from cli.utils import (
+    CleanUpLevel,
+    DeploymentResult,
+    get_deployments_dir,
+    run_script,
+    thread_safe,
+    with_working_directory,
+)
 
 
 class DeploymentStatus(Enum):
@@ -21,10 +27,8 @@ class DeploymentStatus(Enum):
     PRE_REQ_CHECK_IN_PROGRESS = ("pre-req-check-in-progress", CleanUpLevel.DIR)
     PRE_REQ_CHECK_SUCCEEDED = ("pre-req-check-succeeded", CleanUpLevel.DIR)
     PRE_REQ_CHECK_FAILED = ("pre-req-check-failed", CleanUpLevel.DIR)
-    PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS = ("pre-deployment-operations-in-progress",
-                                             CleanUpLevel.FULL)
-    PRE_DEPLOYMENT_OPERATIONS_SUCCEEDED = ("pre-deployment-operations-succeeded",
-                                           CleanUpLevel.FULL)
+    PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS = ("pre-deployment-operations-in-progress", CleanUpLevel.FULL)
+    PRE_DEPLOYMENT_OPERATIONS_SUCCEEDED = ("pre-deployment-operations-succeeded", CleanUpLevel.FULL)
     PRE_DEPLOYMENT_OPERATIONS_FAILED = ("pre-deployment-operations-failed", CleanUpLevel.FULL)
     RAY_CLUSTER_DEPLOYMENT_IN_PROGRESS = ("ray-cluster-deployment-in-progress", CleanUpLevel.FULL)
     RAY_CLUSTER_DEPLOYMENT_SUCCEEDED = ("ray-cluster-deployment-succeeded", CleanUpLevel.FULL)
@@ -48,17 +52,18 @@ def deployment_preparation(scripts_dir: str):
 
 
 @with_working_directory
-def start(scripts_dir: str,
-          license_key: str,
-          registry_user: str,
-          registry_pwd: str,
-          kubeconfig: str,
-          arch_value: str,
-          version: str,
-          trusted_registry_image_pull_secret: str,
-          skip_configuration: bool,
-          use_trusted_registry: bool) -> str:
-
+def start(
+    scripts_dir: str,
+    license_key: str,
+    registry_user: str,
+    registry_pwd: str,
+    kubeconfig: str,
+    arch_value: str,
+    version: str,
+    trusted_registry_image_pull_secret: str,
+    skip_configuration: bool,
+    use_trusted_registry: bool,
+) -> str:
     deployments_dir = get_deployments_dir(scripts_dir)
     deployment_id = generate_deployment_id(kubeconfig)
     deployment_dir = f"{deployments_dir}/{deployment_id}"
@@ -131,8 +136,7 @@ def start(scripts_dir: str,
         return DeploymentResult(
             succeeded=False,
             deployment_id=deployment_id,
-            error=("Pre deployment operations failed "
-                   "- Setting up major pre-deployment components"),
+            error=("Pre deployment operations failed " "- Setting up major pre-deployment components"),
             deployment_status=DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED,
         )
 
@@ -161,9 +165,7 @@ def is_deployment_completed(deployments_dir: str, deployment_id: str) -> bool:
     with open(deployment_state_path, "r") as file:
         deployment_state_dict = yaml.safe_load(file)
 
-    deployment = next(
-        filter(lambda d: d["id"] == deployment_id, deployment_state_dict["deployments"]), None
-    )
+    deployment = next(filter(lambda d: d["id"] == deployment_id, deployment_state_dict["deployments"]), None)
     return deployment["status"] == "completed"
 
 
@@ -171,14 +173,13 @@ def cleanup(scripts_dir: str, deployment_id: str, status: DeploymentStatus) -> b
     click.echo(f"Deployment({deployment_id}) will be destroyed alongside its components")
     result = cleanup_with_cleanup_level(scripts_dir, deployment_id, status.cleanup_level())
     if result:
-        click.echo(
-            f"Deployment({deployment_id}) is destroyed and all its components have been removed"
-        )
+        click.echo(f"Deployment({deployment_id}) is destroyed and all its components have been removed")
     return result
 
 
-def cleanup_with_cleanup_level(scripts_dir: str, deployment_id: str, cleanup_level: CleanUpLevel,
-                               force: bool = False) -> bool:
+def cleanup_with_cleanup_level(
+    scripts_dir: str, deployment_id: str, cleanup_level: CleanUpLevel, force: bool = False
+) -> bool:
     if cleanup_level == CleanUpLevel.NA:
         return
 
@@ -190,12 +191,7 @@ def cleanup_with_cleanup_level(scripts_dir: str, deployment_id: str, cleanup_lev
 
     if cleanup_level == CleanUpLevel.FULL:
         os.chdir(deployment_dir)
-        result = run_script(
-            scripts_dir,
-            deployment_dir,
-            "cleanup-kubernetes.sh",
-            **{"FORCE": str(force).lower()}
-        )
+        result = run_script(scripts_dir, deployment_dir, "cleanup-kubernetes.sh", **{"FORCE": str(force).lower()})
         if not result.succeeded:
             return False
 
@@ -231,9 +227,7 @@ def destroy(scripts_dir: str, deployment_id: str, force: bool) -> bool:
     click.echo(f"Deployment({deployment_id}) will be destroyed alongside its components")
     result = cleanup_with_cleanup_level(scripts_dir, deployment_id, CleanUpLevel.FULL, force=force)
     if result:
-        click.echo(
-            f"Deployment({deployment_id}) is destroyed and all its components have been removed"
-        )
+        click.echo(f"Deployment({deployment_id}) is destroyed and all its components have been removed")
 
     return result
 
@@ -244,13 +238,11 @@ def generate_deployment_id(kubeconfig: str) -> str:
         with open(kubeconfig, "r") as file:
             kubeconfig_content = file.read()
 
-    indicator_hash = md5(kubeconfig_content.encode()).hexdigest()
+    indicator_hash = md5(kubeconfig_content.encode(), usedforsecurity=False).hexdigest()
     return f"k8s-{indicator_hash}"
 
 
-def get_deployment_status(deployments_dir: str,
-                          deployment_dir: str,
-                          deployment_id: str) -> DeploymentStatus:
+def get_deployment_status(deployments_dir: str, deployment_dir: str, deployment_id: str) -> DeploymentStatus:
     exists = os.path.exists(deployment_dir)
     if not exists:
         return None
@@ -278,11 +270,7 @@ def get_deployments_state(deployments_dir: str) -> Dict:
     }
 
 
-def initialize_deployment(deployment_id: str,
-                          deployment_dir: str,
-                          deployments_dir: str,
-                          version: str) -> NoReturn:
-
+def initialize_deployment(deployment_id: str, deployment_dir: str, deployments_dir: str, version: str) -> NoReturn:
     deployments_state = get_deployments_state(deployments_dir)
 
     started_at = datetime.utcnow().isoformat()
@@ -311,19 +299,20 @@ def update_deployments_state(deployments_dir: str, deployments_state: Dict) -> N
         yaml.dump(deployments_state, file, default_flow_style=False)
 
 
-def prepare_env(deployment_id: str,
-                deployment_dir: str,
-                deployments_dir: str,
-                license_key: str,
-                registry_user: str,
-                registry_pwd: str,
-                arch_value: str,
-                kubeconfig: str,
-                version: str,
-                trusted_registry_image_pull_secret: str,
-                skip_configuration: bool,
-                use_trusted_registry: bool):
-
+def prepare_env(
+    deployment_id: str,
+    deployment_dir: str,
+    deployments_dir: str,
+    license_key: str,
+    registry_user: str,
+    registry_pwd: str,
+    arch_value: str,
+    kubeconfig: str,
+    version: str,
+    trusted_registry_image_pull_secret: str,
+    skip_configuration: bool,
+    use_trusted_registry: bool,
+):
     scripts_dir = deployments_dir.replace("/deployments", "")
     set_state(deployment_id, deployments_dir, DeploymentStatus.PREPARING_ENV)
 
@@ -359,10 +348,7 @@ def prepare_env(deployment_id: str,
     set_state(deployment_id, deployments_dir, DeploymentStatus.INITIALIZED)
 
 
-def set_state(deployment_id: str,
-              deployments_dir: str,
-              status: DeploymentStatus,
-              is_completed: bool = False):
+def set_state(deployment_id: str, deployments_dir: str, status: DeploymentStatus, is_completed: bool = False):
     deployments_state = get_deployments_state(deployments_dir)
     for deployment in deployments_state["deployments"]:
         if deployment["id"] == deployment_id:
@@ -414,9 +400,7 @@ def get_deployments(scripts_dir: str) -> List[Dict]:
 def set_cluster_name(scripts_dir: str, deployment_id: str) -> NoReturn:
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
-    result = run_script(
-        scripts_dir, deployment_dir, "get-k8s-cluster-context-name.sh", capture_output=True
-    )
+    result = run_script(scripts_dir, deployment_dir, "get-k8s-cluster-context-name.sh", capture_output=True)
     cluster_name = result.output
 
     deployments_state = get_deployments_state(deployments_dir)
@@ -451,17 +435,11 @@ def configuration_questions(scripts_dir: str, deployment_id: str, skip_configura
 
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
-    set_state(
-        deployment_id,
-        deployments_dir,
-        DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS
-    )
+    set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS)
 
     result = run_script(scripts_dir, deployment_dir, "configuration-questions.sh")
     if not result.succeeded:
-        set_state(
-            deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED
-        )
+        set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED)
 
     return result.succeeded
 
@@ -470,15 +448,11 @@ def download_syntho_charts_release(scripts_dir: str, deployment_id: str) -> bool
     click.echo("Step 3: Downloading the release;")
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
-    set_state(
-        deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS
-    )
+    set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS)
 
     result = run_script(scripts_dir, deployment_dir, "download-syntho-charts-release.sh")
     if not result.succeeded:
-        set_state(
-            deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED
-        )
+        set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED)
 
     return result.succeeded
 
@@ -487,14 +461,10 @@ def major_predeployment_operations(scripts_dir: str, deployment_id: str) -> bool
     click.echo("Step 4: Major pre-deployment operations;")
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
-    set_state(
-        deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS
-    )
+    set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS)
 
     result = run_script(scripts_dir, deployment_dir, "major-pre-deployment-operations.sh")
     if not result.succeeded:
-        set_state(
-            deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED
-        )
+        set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED)
 
     return result.succeeded

@@ -1,21 +1,19 @@
-import os
 import fcntl
-import subprocess
-import time
-import threading
 import glob
-import socket
-import tarfile
+import os
 import platform
-
-from queue import Queue, Empty
-from functools import wraps
-from enum import Enum
+import socket
+import subprocess
+import tarfile
+import threading
+import time
 from collections import namedtuple
+from enum import Enum
+from functools import wraps
+from queue import Empty, Queue
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
-
 
 # Sentinel object
 END_OF_OUTPUT = object()
@@ -33,8 +31,7 @@ def is_arch_supported(arch: str) -> bool:
 
 def thread_safe(func):
     def wrapper(*args, **kwargs):
-        deployments_dir = args[0] if args else kwargs.get(
-            "deployments_dir", "/tmp")
+        deployments_dir = args[0] if args else kwargs.get("deployments_dir", "/tmp")
 
         # Construct the lock file path
         lock_file_path = os.path.join(deployments_dir, ".lock")
@@ -69,19 +66,25 @@ def with_working_directory(func):
     return wrapper
 
 
-DeploymentResult = namedtuple("DeploymentResult", [
-    "succeeded",
-    "deployment_id",
-    "error",
-    "deployment_status",
-])
+DeploymentResult = namedtuple(
+    "DeploymentResult",
+    [
+        "succeeded",
+        "deployment_id",
+        "error",
+        "deployment_status",
+    ],
+)
 
 
-SubprocessResult = namedtuple("SubprocessResult", [
-    "succeeded",
-    "output",
-    "exitcode",
-])
+SubprocessResult = namedtuple(
+    "SubprocessResult",
+    [
+        "succeeded",
+        "output",
+        "exitcode",
+    ],
+)
 
 
 def get_deployments_dir(scripts_dir: str) -> str:
@@ -98,11 +101,9 @@ class CleanUpLevel(Enum):
     NA = "not-applicable"
 
 
-def run_script(scripts_dir: str,
-               deployment_dir: str,
-               script_name: str,
-               capture_output: bool = False,
-               **extra_env) -> SubprocessResult:
+def run_script(
+    scripts_dir: str, deployment_dir: str, script_name: str, capture_output: bool = False, **extra_env
+) -> SubprocessResult:
     env = {
         "DEPLOYMENT_DIR": deployment_dir,
         "PATH": os.environ.get("PATH", ""),
@@ -112,8 +113,7 @@ def run_script(scripts_dir: str,
 
     try:
         if capture_output:
-            res = subprocess.run([script_path], check=True, shell=False, env=env,
-                                 capture_output=True, text=True)
+            res = subprocess.run([script_path], check=True, shell=False, env=env, capture_output=True, text=True)
         else:
             res = subprocess.run([script_path], check=True, shell=False, env=env)
 
@@ -164,7 +164,7 @@ def tail(f, lines, follow, deployment_id_or_process_name):
 
 def enqueue_output(out, queue):
     """Read lines from 'out' and put them into 'queue'"""
-    for line in iter(out.readline, b''):
+    for line in iter(out.readline, b""):
         queue.put(line)
     queue.put(END_OF_OUTPUT)
 
@@ -197,13 +197,7 @@ def read_lines(stdout, timeout):
 
 
 class LogEventHandler(FileSystemEventHandler):
-
-    def __init__(self,
-                 *args,
-                 lines=10,
-                 follow=False,
-                 deployment_id_or_process_name=None,
-                 **kwargs):
+    def __init__(self, *args, lines=10, follow=False, deployment_id_or_process_name=None, **kwargs):
         self.lines = lines
         self.follow = follow
         self.deployment_id_or_process_name = deployment_id_or_process_name
@@ -255,7 +249,7 @@ def logs(scripts_dir, deployment_id_or_process_name, lines, follow, is_deploymen
 
     LOG_DIR = process
     # Generate list of log files with associated creation times
-    log_files = [(f, os.path.getctime(f)) for f in glob.glob(os.path.join(LOG_DIR, '*.log'))]
+    log_files = [(f, os.path.getctime(f)) for f in glob.glob(os.path.join(LOG_DIR, "*.log"))]
     sorted_log_files = sorted(log_files, key=lambda x: x[1])
 
     for index, (filename, _) in enumerate(sorted_log_files):

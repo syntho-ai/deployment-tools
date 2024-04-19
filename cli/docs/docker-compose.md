@@ -1,6 +1,6 @@
 # Managing Docker Resources with syntho-cli
 
-In this guide, we will walk through how to use `syntho-cli` to effectively manage your resources in a 
+In this guide, we will walk through how to use `syntho-cli` to effectively manage your resources in a
 Docker host environment.
 
 ## Prerequisites

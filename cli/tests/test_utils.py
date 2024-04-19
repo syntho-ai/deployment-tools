@@ -1,16 +1,31 @@
 # tests/test_utils.py
-import os
 import fcntl
+import os
 import subprocess
-
 import unittest
-from unittest.mock import patch, MagicMock, mock_open
+from unittest.mock import MagicMock, mock_open, patch
 
-from cli.utils import (CURSOR_TRACKER, reset_cursor_tracker, is_arch_supported, thread_safe,
-                       with_working_directory, get_deployments_dir, run_script, tail,
-                       deployment_exists, utility_exists, make_utilities_dir,
-                       generate_utilities_dir, check_acquired, acquire, release, set_status,
-                       find_available_port, make_tarfile, get_architecture)
+from cli.utils import (
+    CURSOR_TRACKER,
+    acquire,
+    check_acquired,
+    deployment_exists,
+    find_available_port,
+    generate_utilities_dir,
+    get_architecture,
+    get_deployments_dir,
+    is_arch_supported,
+    make_tarfile,
+    make_utilities_dir,
+    release,
+    reset_cursor_tracker,
+    run_script,
+    set_status,
+    tail,
+    thread_safe,
+    utility_exists,
+    with_working_directory,
+)
 
 
 def test_reset_cursor_tracker():
@@ -27,6 +42,7 @@ def test_reset_cursor_tracker():
 
 
 # Test is_arch_supported function
+
 
 def test_is_arch_supported():
     # Test with supported architectures
@@ -179,8 +195,7 @@ class TestTailFunction(unittest.TestCase):
         tail("filename.log", 10, True, "deployment_id")
 
         # Check if subprocess.Popen was called with the correct arguments
-        mock_popen.assert_called_once_with(["tail", "-F", "-n", "10", "filename.log"],
-                                           stdout=subprocess.PIPE)
+        mock_popen.assert_called_once_with(["tail", "-F", "-n", "10", "filename.log"], stdout=subprocess.PIPE)
 
         # Check if read_lines was called
         mock_read_lines.assert_called_once_with(mock_proc.stdout, 5)
@@ -301,6 +316,7 @@ class TestFindAvailablePort(unittest.TestCase):
                 return False
             else:
                 return True
+
         mock_check_port.side_effect = mock_check_port_side_effect
 
         host = "localhost"
@@ -333,7 +349,7 @@ class TestGetArchitecture(unittest.TestCase):
         # Define test cases with various architecture information
         test_cases = [
             ("x86_64", "amd"),  # Test case for x86_64 architecture
-            ("arm64", "arm"),   # Test case for arm64 architecture
+            ("arm64", "arm"),  # Test case for arm64 architecture
             ("aarch64", "arm"),  # Test case for aarch64 architecture
             ("ppc64le", "ppc64le"),  # Test case for ppc64le architecture
             ("sparc64", "sparc64"),  # Test case for sparc64 architecture

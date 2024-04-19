@@ -120,7 +120,7 @@ generate_env() {
 
 deploy_docker_compose() {
     DOCKER_FILE="-f $DC_DIR/docker-compose.yaml"
-    
+
     if [ "$IS_REMOTE_DOCKER" = "true" ]; then
         SSH_ENDPOINT=${DOCKER_HOST#*//}
         ssh $SSH_ENDPOINT mkdir -p /tmp/syntho

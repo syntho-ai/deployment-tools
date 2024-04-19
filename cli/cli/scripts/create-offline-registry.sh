@@ -94,7 +94,7 @@ run_registry2() {
 
     # give some time for docker to start the process
     sleep 5
-    
+
     # Verify if Docker container is running
     if [ "$(DOCKER_CONFIG=$DOCKER_CONFIG docker ps -q -f name=syntho-offline-registry)" ]; then
       echo "The Docker container 'syntho-offline-registry' is running on localhost:$AVAILABLE_PORT."
@@ -111,7 +111,7 @@ delete_registry2() {
 
     # give some time
     sleep 5
-    
+
     # Verify if Docker container is NOT running
     if [ "$(DOCKER_CONFIG=$DOCKER_CONFIG docker ps -q -f name=syntho-offline-registry)" ]; then
       echo "The Docker container 'syntho-offline-registry' is still running on localhost:$AVAILABLE_PORT."
@@ -148,7 +148,7 @@ archive_offline_registry() {
 
 
 prepare_final_versions() {
-    # Initially store all env keys in an array 
+    # Initially store all env keys in an array
     initial_keys=($(env | cut -d= -f1))
 
     # Apply the default values from the .images.env file
@@ -274,7 +274,7 @@ pull_images() {
 
         echo "DOCKER_CONFIG=$DOCKER_CONFIG docker tag ${repo}:${original_tag} ${offline_repo}:${offline_tag}"
         DOCKER_CONFIG=$DOCKER_CONFIG docker tag ${repo}:${original_tag} ${offline_repo}:${offline_tag}
-        
+
         echo "DOCKER_CONFIG=$DOCKER_CONFIG docker push ${offline_repo}:${offline_tag}"
         DOCKER_CONFIG=$DOCKER_CONFIG docker push ${offline_repo}:${offline_tag}
 
