@@ -1,42 +1,31 @@
 # syntho-cli
 
-For detailed information on this topic, please refer to the [relevant section in the documentation](https://github.com/syntho-ai/syntho-cli/blob/main/docs/getting-started.md).
+For detailed information on the CLI's usage, please refer to the [relevant section in the documentation](https://github.com/syntho-ai/syntho-cli/blob/main/docs/getting-started.md).
 
 ## For Developers
 
-Developers can approach this project with two different ways, as production code doesn't need some
-testing/linting/formatting libraries in place
+### Pre-requirements
 
-1. Development Mode
-2. Playing Mode
+- Python `3.12.*` (hint: pyenv)
+- Poetry (`pip install poetry`)
 
 
-### Development Mode
+### Setting up the project
 
-When developing the CLI
+- `poetry install`
 
-> A virtual env is recommended.
+### Usage
 
-```
-pip install -r requirements-dev.txt
-```
+#### Development Mode
 
-#### Enabling pre-commit hooks
+- `poetry shell`
 
-pre-commit ensures that our code adheres to specific quality standards, enhancing the overall
-quality and maintainability of our projects.
-Please ensure that you have pre-commit installed to benefit from these automated checks.
+#### CLI mode - DEV
 
-```
-pre-commit install
-```
+- Option 1: `poetry run syntho-cli --help`
+- Option 2: `poetry shell` && `syntho-cli --help`
 
-### Playing Mode
+#### CLI Mode - PROD
 
-When testing the CLI locally
-
-> A virtual env is recommended.
-
-```
-make pip-local-install
-```
+- `poetry build` -> this will create wheels under ./dist
+- `pip install ./dist/cli-<VERSION>.tar.gz`

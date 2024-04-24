@@ -1,9 +1,9 @@
+import importlib.metadata
 import os
 import sys
 from typing import Optional
 
 import click
-import pkg_resources
 import yaml
 
 from cli import dc_deployment as dc_deployment_manager
@@ -176,14 +176,14 @@ def validate_input_params(
 
 def get_version(package_name: str):
     try:
-        version = pkg_resources.get_distribution(package_name).version
-    except pkg_resources.DistributionNotFound:
+        version = importlib.metadata.version(package_name)
+    except importlib.metadata.PackageNotFoundError:
         version = "Package not found"
     return version
 
 
 @click.group()
-@click.version_option(prog_name="syntho-cli", version=get_version("syntho-cli"))
+@click.version_option(prog_name="syntho-cli", version=get_version("cli"))
 def cli():
     pass
 

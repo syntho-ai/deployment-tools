@@ -1,5 +1,6 @@
 # Ignore build artifacts
 build/
+dist/
 
 # Ignore .egg-info directory
 *.egg-info/
@@ -11,3 +12,6 @@ cli/scripts/not-ready-yet/*
 .coverage
 
 .pytest_cache
+
+cli/scripts/*
+!cli/scripts/*.sh

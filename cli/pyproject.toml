@@ -1,9 +1,9 @@
 [tool.poetry]
-name = "syntho-cli"
-version = "0.1.0"
+name = "cli"
+version = "0.5.0-dev"
 description = "Syntho Stack Deployment CLI"
 authors = [
-    "info@syntho.ai",
+    "Syntho B.V. <info@syntho.ai>",
     "Younes Moustaghfir <younes@syntho.ai>",
 ]
 readme = "README.md"
@@ -13,7 +13,7 @@ license = "MIT License"
 keywords = ["syntho", "synthetic data", "deployment"]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.12"
 click = "^8.1.7"
 pyyaml = "^6.0.1"
 watchdog = "^4.0.0"
@@ -33,22 +33,9 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.setuptools.package-data]
-cli = ["scripts/deploy-kubernetes.sh", "scripts/pre-requirements-kubernetes.sh",
-        "scripts/utils.sh", "scripts/cleanup-kubernetes.sh",
-        "scripts/get-k8s-cluster-context-name.sh",
-        "scripts/configuration-questions.sh",
-        "scripts/download-syntho-charts-release.sh",
-        "scripts/major-pre-deployment-operations.sh",
-        "scripts/deploy-ray-and-syntho-stack.sh",
-        "scripts/k8s-deployment-preparation.sh",
-        "scripts/cleanup-docker-compose.sh",
-        "scripts/pre-requirements-dc.sh",
-        "scripts/configuration-questions-dc.sh",
-        "scripts/download-syntho-charts-release-dc.sh",
-        "scripts/deploy-ray-and-syntho-stack-dc.sh"
-        ]
+cli = ["scripts/*.sh"]
 
-[project.scripts]
+[tool.poetry.scripts]
 syntho-cli = "cli.syntho_cli:cli"
 
 [tool.ruff]
