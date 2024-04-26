@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  {{- with .Values.backend.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  creationTimestamp: null
+  labels:
+    {{- include "syntho-core.labels" . | nindent 4 }}
+    app: {{ .Values.backend.name }}
+  name: {{ .Values.backend.name }}
+spec:
+  ports:
+    - name: backend-port
+      port: 80
+      targetPort: {{ .Values.backend.service.port }}
+  selector:
+    app: {{ .Values.backend.name }}
+status:
+  loadBalancer: {}

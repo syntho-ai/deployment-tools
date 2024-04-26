@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  {{- with .Values.frontend.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "syntho-core.labels" . | nindent 4 }}
+    app: {{ .Values.frontend.name }}
+  name: {{ .Values.frontend.name }}
+spec:
+  replicas: {{ .Values.frontend.replicaCount }}
+  selector:
+    matchLabels:
+        app: {{ .Values.frontend.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.frontend.name }}
+    spec:
+      initContainers:
+        - name: wait-for-backend-service
+          image: busybox
+          command:
+            - 'sh'
+            - '-c'
+            - |
+              until wget -q --spider --server-response --header "Host: {{ .Values.frontend_url }}" "http://{{ .Values.backend.name }}.{{ .Release.Namespace }}.svc.cluster.local/api/docs/" 2>&1 | grep -q "HTTP/1.1 200 OK"; do
+                echo "Waiting for the backend service to be ready..."
+                sleep 1
+              done
+      containers:
+        - image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+          env:
+            - name: NODE_ENV
+              value: {{quote .Values.frontend.mode | default "production"}}
+            - name: PORT
+              value: {{quote .Values.frontend.port}}
+            - name: OPEN_API_URL
+              value: {{ .Values.backend.name }}.{{ .Release.Namespace }}.svc.cluster.local/api/playground/?format=openapi
+            - name: NEXT_PUBLIC_BACKEND_HOST
+              value: {{ .Values.backend.name }}.{{ .Release.Namespace }}.svc.cluster.local
+            - name: NEXT_PUBLIC_BACKEND_PROTOCOL
+              value: http
+            - name: NEXT_PUBLIC_BACKEND_WS_PROTOCOL
+              value: wss
+            - name: NEXT_PUBLIC_FRONTEND_HOST
+              value: {{ .Values.frontend_url }}{{ .Values.frontend_path }}
+            - name: NEXT_PUBLIC_FRONTEND_PROTOCOL
+              value: {{ .Values.frontend_protocol }}
+            - name: FRONTEND_PATH
+              value: {{ .Values.frontend_path }}
+            - name: BACKEND_HOST
+              value: {{ .Values.backend.name }}.{{ .Release.Namespace }}.svc.cluster.local
+          {{- if or $.Values.frontend.env $.Values.frontend.envSecrets }}
+            {{- range $key, $value := $.Values.frontend.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- range $key, $secret := $.Values.frontend.envSecrets }}
+            - name: {{ $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $secret }}
+                  key: {{ $key | quote }}
+            {{- end }}
+          {{- end }}
+          volumeMounts:
+            {{- toYaml .Values.frontend.volumeMounts | default "" | nindent 12 }}
+          name: {{ .Values.frontend.name }}
+          ports:
+            - name: frontend-port
+              containerPort: {{ .Values.frontend.service.port }}
+          resources:
+            limits:
+              cpu: "2000m"
+              ephemeral-storage: "3Gi"
+              memory: "3Gi"
+            requests:
+              cpu: "500m"
+              ephemeral-storage: "3Gi"
+              memory: "3Gi"
+          readinessProbe:
+            tcpSocket:
+              port: 3000
+            initialDelaySeconds: 240
+            timeoutSeconds: 30
+            periodSeconds: 60
+            failureThreshold: 3
+            successThreshold: 1
+          imagePullPolicy: Always
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- toYaml .Values.frontend.volumes | default "" | nindent 8 }}  
+      restartPolicy: Always
+      {{- if .Values.nodeSelector }}
+      nodeSelector: {{- .Values.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations: {{- .Values.tolerations | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.affinity }}
+      affinity: {{- .Values.affinity | toYaml | nindent 8 }}
+      {{- end }}
+status: {}

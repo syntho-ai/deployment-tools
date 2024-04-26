@@ -1,0 +1,17 @@
+{{- if .Values.rbacEnable }}
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+{{ include "ray-cluster.labels" . | indent 4 }}
+  name: {{ include "ray-cluster.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+subjects:
+- kind: ServiceAccount
+  name: {{ .Values.serviceAccount.name  }}
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ include "ray-cluster.fullname" . }}
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

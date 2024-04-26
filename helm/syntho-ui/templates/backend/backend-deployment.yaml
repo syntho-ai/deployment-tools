@@ -1,0 +1,266 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  {{- with .Values.backend.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "syntho-core.labels" . | nindent 4 }}
+    app: {{ .Values.backend.name }}
+  name: {{ .Values.backend.name }}
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.backend.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.backend.name }}
+    spec:
+      containers:
+        - image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          env:
+            - name: FRONTEND_URL
+              value: {{ .Values.frontend_protocol }}://{{ .Values.frontend_url }}
+            - name: SYNTHO_ENGINE_URL
+              value: http://{{ .Values.core.name }}-service:{{ .Values.core.service.port }}/api
+            - name: SYNTHO_WEBSOCKET_URL
+              value: ws://{{ .Values.core.name }}-service:{{ .Values.core.service.port }}/websocket/
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: backend.secret_key
+            - name: DJANGO_PRODUCTION
+              value: "True"
+            - name: REDIS_HOST
+              value: {{quote .Values.backend.redis.host }}
+            - name: REDIS_PORT
+              value: {{quote .Values.backend.redis.port }}
+            - name: REDIS_DB_INDEX
+              value: {{quote .Values.backend.redis.db }}
+            - name: USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: backend.user.password
+            - name: USER_NAME
+              value: {{quote .Values.backend.user.username | default "admin" }}
+            - name: USER_EMAIL
+              value: {{quote .Values.backend.user.email | default "admin@company.com" }}
+            - name: DB_HOST
+              value: {{quote .Values.backend.db.host }}
+            - name: DB_PORT
+              value: {{quote .Values.backend.db.port | default "5432" }}
+            - name: DB_NAME
+              value: {{quote .Values.backend.db.name }}
+            - name: DB_USER
+              value: {{quote .Values.backend.db.user }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: backend.db.password
+            - name: DATA_ACCESS
+              value: {{.Values.backend.data_access | default "true" | quote }}
+            - name: RAY_URL
+              value: "http://{{ .Values.core.ray_address }}:8265"
+            - name: WORKERS
+              value: {{quote .Values.backend.workers }}
+            - name: EXTRA_ALLOWED_HOSTS
+              value: "{{ .Values.frontend_url }} {{ .Values.backend.name }}.{{ .Release.Namespace }}.svc.cluster.local"
+          {{- if or $.Values.backend.env $.Values.backend.envSecrets }}
+            {{- range $key, $value := $.Values.backend.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- range $key, $secret := $.Values.backend.envSecrets }}
+            - name: {{ $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $secret }}
+                  key: {{ $key | quote }}
+            {{- end }}
+          {{- end }}
+          volumeMounts:
+            {{- toYaml .Values.backend.volumeMounts | default "" | nindent 12 }} 
+          name: {{ .Values.backend.name }}
+          ports:
+            - containerPort: {{ .Values.backend.port }}
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: "1000m"
+              ephemeral-storage: "2Gi"
+              memory: "4Gi"
+            requests:
+              cpu: "500m"
+              ephemeral-storage: "2Gi"
+              memory: "2Gi"
+          readinessProbe:
+            httpGet:
+              path: /api/docs/
+              port: 8000
+              httpHeaders:
+              - name: Host
+                value: {{ .Values.frontend_url }}
+            initialDelaySeconds: 10
+            periodSeconds: 60
+            successThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /api/docs/
+              port: 8000
+              httpHeaders:
+              - name: Host
+                value: {{ .Values.frontend_url }}
+            initialDelaySeconds: 60
+            timeoutSeconds: 10
+            periodSeconds: 10
+            failureThreshold: 2
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- toYaml .Values.backend.volumes | default "" | nindent 8 }}    
+      restartPolicy: Always
+      {{- if .Values.nodeSelector }}
+      nodeSelector: {{- .Values.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations: {{- .Values.tolerations | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.affinity }}
+      affinity: {{- .Values.affinity | toYaml | nindent 8 }}
+      {{- end }}
+status: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  {{- with .Values.backend.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    app: backend-worker
+  name: backend-worker
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      app: backend-worker
+  template:
+    metadata:
+      labels:
+        app: backend-worker
+    spec:
+      containers:
+      - name: backend-worker
+        env:
+          - name: FRONTEND_URL
+            value: {{ .Values.frontend_protocol }}://{{ .Values.frontend_url }}
+          - name: SYNTHO_ENGINE_URL
+            value: http://{{ .Values.core.name }}-service:{{ .Values.core.service.port }}/api
+          - name: SYNTHO_WEBSOCKET_URL
+            value: ws://{{ .Values.core.name }}-service:{{ .Values.core.service.port }}/websocket/
+          - name: SECRET_KEY
+            valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: backend.secret_key
+          - name: DJANGO_PRODUCTION
+            value: "True"
+          - name: REDIS_HOST
+            value: {{quote .Values.backend.redis.host }}
+          - name: REDIS_PORT
+            value: {{quote .Values.backend.redis.port }}
+          - name: REDIS_DB_INDEX
+            value: {{quote .Values.backend.redis.db }}
+          - name: USER_PASSWORD
+            valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: backend.user.password
+          - name: USER_NAME
+            value: {{quote .Values.backend.user.username | default "admin" }}
+          - name: USER_EMAIL
+            value: {{quote .Values.backend.user.email | default "admin@company.com" }}
+          - name: DB_HOST
+            value: {{quote .Values.backend.db.host }}
+          - name: DB_PORT
+            value: {{quote .Values.backend.db.port | default "5432" }}
+          - name: DB_NAME
+            value: {{quote .Values.backend.db.name }}
+          - name: DB_USER
+            value: {{quote .Values.backend.db.user }}
+          - name: DB_PASSWORD
+            valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: backend.db.password
+        {{- if or $.Values.backend.env $.Values.backend.envSecrets }}
+          {{- range $key, $value := $.Values.backend.env }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+          {{- end }}
+          {{- range $key, $secret := $.Values.backend.envSecrets }}
+          - name: {{ $key }}
+            valueFrom:
+              secretKeyRef:
+                name: {{ $secret }}
+                key: {{ $key | quote }}
+          {{- end }}
+        {{- end }}
+        volumeMounts:
+          {{- toYaml .Values.backend.volumeMounts | default "" | nindent 12 }} 
+        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+        command: ["python"]
+        args: ["manage.py", "subscriber"]
+        imagePullPolicy: Always
+        resources:
+            limits:
+              cpu: "1000m"
+              ephemeral-storage: "2Gi"
+              memory: "500Mi"
+            requests:
+              cpu: "500m"
+              ephemeral-storage: "2Gi"
+              memory: "250Mi"
+        readinessProbe:
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 10
+          exec:
+            command:
+            - cat
+            - /tmp/healthy
+        livenessProbe:
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 10
+          exec:
+            command:
+            - cat
+            - /tmp/healthy
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- toYaml .Values.backend.volumes | default "" | nindent 8 }}    
+      restartPolicy: Always
+      {{- if .Values.nodeSelector }}
+      nodeSelector: {{- .Values.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations: {{- .Values.tolerations | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.affinity }}
+      affinity: {{- .Values.affinity | toYaml | nindent 8 }}
+      {{- end }}
+status: {}
+

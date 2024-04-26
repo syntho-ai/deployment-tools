@@ -1,0 +1,128 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  {{- with .Values.core.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "syntho-core.labels" . | nindent 4 }}
+    app: {{ .Values.core.name }}-worker
+  name: {{ .Values.core.name }}-worker
+spec:
+  replicas: {{ .Values.core.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.core.name }}-worker
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.core.name }}-worker
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        {{- if .Values.core.SeperateWorkerImage  }}
+        - image: "{{ .Values.core.workerImage.repository }}:{{ .Values.core.workerImage.tag }}"
+        {{- else }}
+        - image: "{{ .Values.core.image.repository }}:{{ .Values.core.image.tag }}"
+        {{- end}}
+          env:
+            - name: APP_ENV
+              value: {{ .Values.core.app_env | default "prod" }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: core-secret
+                  key: core.database_url 
+            - name: PORT
+              value: {{quote .Values.core.port }}
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: core-secret
+                  key: core.secret_key
+            - name: WORKER_TIMEOUT
+              value: "{{ .Values.core.worker_timeout | default "3000" }}"
+            - name: CELERY_BROKER_URL
+              value:  "redis://{{ .Values.core.redis.host}}:{{ .Values.core.redis.port }}/{{ .Values.core.redis.db }}"
+            - name: CELERY_RESULT_BACKEND
+              value:  "redis://{{ .Values.core.redis.host}}:{{ .Values.core.redis.port }}/{{ .Values.core.redis.db }}"
+            - name: RAY_ADDRESS
+              value: {{quote .Values.core.ray_address }}
+            - name: LICENSE_KEY_SIGNED
+              value: {{ .Values.SynthoLicense }}
+            - name: MAX_WORKERS
+              value: {{ quote .Values.core.workers }}
+            - name: REDIS_HOST
+              value: {{ quote .Values.core.redis.host}}
+            - name: REDIS_PORT
+              value: {{ quote .Values.core.redis.port }}
+          {{- if or $.Values.core.env $.Values.core.envSecrets }}
+            {{- range $key, $value := $.Values.core.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- range $key, $secret := $.Values.core.envSecrets }}
+            - name: {{ $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $secret }}
+                  key: {{ $key | quote }}
+            {{- end }}
+          {{- end }}
+          volumeMounts:
+            {{- toYaml .Values.core.volumeMounts | default "" | nindent 12 }} 
+          command: ["celery"]
+          args:
+            {{  range .Values.core.celery_args }}
+              - {{ . }}
+            {{ end }}
+          name: {{ .Values.core.name }}-worker
+          imagePullPolicy: Always
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            limits:
+              cpu: "1250m"
+              ephemeral-storage: "3Gi"
+              memory: "1000Mi"
+            requests:
+              cpu: "1000m"
+              ephemeral-storage: "3Gi"
+              memory: "750Mi"
+          readinessProbe:
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            timeoutSeconds: 10
+            exec:
+              command:
+              - "/bin/bash"
+              - "-c"
+              - "celery -b redis://{{ .Values.core.redis.host}}:{{ .Values.core.redis.port }}/{{ .Values.core.redis.db }} inspect ping -d celery@$HOSTNAME"
+          livenessProbe:
+            initialDelaySeconds: 90
+            periodSeconds: 30
+            timeoutSeconds: 10
+            exec:
+              command:
+              - "/bin/bash"
+              - "-c"
+              - "celery -b redis://{{ .Values.core.redis.host}}:{{ .Values.core.redis.port }}/{{ .Values.core.redis.db }} inspect ping -d celery@$HOSTNAME"
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- toYaml .Values.core.volumes | default "" | nindent 8 }}    
+      restartPolicy: Always
+      {{- if .Values.nodeSelector }}
+      nodeSelector: {{- .Values.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations: {{- .Values.tolerations | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.affinity }}
+      affinity: {{- .Values.affinity | toYaml | nindent 8 }}
+      {{- end }}
+status: {}

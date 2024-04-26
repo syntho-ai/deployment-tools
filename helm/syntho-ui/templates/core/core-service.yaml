@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    {{- include "syntho-core.labels" . | nindent 4 }}
+    name: {{ .Values.core.name }}-service
+  name: {{ .Values.core.name }}-service
+spec:
+  type: {{ .Values.core.service.type }}
+  ports:
+    - port: {{ .Values.core.service.port }}
+      targetPort: {{ .Values.core.service.port }}
+      protocol: TCP
+      name: core-port
+  selector:
+    app: {{ .Values.core.name }}
+status:
+  loadBalancer: {}

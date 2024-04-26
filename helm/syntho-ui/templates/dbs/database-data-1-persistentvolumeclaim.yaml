@@ -1,0 +1,22 @@
+{{- if .Values.core.database_enabled -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    io.kompose.service: database-data-1
+  name: database-data-1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+{{- if and (or (not .Values.db.storageClassName) (eq .Values.db.storageClassName "")) (not (or (not .Values.db.pvLabelKey) (eq .Values.db.pvLabelKey ""))) }}
+  selector:
+    matchLabels:
+      pv-label-key: {{ .Values.db.pvLabelKey }}
+{{- else }}
+  storageClassName: {{ .Values.db.storageClassName }}
+{{- end }}
+status: {}
+{{- end }}

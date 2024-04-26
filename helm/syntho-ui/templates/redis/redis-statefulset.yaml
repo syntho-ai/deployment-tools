@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  labels:
+    {{- include "syntho-core.labels" . | nindent 4 }}
+    app: redis
+spec:
+  serviceName: "redis-svc"
+  replicas: {{ .Values.redis.replicaCount }}
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      initContainers:
+      - name: init-redis
+        image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+        command:
+        - bash
+        - "-c"
+        - |
+          set -ex
+          # Generate redis server-id from pod ordinal index.
+          [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
+          ordinal=${BASH_REMATCH[1]}
+          # Copy appropriate redis config files from config-map to respective directories.
+          if [[ $ordinal -eq 0 ]]; then
+            cp /mnt/master.conf /etc/redis-config.conf
+          else
+            cp /mnt/slave.conf /etc/redis-config.conf
+          fi
+        volumeMounts:
+        - name: redis-claim
+          mountPath: /etc
+        - name: config-map
+          mountPath: /mnt/
+      containers:
+      - name: redis
+        image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+        ports:
+        - containerPort: 6379
+          name: redis
+        command:
+          - redis-server
+          - "/etc/redis-config.conf"
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+        - name: redis-claim
+          mountPath: /etc
+      volumes:
+      - name: config-map
+        configMap:
+          name: redis-configuration
+      {{- if .Values.nodeSelector }}
+      nodeSelector: {{- .Values.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations: {{- .Values.tolerations | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.affinity }}
+      affinity: {{- .Values.affinity | toYaml | nindent 8 }}
+      {{- end }}          
+  volumeClaimTemplates:
+  - metadata:
+      name: redis-claim
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+      {{- if and (or (not .Values.redis.storageClassName) (eq .Values.redis.storageClassName "")) (not (or (not .Values.redis.pvLabelKey) (eq .Values.redis.pvLabelKey ""))) }}
+      selector:
+        matchLabels:
+          pv-label-key: {{ .Values.redis.pvLabelKey }}
+      {{- else }}
+      storageClassName: {{ .Values.redis.storageClassName | default "default" }}
+      {{- end }}
+  - metadata:
+      name: redis-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+      {{- if and (or (not .Values.redis.storageClassName) (eq .Values.redis.storageClassName "")) (not (or (not .Values.redis.pvLabelKey) (eq .Values.redis.pvLabelKey ""))) }}
+      selector:
+        matchLabels:
+          pv-label-key: {{ .Values.redis.pvLabelKey }}
+      {{- else }}
+      storageClassName: {{ .Values.redis.storageClassName | default "default" }}
+      {{- end }}

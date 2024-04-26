@@ -1,0 +1,60 @@
+{{- if .Values.backend.database_enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database
+  labels:
+    io.kompose.service: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: database
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f azure-docker-compose.yaml
+        kompose.version: 1.26.0 (40646f47)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: database
+    spec:
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: {{quote .Values.backend.db.name }}
+            - name: POSTGRES_PASSWORD
+              value: {{quote .Values.backend.db.password }}
+            - name: POSTGRES_USER
+              value: {{quote .Values.backend.db.user }}
+          image: "{{ .Values.db.image.repository }}:{{ .Values.db.image.tag }}"
+          name: postgres
+          ports:
+            - containerPort: 5432
+          resources: {}
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: database-data-2
+              subPath: postgres
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      restartPolicy: Always
+      volumes:
+        - name: database-data-2
+          persistentVolumeClaim:
+            claimName: database-data-2
+      {{- if .Values.nodeSelector }}
+      nodeSelector: {{- .Values.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations: {{- .Values.tolerations | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.affinity }}
+      affinity: {{- .Values.affinity | toYaml | nindent 8 }}
+      {{- end }}
+status: {}
+{{- end }}

@@ -1,0 +1,25 @@
+# permissions for end users to view rayjobs.
+{{- if .Values.rbacEnable }}
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+{{ include "ray-cluster.labels" . | indent 4 }}
+  name: rayjob-viewer-role
+  namespace: {{ .Release.Namespace }}
+rules:
+- apiGroups:
+  - ray.io
+  resources:
+  - rayjobs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ray.io
+  resources:
+  - rayjobs/status
+  verbs:
+  - get
+{{- end }}
