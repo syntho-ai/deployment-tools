@@ -43,12 +43,12 @@ spec:
                     {{ end }}
             securityContext:
             {{- toYaml .Values.head.securityContext | nindent 14 }}
-            volumeMounts: 
+            volumeMounts:
               - mountPath: /tmp/ray-workflows
                 name: ray-workflows
         {{ end }}
         containers:
-          - volumeMounts: 
+          - volumeMounts:
             - mountPath: /tmp/ray-workflows
               name: ray-workflows
             {{- toYaml .Values.head.volumeMounts | nindent 12 }}
@@ -80,7 +80,7 @@ spec:
           {{- if .Values.head.sidecarContainers }}
           {{- toYaml .Values.head.sidecarContainers | nindent 10 }}
           {{- end }}
-        volumes: 
+        volumes:
         - name: ray-workflows
           persistentVolumeClaim:
             claimName: ray-workflows-claim
@@ -95,7 +95,7 @@ spec:
 {{ include "ray-cluster.labels" . | indent 10 }}
         {{ else }}
         labels: {{ include "ray-cluster.labels" . | nindent 10 }}
-        {{- end }} 
+        {{- end }}
 
   workerGroupSpecs:
   {{- range $groupName, $values := .Values.additionalWorkerGroups }}
@@ -170,7 +170,7 @@ spec:
 {{ include "ray-cluster.labels" $ | indent 10 }}
         {{ else }}
         labels: {{ include "ray-cluster.labels" $ | nindent 10 }}
-        {{- end }} 
+        {{- end }}
 
   {{- end }}
   {{- end }}

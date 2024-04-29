@@ -176,7 +176,7 @@ tolerations: []
 ## By default we don't set affinity
 affinity: {}
 
-# affinity: 
+# affinity:
 #  podAffinity:
 #    preferredDuringSchedulingIgnoredDuringExecution:
 #     - weight: 50

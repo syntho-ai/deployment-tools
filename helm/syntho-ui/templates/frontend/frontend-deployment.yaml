@@ -95,7 +95,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        {{- toYaml .Values.frontend.volumes | default "" | nindent 8 }}  
+        {{- toYaml .Values.frontend.volumes | default "" | nindent 8 }}
       restartPolicy: Always
       {{- if .Values.nodeSelector }}
       nodeSelector: {{- .Values.nodeSelector | toYaml | nindent 8 }}

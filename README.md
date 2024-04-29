@@ -63,6 +63,25 @@ A few things have been implemented for this project:
 
 - Pre-commit hooks in order to check your files
 
+### Project overview
+
+```
+deployment-tools
+│   README.md
+|
+└───cli
+|
+└───docker-compose
+│   └───config
+│   └───postgres
+|
+└───helm
+│   └───config
+│   └───ray
+│   └───syntho-ui
+
+```
+
 ### Prerequisites
 
 Install pre-commit

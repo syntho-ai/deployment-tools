@@ -34,7 +34,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: core-secret
-                  key: core.database_url 
+                  key: core.database_url
             - name: PORT
               value: {{quote .Values.core.port }}
             - name: SECRET_KEY
@@ -72,7 +72,7 @@ spec:
             {{- end }}
           {{- end }}
           volumeMounts:
-            {{- toYaml .Values.core.volumeMounts | default "" | nindent 12 }} 
+            {{- toYaml .Values.core.volumeMounts | default "" | nindent 12 }}
           command: ["celery"]
           args:
             {{  range .Values.core.celery_args }}
@@ -114,7 +114,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        {{- toYaml .Values.core.volumes | default "" | nindent 8 }}    
+        {{- toYaml .Values.core.volumes | default "" | nindent 8 }}
       restartPolicy: Always
       {{- if .Values.nodeSelector }}
       nodeSelector: {{- .Values.nodeSelector | toYaml | nindent 8 }}
