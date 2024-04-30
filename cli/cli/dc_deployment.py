@@ -58,6 +58,7 @@ def start(
     skip_configuration: bool,
     use_trusted_registry: bool,
     use_offline_registry: bool,
+    deployment_tools_version: str,
 ) -> str:
     deployments_dir = get_deployments_dir(scripts_dir)
     deployment_id = generate_deployment_id(docker_host)
@@ -97,6 +98,7 @@ def start(
         skip_configuration,
         use_trusted_registry,
         use_offline_registry,
+        deployment_tools_version,
     )
 
     succeeded = pre_requirements_check(scripts_dir, deployment_id)
@@ -301,6 +303,7 @@ def prepare_env(
     skip_configuration: bool,
     use_trusted_registry: bool,
     use_offline_registry: bool,
+    deployment_tools_version: str,
 ):
     scripts_dir = deployments_dir.replace("/deployments", "")
     set_state(deployment_id, deployments_dir, DeploymentStatus.PREPARING_ENV)
@@ -372,6 +375,7 @@ def prepare_env(
         "PREPULL_IMAGES_DIR": generate_prepull_images_dir(scripts_dir),
         "ACTIVATE_OFFLINE_MODE_DIR": generate_offline_registry_dir(scripts_dir),
         "ACTIVATE_OFFLINE_MODE_ARCHIVE_PATH": generate_offline_registry_archive_path(scripts_dir),
+        "DEPLOYMENT_TOOLS_VERSION": deployment_tools_version,
     }
     env_file_path = f"{deployment_dir}/.env"
     with open(env_file_path, "w") as file:

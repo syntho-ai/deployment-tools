@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cli"
-version = "0.5.0-dev"
+version = "1.8.0a1"
 description = "Syntho Stack Deployment CLI"
 authors = [
     "Syntho B.V. <info@syntho.ai>",
@@ -11,6 +11,12 @@ homepage = "https://github.com/syntho-ai/syntho-cli"
 repository = "https://github.com/syntho-ai/syntho-cli"
 license = "MIT License"
 keywords = ["syntho", "synthetic data", "deployment"]
+include = [
+    "cli/scripts/*.sh",
+    "cli/scripts/syntho-charts.tar.gz",
+    "README.md",
+    "LICENSE"
+]
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -27,15 +33,14 @@ pre-commit = "^3.7.0"
 coverage = "^7.4.4"
 ruff = "^0.4.0"
 bandit = "^1.7.8"
+pytest = "^8.2.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.setuptools.package-data]
-cli = ["scripts/*.sh"]
-
 [tool.poetry.scripts]
+pre-build = "cli.pre_build:main"
 syntho-cli = "cli.syntho_cli:cli"
 
 [tool.ruff]
