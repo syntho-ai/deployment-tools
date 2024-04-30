@@ -1,19 +1,1 @@
 .env
-
-# Ignore build artifacts
-*build/
-*dist/
-
-# Ignore .egg-info directory
-*.egg-info/
-
-cli/scripts/not-ready-yet/*
-*.kube
-
-**/__pycache__/
-*.coverage
-
-*.pytest_cache
-
-cli/cli/scripts/*
-!cli/cli/scripts/*.sh
