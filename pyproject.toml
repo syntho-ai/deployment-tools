@@ -10,11 +10,33 @@ license = "MIT License"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.12"
 pre-commit = "^3.7.0"
 ruff = "^0.4.2"
-
+bandit = "^1.7.8"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+# Same as Black.
+line-length = 120
+extend-include = ["*.ipynb"]
+
+[tool.ruff.lint]
+# E = pycodestyles (default)
+# F = pyflakes (default)
+# B = flake8-bugbear (extra)
+# I = isort (extra)
+select = ["E", "F", "B", "I"]
+
+[tool.bandit]
+exclude_dirs = ["/tests/"]
+skips = [
+    "B101",
+    "B108",
+    "B404",
+    "B603",
+    "B607",
+]

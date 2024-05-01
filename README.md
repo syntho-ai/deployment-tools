@@ -84,20 +84,7 @@ deployment-tools
 
 ### Prerequisites
 
-Install pre-commit
-* pip
-  ```sh
-  pip install pre-commit
-  ```
-* brew
-  ```sh
-  brew install pre-commit
-  ```
-
-Run pre-commit install:
-```sh
-pre-commit install
-```
+* Install `Python 12.*` and make sure it is the default one
 
 ### Installation
 
@@ -109,14 +96,14 @@ pre-commit install
    ```sh
    curl -sSL https://install.python-poetry.org | python3 -
    ```
-3. Run pre-commit install:
+3. Install Python Packages in root
+   ```sh
+   poetry install --no-root
+   ```
+4. Run pre-commit install:
     ```sh
     pre-commit install
     ```
-4. Install Python Packages in root
-   ```sh
-   poetry install
-   ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
