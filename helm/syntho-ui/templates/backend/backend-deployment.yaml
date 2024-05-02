@@ -106,8 +106,10 @@ spec:
               httpHeaders:
               - name: Host
                 value: {{ .Values.frontend_url }}
-            initialDelaySeconds: 10
-            periodSeconds: 60
+            initialDelaySeconds: 120
+            timeoutSeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
             successThreshold: 1
           livenessProbe:
             httpGet:
@@ -116,10 +118,11 @@ spec:
               httpHeaders:
               - name: Host
                 value: {{ .Values.frontend_url }}
-            initialDelaySeconds: 60
-            timeoutSeconds: 10
-            periodSeconds: 10
-            failureThreshold: 2
+            initialDelaySeconds: 240
+            timeoutSeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+            successThreshold: 1
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

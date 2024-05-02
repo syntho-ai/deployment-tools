@@ -230,7 +230,6 @@ def utilities():
     required=True,
     callback=validate_kubeconfig,
 )
-@click.option("--arch", type=str, help=("Specify the architecture. Default: amd"), default="amd", required=False)
 @click.option(
     "--version",
     type=str,
@@ -261,7 +260,6 @@ def k8s_deployment(
     registry_user: str,
     registry_pwd: str,
     kubeconfig: str,
-    arch: str,
     version: Optional[str],
     trusted_registry_image_pull_secret: Optional[str],
     skip_configuration: bool,
@@ -279,7 +277,7 @@ def k8s_deployment(
     except click.BadParameter as exc:
         raise click.UsageError(str(exc)) from exc
 
-    arch = arch.lower()
+    arch = utils.get_architecture()
     if not utils.is_arch_supported(arch):
         raise click.ClickException(f"Unsupported architecture: {arch}. Only AMD/ARM is supported.")
     arch_text = f"Architecture: {arch}64"
@@ -305,6 +303,7 @@ def k8s_deployment(
         trusted_registry_image_pull_secret,
         skip_configuration,
         use_trusted_registry,
+        get_version("cli"),
     )
 
     if result.succeeded:
@@ -532,6 +531,7 @@ def dc_deployment(
         skip_configuration,
         use_trusted_registry,
         use_offline_registry,
+        get_version("cli"),
     )
 
     if result.succeeded:
