@@ -100,7 +100,7 @@ kubernetes_cluster_check() {
     fi
 
     SERVER_ARCH=$(kubectl --kubeconfig="$KUBECONFIG" get nodes -o json | jq -r '.items[0].status.nodeInfo.architecture')
-    if [[ $GIVEN_ARCH != $SERVER_ARCH ]]; then
+    if [[ $GIVEN_ARCH != "$SERVER_ARCH" ]]; then
         errors+="given --arch parameter isn't consistent with the kubernetes cluster's architecture($SERVER_ARCH). Supported --arch parameters are amd or arm and eventually both will be converted to amd64 or arm64. No other architectures are supported by the cli.\n"
     fi
 
@@ -124,7 +124,7 @@ EOF
 
     SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/dump_k8s_server_info.log"
     echo "k8s cluster info:" >> $SYNTHO_CLI_PROCESS_LOGS
-    echo $(cat "$DEPLOYMENT_DIR/.k8s-cluster-info.env") >> $SYNTHO_CLI_PROCESS_LOGS
+    echo "$(cat "$DEPLOYMENT_DIR/.k8s-cluster-info.env")" >> "$SYNTHO_CLI_PROCESS_LOGS"
 }
 
 check_if_configurations_can_be_skipped() {

@@ -24,7 +24,6 @@ source $DEPLOYMENT_DIR/.resources.env --source-only
 SHARED="$DEPLOYMENT_DIR/shared"
 mkdir -p "$SHARED"
 SYNTHO_CLI_PROCESS_DIR="$SHARED/process"
-BACKGROUND_PIDS="$SHARED/background.pids"
 mkdir -p "$SYNTHO_CLI_PROCESS_DIR"
 source $DEPLOYMENT_DIR/.auth.env --source-only
 ADMIN_USERNAME="${UI_ADMIN_LOGIN_USERNAME}"
@@ -137,7 +136,12 @@ deploy_docker_compose() {
     fi
 
 
-    IMAGES=($(DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose $(echo $DOCKER_FILE) config | grep "image:" | awk '{print $2}' | sort -u))
+
+    local DOCKER_FILE_EXTENSION
+    DOCKER_FILE_EXTENSION="$(echo "$DOCKER_FILE")"
+
+    # shellcheck disable=SC2207
+    IMAGES=($(DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose $DOCKER_FILE_EXTENSION config | grep "image:" | awk '{print $2}' | sort -u))
     for IMAGE in "${IMAGES[@]}"; do
         echo "Pulling Image: $IMAGE"
         if [[ $IMAGE == *"syntho.azurecr.io"* ]]; then
@@ -151,7 +155,7 @@ deploy_docker_compose() {
         fi
     done
 
-    DOCKER_HOST=$DOCKER_HOST docker compose $(echo $DOCKER_FILE) up -d
+    DOCKER_HOST=$DOCKER_HOST docker compose $DOCKER_FILE_EXTENSION up -d
 }
 
 generate_override_remote_file() {
@@ -220,7 +224,6 @@ wait_for_fe_health() {
 all_logs() {
     sleep 5
 
-    NAMESPACE="syntho"
     OUTPUT_DIR="/tmp/syntho"
     LOGS_DIR="$SHARED/logs"
     TARBALL="$OUTPUT_DIR/diagnosis-dc.tar.gz"

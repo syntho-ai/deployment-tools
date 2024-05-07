@@ -77,21 +77,23 @@ pull_images_into_trusted_registry() {
 
 prepare_final_versions() {
     # Initially store all env keys in an array
+    # shellcheck disable=SC2207
     initial_keys=($(env | cut -d= -f1))
 
     # Apply the default values from the .images.env file
     while read -r line || [[ -n "$line" ]]; do
-        export "$line"
+        export "${line?}"
     done < ${DEPLOYMENT_DIR}/.images.env
 
     #If ARCH is arm, override with the values from the .images-arm.env file
     if [[ "$ARCH" == "arm" ]]; then
         while read -r line || [[ -n "$line" ]]; do
-            export "$line"
+            export "${line?}"
         done < ${DEPLOYMENT_DIR}/.images-arm.env
     fi
 
     # Get all the keys that are newly added (difference from initial_keys)
+    # shellcheck disable=SC2207
     new_keys=($(comm -3 <(printf "%s\n" "${initial_keys[@]}" | sort) <(env | cut -d= -f1 | sort)))
 
     # Write only these envs to the final file
@@ -125,10 +127,10 @@ prepare_trusted_images() {
     img_trusted="${DEPLOYMENT_DIR}/.images-trusted.env"
 
     # Create/Empty files
-    > $img_repo
-    > $img_key
-    > $img_tag
-    > $img_trusted
+    > "$img_repo" true
+    > "$img_key" true
+    > "$img_tag" true
+    > "$img_trusted" true
 
     # Add TRUSTED_IMAGE_REGISTRY_SERVER and IMAGE_REGISTRY_SERVER to trusted file
     IMAGE_REGISTRY_SERVER=$(grep IMAGE_REGISTRY_SERVER ${DEPLOYMENT_DIR}/.images-merged.env | cut -d '=' -f2)
@@ -172,13 +174,12 @@ prepare_trusted_images() {
 pull_images() {
     # Temporary files
     img_pair="${DEPLOYMENT_DIR}/.img_pair_tmp"
-    img_trusted="${DEPLOYMENT_DIR}/.images-trusted.env"
 
     # Create/Empty file
-    > $img_pair
+    > "$img_pair" true
 
     # Source trusted image env file
-    source $img_trusted
+    source "${DEPLOYMENT_DIR}/.images-trusted.env"
 
     # read file line by line
     while IFS='=' read -r key value; do

@@ -42,7 +42,7 @@ if [[ "$USE_TRUSTED_REGISTRY" == "true" ]]; then
     echo "USE_TRUSTED_REGISTRY: $USE_TRUSTED_REGISTRY" >> $SYNTHO_CLI_PROCESS_LOGS
     if [[ "$USE_TRUSTED_REGISTRY" == "true" ]]; then
         echo "using trusted image registry instead" >> $SYNTHO_CLI_PROCESS_LOGS
-        echo $(cat $PREPULL_IMAGES_DIR/.images-trusted.env) >> $SYNTHO_CLI_PROCESS_LOGS
+        echo "$(cat "$PREPULL_IMAGES_DIR/.images-trusted.env")" >> "$SYNTHO_CLI_PROCESS_LOGS"
         PREPULL_IMAGES_DIR="$PREPULL_IMAGES_DIR"
         # Read the .image-trusted.env file line by line
         while IFS='=' read -r key value; do
@@ -141,10 +141,12 @@ wait_for_ray_cluster_health() {
     }
 
     is_cluster_healthy() {
-        local POD_NAME=$(kubectl --kubeconfig $KUBECONFIG get pod -n syntho | grep "^$POD_PREFIX" | awk '{print $1}')
+        local POD_NAME
+        POD_NAME=$(kubectl --kubeconfig "$KUBECONFIG" get pod -n syntho | grep "^$POD_PREFIX" | awk '{print $1}')
 
         if [ -n "$POD_NAME" ]; then
-            local CONTENT=$(kubectl --kubeconfig $KUBECONFIG -n syntho exec -ti $POD_NAME -- /bin/bash -c "ray status")
+            local CONTENT
+            CONTENT=$(kubectl --kubeconfig $KUBECONFIG -n syntho exec -ti $POD_NAME -- /bin/bash -c "ray status")
             echo $CONTENT | grep -q "(no failures)" && echo $CONTENT | grep -q "(no pending nodes)"
         fi
     }
@@ -198,7 +200,8 @@ wait_for_synthoui_health() {
     }
 
     is_frontend_healthy() {
-        local POD_NAME=$(kubectl --kubeconfig $KUBECONFIG get pod -n syntho | grep "^$POD_PREFIX" | awk '{print $1}')
+        local POD_NAME
+        POD_NAME=$(kubectl --kubeconfig $KUBECONFIG get pod -n syntho | grep "^$POD_PREFIX" | awk '{print $1}')
         content=""
 
         if [ -n "$POD_NAME" ]; then
@@ -361,6 +364,7 @@ all_logs() {
     rm -rf "$OUTPUT_DIR" "$LOGS_DIR"
     mkdir -p "$OUTPUT_DIR" "$LOGS_DIR"
 
+    # shellcheck disable=SC2207
     PODS=($(kubectl --kubeconfig $KUBECONFIG get pods -n $NAMESPACE -o jsonpath='{.items[*].metadata.name}'))
     echo "${PODS[@]}" > "$LOGS_DIR/pods"
 
