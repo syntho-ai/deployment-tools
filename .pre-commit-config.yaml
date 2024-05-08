@@ -52,3 +52,8 @@ repos:
       - id: shellcheck
         # Optionally only show errors and warnings
         args: ["--severity=warning"]
+
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v3.25.0
+    hooks:
+      - id: commitizen

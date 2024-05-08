@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "deployment-tools"
-version = "1.8.0a1"
+version = "1.9.0"
 description = "Syntho deployment tools repository"
 authors = [
     "Syntho B.V. <info@syntho.ai>",
@@ -14,6 +14,9 @@ python = "^3.12"
 pre-commit = "^3.7.0"
 ruff = "^0.4.2"
 bandit = "^1.7.8"
+
+[tool.poetry.group.dev.dependencies]
+commitizen = "^3.25.0"
 
 [build-system]
 requires = ["poetry-core"]
