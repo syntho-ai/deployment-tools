@@ -1,6 +1,6 @@
 # syntho-cli
 
-For detailed information on the CLI's usage, please refer to the [relevant section in the documentation](https://github.com/syntho-ai/syntho-cli/blob/main/docs/getting-started.md).
+For detailed information on the CLI's usage, please refer to the [relevant section in the documentation](https://github.com/syntho-ai/deployment-tools/blob/main/cli/docs/getting-started.md).
 
 ## For Developers
 

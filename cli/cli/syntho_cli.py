@@ -183,7 +183,7 @@ def get_version(package_name: str):
 
 
 @click.group()
-@click.version_option(prog_name="syntho-cli", version=get_version("cli"))
+@click.version_option(prog_name="syntho-cli", version=get_version("syntho-cli"))
 def cli():
     pass
 
