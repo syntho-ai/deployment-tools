@@ -1,3 +1,10 @@
+## 1.10.7 (2024-05-08)
+
+### Fix
+
+- fix version
+- fix package name during poetry build
+
 ## 1.10.6 (2024-05-08)
 
 ### Fix
