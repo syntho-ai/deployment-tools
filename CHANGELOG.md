@@ -1,3 +1,9 @@
+## 1.10.1 (2024-05-08)
+
+### Fix
+
+- fix release and bump version pipelines
+
 ## 1.10.0 (2024-05-08)
 
 ### Feat
