@@ -1,3 +1,9 @@
+## 1.10.8 (2024-05-08)
+
+### Fix
+
+- fix version command and update links
+
 ## 1.10.7 (2024-05-08)
 
 ### Fix
