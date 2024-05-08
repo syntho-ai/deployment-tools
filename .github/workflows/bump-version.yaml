@@ -21,6 +21,8 @@ jobs:
         uses: commitizen-tools/commitizen-action@master
         with:
           changelog_increment_filename: changelog.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Zip docker-compose and Helm charts
         run: |
           tar -czf docker-compose.tar.gz docker-compose
