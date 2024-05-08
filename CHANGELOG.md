@@ -1,3 +1,9 @@
+## 1.10.2 (2024-05-08)
+
+### Fix
+
+- mostly testing whether pipeline gets triggered correctly
+
 ## 1.10.1 (2024-05-08)
 
 ### Fix
