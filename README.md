@@ -63,6 +63,7 @@
 A few things have been implemented for this project:
 
 - Pre-commit hooks in order to check your files
+- A VScode workspace file to correctly create VSCode workspaces
 
 ### Project overview
 
