@@ -34,9 +34,9 @@ delete_synthoui() {
 
 delete_image_registry_secret() {
     if [[ $FORCE == "true" ]]; then
-        kubectl --kubeconfig $KUBECONFIG --namespace syntho delete secret syntho-cr-secret --grace-period=0 --force
+        kubectl --kubeconfig $KUBECONFIG --namespace syntho delete secret $SECRET_NAME_FOR_IMAGE_REGISTRY --grace-period=0 --force
     else
-        kubectl --kubeconfig $KUBECONFIG --namespace syntho delete secret syntho-cr-secret
+        kubectl --kubeconfig $KUBECONFIG --namespace syntho delete secret $SECRET_NAME_FOR_IMAGE_REGISTRY
     fi
 }
 

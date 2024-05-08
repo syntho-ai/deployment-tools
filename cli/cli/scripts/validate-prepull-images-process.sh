@@ -4,6 +4,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$SCRIPT_DIR/utils.sh" --source-only
 
 CUSTOM_ENV_FILE_PATH="$CUSTOM_ENV_FILE_PATH"
+# shellcheck disable=SC1090
 source "$CUSTOM_ENV_FILE_PATH" --source-only
 
 

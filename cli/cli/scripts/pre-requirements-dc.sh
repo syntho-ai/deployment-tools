@@ -6,7 +6,6 @@ source "$SCRIPT_DIR/utils.sh" --source-only
 source $DEPLOYMENT_DIR/.env --source-only
 DOCKER_HOST="$DOCKER_HOST"
 DOCKER_SSH_USER_PRIVATE_KEY="$DOCKER_SSH_USER_PRIVATE_KEY"
-GIVEN_ARCH="${ARCH}64"
 
 SHARED="$DEPLOYMENT_DIR/shared"
 mkdir -p "$SHARED"
@@ -114,7 +113,7 @@ docker_host_check() {
         CLIENT_ARCH=$(echo "$VERSION_INFO" | grep "OS/Arch" | awk 'NR==1{print $2}' | awk -F'/' '{print $2}')
         SERVER_ARCH=$(echo "$VERSION_INFO" | grep "OS/Arch" | awk 'NR==2{print $2}' | awk -F'/' '{print $2}')
 
-        if [[ $CLIENT_ARCH != $SERVER_ARCH ]]; then
+        if [[ $CLIENT_ARCH != "$SERVER_ARCH" ]]; then
             errors+="Docker client($CLIENT_ARCH) and server($SERVER_ARCH) architecture isn't compatible with each other.\n"
         fi
     fi

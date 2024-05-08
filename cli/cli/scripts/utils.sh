@@ -8,14 +8,23 @@ if [[ $DEPLOYMENT_DIR != "" ]]; then
     mkdir -p "$SHARED"
 fi
 
+# shellcheck disable=SC2034
 RED='\033[0;31m'
+# shellcheck disable=SC2034
 BOLD_WHITE='\033[1;37m'
+# shellcheck disable=SC2034
 BOLD_WHITE_ON_RED='\033[1;37;41m'
+# shellcheck disable=SC2034
 BOLD_WHITE_ON_ORANGE='\033[1;37;48;5;208m'
+# shellcheck disable=SC2034
 GREEN='\033[0;32m'
+# shellcheck disable=SC2034
 BOLD_WHITE_ON_GREEN='\033[1;37;42m'
+# shellcheck disable=SC2034
 YELLOW='\033[0;33m'
+# shellcheck disable=SC2034
 NC='\033[0m' # No Color
+# shellcheck disable=SC2034
 CLEARUP='\033[K'
 
 # Declare global variables
