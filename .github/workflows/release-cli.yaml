@@ -39,5 +39,6 @@ jobs:
         run: poetry install --no-interaction --no-root
       - name: Install project
         run: poetry install --no-interaction
+      - run: poetry config pypi-token.pypi ${{ secret.PYPI_TOKEN }}
       - name: Poetry build & publish
         run: poetry run pre-build && poetry publish --build
