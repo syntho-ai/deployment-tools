@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "deployment-tools"
-version = "1.10.5"
+version = "1.10.6"
 description = "Syntho deployment tools repository"
 authors = [
     "Syntho B.V. <info@syntho.ai>",
