@@ -1,11 +1,12 @@
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.1.0"
+version = "1.9.0"
 tag_format = "$version"
 version_files = [
     "cli/pyproject.toml:version",
     "helm/ray/Chart.yaml:version",
     "helm/syntho-ui/Chart.yaml:version",
+    "pyproject.toml:version"
 ]
 changelog_incremental = true
 update_changelog_on_bump = true
