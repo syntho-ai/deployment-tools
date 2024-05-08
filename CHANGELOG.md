@@ -1,3 +1,9 @@
+## 1.10.3 (2024-05-08)
+
+### Fix
+
+- fixing syntho-cli upload pipeline by removing if statement
+
 ## 1.10.2 (2024-05-08)
 
 ### Fix
