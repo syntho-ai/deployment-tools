@@ -107,6 +107,9 @@ deployment-tools
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## Releasing
+
+This project uses [commitizen](https://commitizen-tools.github.io/commitizen/) to bump the version and create a new release. For every commit on main, we check whether a release can be created by seeing in any commits were made that either increase the patch, minor or major version. If that's the case, a Github release will be created with the new version and the changelog. After that, the Syntho CLI wheel will be uploaded to PyPI.
 
 
 <!-- USAGE EXAMPLES -->
