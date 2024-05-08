@@ -43,7 +43,7 @@ jobs:
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
         with:
-          scandir: './cli'
+          scandir: './cli/cli'
           severity: warning
       - name: Run ruff
         uses: chartboost/ruff-action@v1
