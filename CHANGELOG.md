@@ -1,3 +1,9 @@
+## 1.10.4 (2024-05-08)
+
+### Fix
+
+- change to PAT token to trigger actions
+
 ## 1.10.3 (2024-05-08)
 
 ### Fix
