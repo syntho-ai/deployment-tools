@@ -1,3 +1,9 @@
+## 1.10.11 (2024-05-13)
+
+### Fix
+
+- fix input when calling get_version (#5)
+
 ## 1.10.10 (2024-05-08)
 
 ### Fix
