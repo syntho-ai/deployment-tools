@@ -303,7 +303,7 @@ def k8s_deployment(
         trusted_registry_image_pull_secret,
         skip_configuration,
         use_trusted_registry,
-        get_version("cli"),
+        get_version("syntho-cli"),
     )
 
     if result.succeeded:
@@ -531,7 +531,7 @@ def dc_deployment(
         skip_configuration,
         use_trusted_registry,
         use_offline_registry,
-        get_version("cli"),
+        get_version("syntho-cli"),
     )
 
     if result.succeeded:
