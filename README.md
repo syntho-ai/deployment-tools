@@ -43,19 +43,40 @@
 <details>
   <summary>Table of Contents</summary>
   <ol>
+    <li><a href="#usage">Usage</a></li>
     <li>
       <a href="#getting-started">Getting Started</a>
+      <ul>
+        <li><a href="#project-overview">Project Overview</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#syntho-cli">Getting Started</a>
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
     <li><a href="#releasing">Releasing</a><li>
-    <li><a href="#usage">Usage</a></li>
     <li><a href="#contact">Contact</a></li>
   </ol>
 </details>
 
+
+## Usage
+
+### Docker Compose
+
+
+_The Docker Compose documentation can be found in the Syntho [Documentation](https://docs.syntho.ai/deploy-syntho/deploy-syntho-using-docker)_
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+### Helm charts
+
+_The Helm chart documentation can be found in the Syntho [Documentation](https://docs.syntho.ai/deploy-syntho/deploy-syntho-using-kubernetes)_
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -64,6 +85,8 @@ A few things have been implemented for this project:
 
 - Pre-commit hooks in order to check your files
 - A VScode workspace file to correctly create VSCode workspaces
+- The Docker Compose file and Helm charts to deploy the Syntho Application with
+- The source code of the Syntho CLI (The deployment CLI for the Syntho Application)
 
 ### Project overview
 
@@ -83,10 +106,11 @@ deployment-tools
 │   └───syntho-ui
 
 ```
+## Syntho CLI
 
 ### Prerequisites
 
-* Install `Python 12.*` and make sure it is the default one
+* Install `Python 11.*` or higher and make sure it is the default one
 
 ### Installation
 
@@ -112,24 +136,6 @@ deployment-tools
 ## Releasing
 
 This project uses [commitizen](https://commitizen-tools.github.io/commitizen/) to bump the version and create a new release. For every commit on main, we check whether a release can be created by seeing in any commits were made that either increase the patch, minor or major version. If that's the case, a Github release will be created with the new version and the changelog. After that, the Syntho CLI wheel will be uploaded to PyPI.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- USAGE EXAMPLES -->
-## Usage
-
-### Setting up Docker compose
-
-*Add documentation*
-
-_For more examples, please refer to the [Documentation](https://example.com)_
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-### Helm charts
-
-*Add documentation*
-
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
