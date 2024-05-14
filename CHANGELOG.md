@@ -1,3 +1,9 @@
+## 1.10.13 (2024-05-14)
+
+### Fix
+
+- set content to read for release pipeline CLI
+
 ## 1.10.12 (2024-05-14)
 
 ### Fix
