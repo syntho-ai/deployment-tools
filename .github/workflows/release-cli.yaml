@@ -45,7 +45,7 @@ jobs:
         run: poetry install --no-interaction
       - name: Poetry build & publish
         run: poetry run pre-build && poetry build
-      - run: ls /dist
+      - run: ls dist
       - name: Publish to PyPi
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
