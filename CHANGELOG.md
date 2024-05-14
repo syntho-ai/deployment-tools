@@ -1,3 +1,9 @@
+## 1.10.15 (2024-05-14)
+
+### Fix
+
+- set correct path for publishing to pypi
+
 ## 1.10.14 (2024-05-14)
 
 ### Fix
