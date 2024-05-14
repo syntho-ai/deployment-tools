@@ -1,3 +1,9 @@
+## 1.10.12 (2024-05-14)
+
+### Fix
+
+- fix pipeline for releasing CLI
+
 ## 1.10.11 (2024-05-13)
 
 ### Fix
