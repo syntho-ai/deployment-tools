@@ -1,3 +1,9 @@
+## 1.10.14 (2024-05-14)
+
+### Fix
+
+- specifically set directory for twine
+
 ## 1.10.13 (2024-05-14)
 
 ### Fix

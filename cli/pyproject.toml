@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "syntho-cli"
-version = "1.10.13"
+version = "1.10.14"
 description = "Syntho Stack Deployment CLI"
 authors = [
     "Syntho B.V. <info@syntho.ai>",
