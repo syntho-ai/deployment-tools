@@ -17,6 +17,7 @@ jobs:
     permissions:
       # Used to authenticate to PyPI via OIDC.
       id-token: write
+      contents: read
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
