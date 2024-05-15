@@ -43,7 +43,7 @@ head:
     #   requests:
     #     cpu: "500m"
     #     memory: "512Mi"
-  init_container_enabled: False
+  init_container_enabled: false
   initContainer:
     arguments: ["chmod", "-R", "777", "/tmp/ray-workflows"]
     securityContext: {}
@@ -117,8 +117,8 @@ worker:
   # containerEnv specifies environment variables for the Ray container,
   # Follows standard K8s container env schema.
   containerEnv:
-   - name: RAY_SCHEDULER_SPREAD_THRESHOLD
-     value: "0.0"
+    - name: RAY_SCHEDULER_SPREAD_THRESHOLD
+      value: "0.0"
   envFrom: []
     # - secretRef:
     #     name: my-env-secret
