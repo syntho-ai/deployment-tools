@@ -16,3 +16,9 @@ type: application
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
 version: 1.10.16
+maintainers:
+  - name: Syntho B.V.
+    email: info@syntho.ai
+    url: syntho.ai
+  - name: Younes Moustaghfir
+    email: younes@syntho.ai
