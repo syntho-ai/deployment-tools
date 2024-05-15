@@ -43,7 +43,7 @@ head:
     #   requests:
     #     cpu: "500m"
     #     memory: "512Mi"
-  init_container_enabled: true
+  init_container_enabled: False
   initContainer:
     arguments: ["chmod", "-R", "777", "/tmp/ray-workflows"]
     securityContext: {}
@@ -136,11 +136,11 @@ worker:
   # for further guidance.
   resources:
     limits:
-      cpu: "1000m"
-      memory: "4G"
+      cpu: "8000m"
+      memory: "32G"
     requests:
-      cpu: "500m"
-      memory: "1G"
+      cpu: "8000m"
+      memory: "32G"
   annotations: {}
   nodeSelector: {}
   tolerations: []

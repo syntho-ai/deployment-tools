@@ -20,7 +20,7 @@ core:
   volumes: []
   volumeMounts: []
   database_enabled: true
-  celery_args: ['-A', 'app.celery', 'worker', '--loglevel=info', '--concurrency=1', '--max-memory-per-child=50000']
+  celery_args: ['-A', 'app.celery', 'worker', '--loglevel=info', '--concurrency=4', '--max-memory-per-child=50000']
   db:
     username: postgres
     password: postgres
