@@ -1,6 +1,6 @@
-import importlib.metadata
 import os
 import sys
+from importlib import metadata
 from typing import Optional
 
 import click
@@ -28,11 +28,11 @@ def validate_kubeconfig(ctx, param, value):
             config = yaml.safe_load(value)
         except Exception as exc:
             raise click.BadParameter(
-                "KUBECONFIG is neither a valid YAML string nor a path to a valid YAML file."
+                f"KUBECONFIG is neither a valid YAML string nor a path to a valid YAML file: {value}"
             ) from exc
 
     if not isinstance(config, dict):
-        raise click.BadParameter("KUBECONFIG is neither a valid YAML string nor a path to a valid YAML file.")
+        raise click.BadParameter(f"KUBECONFIG is neither a valid YAML string nor a path to a valid YAML file: {value}")
 
     # Check if the key components of the KUBECONFIG are present
     if not (config.get("clusters", False) and config.get("contexts", False) and config.get("users", False)):
@@ -176,16 +176,21 @@ def validate_input_params(
 
 def get_version(package_name: str):
     try:
-        version = importlib.metadata.version(package_name)
-    except importlib.metadata.PackageNotFoundError:
+        version = metadata.version(package_name)
+    except metadata.PackageNotFoundError:
         version = "Package not found"
     return version
 
 
 @click.group()
-@click.version_option(prog_name="syntho-cli", version=get_version("syntho-cli"))
 def cli():
     pass
+
+
+@cli.command(name="version")
+def version():
+    version = get_version("syntho-cli")
+    click.echo(f"syntho-cli, {version}")
 
 
 @cli.group(help="Manages Kubernetes Deployments")
@@ -233,9 +238,8 @@ def utilities():
 @click.option(
     "--version",
     type=str,
-    help=("Specify a version for Syntho stack. Default: stable"),
-    default="stable",
-    required=False,
+    help=("Specify a version for Syntho stack."),
+    required=True,
 )
 @click.option(
     "--trusted-registry-image-pull-secret",
