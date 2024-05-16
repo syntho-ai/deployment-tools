@@ -26,7 +26,7 @@ pip install syntho-cli
 Verify the installation by running:
 
 ```
-syntho-cli --version
+syntho-cli version
 ```
 
 You should see `syntho-cli, version x.y.z` as the output.
