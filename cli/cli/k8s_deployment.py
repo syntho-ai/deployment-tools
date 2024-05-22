@@ -64,6 +64,7 @@ def start(
     skip_configuration: bool,
     use_trusted_registry: bool,
     deployment_tools_version: str,
+    dry_run: bool,
 ) -> str:
     deployments_dir = get_deployments_dir(scripts_dir)
     deployment_id = generate_deployment_id(kubeconfig)
@@ -102,6 +103,7 @@ def start(
         skip_configuration,
         use_trusted_registry,
         deployment_tools_version,
+        dry_run,
     )
 
     succeeded = pre_requirements_check(scripts_dir, deployment_id)
@@ -315,6 +317,7 @@ def prepare_env(
     skip_configuration: bool,
     use_trusted_registry: bool,
     deployment_tools_version: str,
+    dry_run: bool,
 ):
     scripts_dir = deployments_dir.replace("/deployments", "")
     set_state(deployment_id, deployments_dir, DeploymentStatus.PREPARING_ENV)
@@ -343,6 +346,7 @@ def prepare_env(
         "PREPULL_IMAGES_DIR": generate_prepull_images_dir(scripts_dir),
         "IMAGE_PULL_SECRET": trusted_registry_image_pull_secret,
         "DEPLOYMENT_TOOLS_VERSION": deployment_tools_version,
+        "DRY_RUN": "true" if dry_run else "false",
     }
     env_file_path = f"{deployment_dir}/.env"
     with open(env_file_path, "w") as file:
