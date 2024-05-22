@@ -84,7 +84,7 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           resources:
             limits:
-              cpu: "1250m"
+              cpu: "4000m"
               ephemeral-storage: "3Gi"
               memory: "1000Mi"
             requests:
