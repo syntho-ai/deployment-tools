@@ -35,6 +35,8 @@ mkdir -p "$SHARED"
 SYNTHO_CLI_PROCESS_DIR="$SHARED/process"
 mkdir -p "$SYNTHO_CLI_PROCESS_DIR"
 
+DRY_RUN="$DRY_RUN"
+
 if [[ "$USE_TRUSTED_REGISTRY" == "true" ]]; then
     SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/override_image_urls_and_tags_with_trusted_registry.log"
 
@@ -130,10 +132,22 @@ generate_ray_values() {
 deploy_ray() {
     local VALUES_YAML="$CHARTS_DIR/ray/values-generated.yaml"
     local RAY_CHARTS="$CHARTS_DIR/ray"
-    helm --kubeconfig $KUBECONFIG install ray-cluster $RAY_CHARTS --values $VALUES_YAML --namespace syntho
+
+
+    if [[ "$DRY_RUN" == "true" ]]; then
+        helm --kubeconfig $KUBECONFIG install ray-cluster $RAY_CHARTS --values $VALUES_YAML --namespace syntho --dry-run
+    else
+        helm --kubeconfig $KUBECONFIG install ray-cluster $RAY_CHARTS --values $VALUES_YAML --namespace syntho
+    fi
 }
 
 wait_for_ray_cluster_health() {
+    if [[ "$DRY_RUN" == "true" ]]; then
+        echo "DRY_RUN is enabled. Skipping actual health check and simulating success."
+        sleep 5
+        return 0
+    fi
+
     local POD_PREFIX=ray-cluster-head
 
     is_pod_running() {
@@ -189,10 +203,20 @@ generate_synthoui_values() {
 deploy_synthoui() {
     local VALUES_YAML="$CHARTS_DIR/syntho-ui/values-generated.yaml"
     local RAY_CHARTS="$CHARTS_DIR/syntho-ui"
-    helm --kubeconfig $KUBECONFIG install syntho-ui $RAY_CHARTS --values $VALUES_YAML --namespace syntho
+    if [[ "$DRY_RUN" == "true" ]]; then
+        helm --kubeconfig $KUBECONFIG install syntho-ui $RAY_CHARTS --values $VALUES_YAML --namespace syntho --dry-run
+    else
+        helm --kubeconfig $KUBECONFIG install syntho-ui $RAY_CHARTS --values $VALUES_YAML --namespace syntho
+    fi
 }
 
 wait_for_synthoui_health() {
+    if [[ "$DRY_RUN" == "true" ]]; then
+        echo "DRY_RUN is enabled. Skipping actual health check and simulating success."
+        sleep 5
+        return 0
+    fi
+
     local POD_PREFIX=frontend-
 
     is_pod_running() {
@@ -226,6 +250,12 @@ wait_for_synthoui_health() {
 }
 
 wait_local_nginx() {
+    if [[ "$DRY_RUN" == "true" ]]; then
+        echo "DRY_RUN is enabled. Skipping actual health check and simulating success."
+        sleep 5
+        return 0
+    fi
+
     is_200() {
         local INGRESS_CONTROLLER_SERVICE_NAME="syntho-ingress-nginx-controller"
         local INGRESS_CONTROLLER_NAMESPACE="syntho"
@@ -299,7 +329,6 @@ deploy_ray_cluster() {
         errors+="values.yaml generation error for the Ray Cluster\n"
     fi
     echo "deploy_ray_cluster:generate_ray_values has been done" >> $SYNTHO_CLI_PROCESS_LOGS
-
 
     echo "deploy_ray_cluster:deploy_ray has been started" >> $SYNTHO_CLI_PROCESS_LOGS
     if ! deploy_ray >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
