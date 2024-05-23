@@ -46,11 +46,15 @@ spec:
             volumeMounts:
               - mountPath: /tmp/ray-workflows
                 name: ray-workflows
+              - mountPath: /tmp/ray-data
+                name: ray-data
         {{ end }}
         containers:
           - volumeMounts:
             - mountPath: /tmp/ray-workflows
               name: ray-workflows
+            - mountPath: /tmp/ray-data
+              name: ray-data
             {{- toYaml .Values.head.volumeMounts | nindent 12 }}
             name: ray-head
             image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
@@ -84,6 +88,9 @@ spec:
         - name: ray-workflows
           persistentVolumeClaim:
             claimName: ray-workflows-claim
+        - name: ray-data
+          persistentVolumeClaim:
+            claimName: ray-data-claim
         {{- toYaml .Values.head.volumes | nindent 8 }}
         affinity: {{- toYaml .Values.head.affinity | nindent 10 }}
         tolerations: {{- toYaml .Values.head.tolerations | nindent 10 }}
@@ -128,6 +135,8 @@ spec:
           - volumeMounts:
             - mountPath: /tmp/ray-workflows
               name: ray-workflows
+            - mountPath: /tmp/ray-data
+              name: ray-data
             {{- toYaml $values.volumeMounts | nindent 12 }}
             name: ray-worker
             image: {{ $.Values.image.repository }}:{{ $.Values.image.tag }}
@@ -159,6 +168,9 @@ spec:
         - name: ray-workflows
           persistentVolumeClaim:
             claimName: ray-workflows-claim
+        - name: ray-data
+          persistentVolumeClaim:
+            claimName: ray-data-claim
         {{- toYaml $values.volumes | nindent 8 }}
         affinity: {{- toYaml $values.affinity | nindent 10 }}
         tolerations: {{- toYaml $values.tolerations | nindent 10 }}
@@ -203,6 +215,8 @@ spec:
           - volumeMounts:
             - mountPath: /tmp/ray-workflows
               name: ray-workflows
+            - mountPath: /tmp/ray-data
+              name: ray-data
             {{- toYaml .Values.head.volumeMounts | nindent 12 }}
             name: ray-worker
             image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
@@ -234,6 +248,9 @@ spec:
         - name: ray-workflows
           persistentVolumeClaim:
             claimName: ray-workflows-claim
+        - name: ray-data
+          persistentVolumeClaim:
+            claimName: ray-data-claim
         {{- toYaml .Values.head.volumes | nindent 8 }}
         affinity: {{- toYaml .Values.worker.affinity | nindent 10 }}
         tolerations: {{- toYaml .Values.worker.tolerations | nindent 10 }}
