@@ -228,6 +228,7 @@ storage:
   pvLabelKey: "{{ PV_LABEL_KEY }}"
   storageClassName: "{{ STORAGE_CLASS_NAME }}"
   accessMode: {{ STORAGE_ACCESS_MODE }}
+  dataPvLabelKey: ""
 
 serviceAccount:
   # Specifies whether a service account should be created
