@@ -30,10 +30,10 @@ spec:
     requests:
       storage: {{ .Values.storage.dataStorage | default "100Gi" }}
 
-{{- if and (or (not .Values.storage.storageClassName) (eq .Values.storage.storageClassName "")) (not (or (not .Values.storage.pvLabelKey) (eq .Values.storage.pvLabelKey ""))) }}
+{{- if and (or (not .Values.storage.storageClassName) (eq .Values.storage.storageClassName "")) (not (or (not .Values.storage.dataPvLabelKey) (eq .Values.storage.dataPvLabelKey ""))) }}
   selector:
     matchLabels:
-      pv-label-key: {{ .Values.storage.pvLabelKey }}
+      pv-label-key: {{ .Values.storage.dataPvLabelKey }}
 {{- else }}
   storageClassName: {{ .Values.storage.storageClassName }}
 {{- end }}
