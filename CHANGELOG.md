@@ -1,3 +1,9 @@
+## 1.11.0 (2024-05-23)
+
+### Feat
+
+- implements --dry-run functionality for deployments
+
 ## 1.10.16 (2024-05-14)
 
 ### Fix
