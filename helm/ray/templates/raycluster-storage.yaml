@@ -17,3 +17,23 @@ spec:
 {{- else }}
   storageClassName: {{ .Values.storage.storageClassName }}
 {{- end }}
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: ray-data-claim
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes:
+  - {{ .Values.storage.accessMode | default "ReadWriteMany" }}
+  resources:
+    requests:
+      storage: {{ .Values.storage.dataStorage | default "100Gi" }}
+
+{{- if and (or (not .Values.storage.storageClassName) (eq .Values.storage.storageClassName "")) (not (or (not .Values.storage.pvLabelKey) (eq .Values.storage.pvLabelKey ""))) }}
+  selector:
+    matchLabels:
+      pv-label-key: {{ .Values.storage.pvLabelKey }}
+{{- else }}
+  storageClassName: {{ .Values.storage.storageClassName }}
+{{- end }}
