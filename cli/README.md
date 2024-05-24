@@ -29,3 +29,8 @@ For detailed information on the CLI's usage, please refer to the [relevant secti
 
 - `poetry run pre-build && poetry build` -> this will create wheels under ./dist
 - `pip install ./dist/cli-<VERSION>.tar.gz`
+
+### Running tests
+
+- Unit tests: `pytest tests/`
+- Integration tests: `cd ./tests/integration && ./run.sh`

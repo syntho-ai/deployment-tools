@@ -75,6 +75,11 @@ developer_tools_check() {
         errors+="Missing command line tool - jq\n"
     fi
 
+    # Check if docker-compose exists
+    if ! command_exists "dockercompose"; then
+        errors+="Missing command line tool - docker-compose\n"
+    fi
+
     if [[ $DOCKER_HOST == ssh://* ]] && [[ -n $DOCKER_SSH_USER_PRIVATE_KEY ]]; then
         # Check if ssh-agent exists
         if ! command_exists "ssh-agent"; then

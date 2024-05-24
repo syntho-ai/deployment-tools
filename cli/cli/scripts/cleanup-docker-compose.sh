@@ -25,7 +25,7 @@ mkdir -p "$SYNTHO_CLI_PROCESS_DIR"
 
 
 destroy() {
-    DOCKER_HOST=$DOCKER_HOST docker compose -f $DC_DIR/docker-compose.yaml down --remove-orphans --volumes --rmi all
+    DOCKER_HOST=$DOCKER_HOST dockercompose -f $DC_DIR/docker-compose.yaml down --remove-orphans --volumes --rmi all
 }
 
 destroy_offline_registry_if_exists() {

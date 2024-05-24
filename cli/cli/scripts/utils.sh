@@ -217,3 +217,14 @@ write_and_exit() {
     fi
     exit 0
 }
+
+dockercompose() {
+    if docker compose version >/dev/null 2>&1; then
+        docker compose "$@"
+    elif docker-compose version >/dev/null 2>&1; then
+        docker-compose "$@"
+    else
+        echo "Neither docker compose nor docker-compose found" >&2
+        return 1
+    fi
+}
