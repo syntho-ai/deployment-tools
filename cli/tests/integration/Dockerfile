@@ -7,8 +7,10 @@ RUN pip install pyyaml
 WORKDIR /app
 COPY modify_kubeconfig.py .
 ARG KUBECONFIG
+ARG CLUSTER_CONTAINER_NAME
+ARG CLUSTER_INTERNAL_PORT
 COPY ${KUBECONFIG} /root/.kube/config
-RUN KUBECONFIG=/root/.kube/config python modify_kubeconfig.py
+RUN KUBECONFIG=/root/.kube/config CLUSTER_CONTAINER_NAME=${CLUSTER_CONTAINER_NAME} CLUSTER_INTERNAL_PORT=${CLUSTER_INTERNAL_PORT} python modify_kubeconfig.py
 
 ### MODIFYING KUBECONFIG ###
 

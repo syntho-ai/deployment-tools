@@ -31,33 +31,60 @@ if [[ $VERSION == "" ]]; then
     exit 1
 fi
 
+# Get kubeconfig for the kind cluster and check if the command was successful
+if ! KUBECONFIG=$(kind get kubeconfig --name "$CLUSTER_NAME" 2>/dev/null); then
+    echo "Kind cluster with name $CLUSTER_NAME does not exist or could not be reached."
+    exit 1
+fi
+
+CLUSTER_CONTAINER_NAME=${CLUSTER_NAME}-control-plane
+CLUSTER_CONTAINER_ID=$(docker ps -q -f "name=${CLUSTER_CONTAINER_NAME}")
+if [ -z "$CLUSTER_CONTAINER_ID" ]; then
+  echo "No container found for kind cluster '${CLUSTER_NAME}'."
+  exit 1
+fi
+
+CLUSTER_NETWORK=$(docker inspect "$CLUSTER_CONTAINER_NAME" | jq -r '.[0].NetworkSettings.Networks | keys[] | select(. != "bridge") | . ' | head -n 1)
+if [ -z "$CLUSTER_NETWORK" ]; then
+  echo "No network found for kind cluster '${CLUSTER_NAME}'."
+  exit 1
+fi
+
+CLUSTER_INTERNAL_PORT=$(docker inspect "$CLUSTER_CONTAINER_NAME" | jq -r '.[0].NetworkSettings.Ports | keys[0] | split("/")[0] | gsub(" ";"")')
+
 RUN_DIR=${0}
 # shellcheck disable=SC2164
 SCRIPT_DIR="$( cd "$(dirname "${RUN_DIR}")" >/dev/null 2>&1 ; pwd -P )"
 
 prepare() {
-    mkdir -p "$SCRIPT_DIR/temp-workspace"
-    cp -r "$SCRIPT_DIR/../../../cli" "./temp-workspace/."
-    cp -r "$SCRIPT_DIR/../../../helm" "./temp-workspace/."
-    cp -r "$SCRIPT_DIR/../../../docker-compose" "./temp-workspace/."
+    local SOURCE_DIR
+    local DEST_DIR="$SCRIPT_DIR/temp-workspace"
+    mkdir -p "$DEST_DIR"
 
-    # Get kubeconfig for the kind cluster and check if the command was successful
-    if ! KUBECONFIG=$(kind get kubeconfig --name "$CLUSTER_NAME" 2>/dev/null); then
-        echo "Kind cluster with name $CLUSTER_NAME does not exist or could not be reached."
-        exit 1
-    fi
+    SOURCE_DIR="$(realpath "$SCRIPT_DIR/../../../cli")"
+    rsync -av --progress --exclude 'tests' "$SOURCE_DIR/" "$DEST_DIR/cli"
+
+    SOURCE_DIR="$(realpath "$SCRIPT_DIR/../../../helm")"
+    rsync -av --progress "$SOURCE_DIR/" "$DEST_DIR/helm"
+
+    SOURCE_DIR="$(realpath "$SCRIPT_DIR/../../../docker-compose")"
+    rsync -av --progress "$SOURCE_DIR/" "$DEST_DIR/docker-compose"
+
     echo "$KUBECONFIG" > ./kubeconfig
 }
 
 build() {
-    docker build --build-arg KUBECONFIG=./kubeconfig -t integration-test-image .
+    docker build \
+        --build-arg KUBECONFIG=./kubeconfig \
+        --build-arg CLUSTER_CONTAINER_NAME=$CLUSTER_CONTAINER_NAME \
+        --build-arg CLUSTER_INTERNAL_PORT=$CLUSTER_INTERNAL_PORT -t integration-test-image .
 }
 
 run_k8s_tests() {
     DEPLOY_K8S_COMMAND="syntho-cli k8s deployment --license-key $LICENSE_KEY --registry-user $REGISTRY_USER --registry-pwd $REGISTRY_PWD --version $VERSION --kubeconfig /root/.kube/config --skip-configuration --dry-run"
     FIND_DEPLOYMENT_ID_COMMAND="DEPLOYMENT_ID=\$(syntho-cli k8s deployments | yq '.[0].id')"
     DESTROY_DEPLOYMENT_COMMAND="syntho-cli k8s destroy --deployment-id \$DEPLOYMENT_ID"
-    docker run -t integration-test-image /bin/bash -c "$DEPLOY_K8S_COMMAND && $FIND_DEPLOYMENT_ID_COMMAND && $DESTROY_DEPLOYMENT_COMMAND"
+    docker run --network $CLUSTER_NETWORK -t integration-test-image /bin/bash -c "$DEPLOY_K8S_COMMAND && $FIND_DEPLOYMENT_ID_COMMAND && $DESTROY_DEPLOYMENT_COMMAND"
 }
 
 run_dc_tests() {
