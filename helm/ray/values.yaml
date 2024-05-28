@@ -227,6 +227,7 @@ storage:
   pvLabelKey: ""
   storageClassName: "default"
   accessMode: ReadWriteMany
+  dataPvLabelKey: ""
 
 serviceAccount:
   # Specifies whether a service account should be created
