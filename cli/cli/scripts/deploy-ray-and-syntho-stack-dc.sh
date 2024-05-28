@@ -143,7 +143,7 @@ deploy_docker_compose() {
     DOCKER_FILE_EXTENSION="$(echo "$DOCKER_FILE")"
 
     # shellcheck disable=SC2207
-    IMAGES=($(DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose $DOCKER_FILE_EXTENSION config | grep "image:" | awk '{print $2}' | sort -u))
+    IMAGES=($(DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST dockercompose $DOCKER_FILE_EXTENSION config | grep "image:" | awk '{print $2}' | sort -u))
     for IMAGE in "${IMAGES[@]}"; do
         echo "Pulling Image: $IMAGE"
         if [[ $IMAGE == *"syntho.azurecr.io"* ]]; then
@@ -158,10 +158,10 @@ deploy_docker_compose() {
     done
 
     if [[ "$DRY_RUN" == "true" ]]; then
-        COMPOSE_CONFIG=$(DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose $DOCKER_FILE_EXTENSION config)
+        COMPOSE_CONFIG=$(DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST dockercompose $DOCKER_FILE_EXTENSION config)
         echo "COMPOSE CONFIG:\n$COMPOSE_CONFIG"
     else
-        DOCKER_HOST=$DOCKER_HOST docker compose $DOCKER_FILE_EXTENSION up -d
+        DOCKER_HOST=$DOCKER_HOST dockercompose $DOCKER_FILE_EXTENSION up -d
     fi
 }
 
@@ -198,7 +198,7 @@ wait_for_frontend_service_health() {
 
     is_fe_running() {
         # Check whether Docker container logs contain "started server on 0.0.0.0:3000"
-        DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose -f $DC_DIR/docker-compose.yaml logs frontend 2>&1 | grep -q "started server on 0.0.0.0:3000"
+        DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST dockercompose -f $DC_DIR/docker-compose.yaml logs frontend 2>&1 | grep -q "started server on 0.0.0.0:3000"
     }
 
 
@@ -243,11 +243,11 @@ all_logs() {
     rm -rf "$OUTPUT_DIR" "$LOGS_DIR"
     mkdir -p "$OUTPUT_DIR" "$LOGS_DIR"
 
-    services=$(DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose -f $DC_DIR/docker-compose.yaml ps --services)
+    services=$(DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST dockercompose -f $DC_DIR/docker-compose.yaml ps --services)
 
     echo "$services" | while IFS= read -r service; do
         echo "Processing logs for service: $service"
-        DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose -f $DC_DIR/docker-compose.yaml logs $service > "$LOGS_DIR/$service.log"
+        DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST dockercompose -f $DC_DIR/docker-compose.yaml logs $service > "$LOGS_DIR/$service.log"
     done
 
     tar -czvf "$TARBALL" -C "$LOGS_DIR" .

@@ -17,3 +17,7 @@ cli/scripts/not-ready-yet/*
 
 cli/cli/scripts/*
 !cli/cli/scripts/*.sh
+
+*kubeconfig
+*temp*
+*.flake8
