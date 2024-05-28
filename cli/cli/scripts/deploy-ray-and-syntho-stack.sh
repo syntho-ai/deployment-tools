@@ -135,10 +135,25 @@ deploy_ray() {
 
 
     if [[ "$DRY_RUN" == "true" ]]; then
+        install_crds_if_not_exists
         helm --kubeconfig $KUBECONFIG install ray-cluster $RAY_CHARTS --values $VALUES_YAML --namespace syntho --dry-run
     else
         helm --kubeconfig $KUBECONFIG install ray-cluster $RAY_CHARTS --values $VALUES_YAML --namespace syntho
     fi
+}
+
+install_crds_if_not_exists() {
+    crd_files_dir="$CHARTS_DIR/ray/crds"
+    crd_names_from_cluster=$(kubectl --kubeconfig "$KUBECONFIG" get crd | awk '{print $1}' | tail -n +2)
+
+    for crd_file in $crd_files_dir/*.yaml; do
+        echo "crd file: $crd_file"
+        crd_name=$(yq ".metadata.name" $crd_file)
+        if [[ $(echo "$crd_names_from_cluster" | grep -c "$crd_name") -eq 0 ]]; then
+            echo "CRD $crd_name is not installed, installing"
+            kubectl --kubeconfig "$KUBECONFIG" create -f $crd_file
+        fi
+    done
 }
 
 wait_for_ray_cluster_health() {
