@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Exit immediately if a command exits with a non-zero status
+set -e
+# Print commands and their arguments as they are executed (optional for debugging)
+set -x
 
 if [[ $CLUSTER_NAME == "" ]]; then
     echo "CLUSTER_NAME should be provided for running the integration tests"
@@ -99,9 +103,9 @@ cleanup() {
     rm -rf ./temp-workspace
 }
 
+trap cleanup EXIT
 
 prepare
 build
 run_k8s_tests
 run_dc_tests
-cleanup
