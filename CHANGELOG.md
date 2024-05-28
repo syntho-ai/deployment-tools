@@ -1,3 +1,10 @@
+## 1.11.1 (2024-05-28)
+
+### Fix
+
+- adjust pvlabel to be different for Ray data storage
+- add ray data storage for shared storage among ray nodes
+
 ## 1.11.0 (2024-05-23)
 
 ### Feat
