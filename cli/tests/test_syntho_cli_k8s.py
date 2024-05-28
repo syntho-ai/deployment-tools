@@ -96,6 +96,7 @@ users:
             False,
             False,
             "2.0.0",
+            False,
         )
 
     def test_deployment_with_kubeconfig_file_path_and_registry_creds(self):
@@ -138,6 +139,7 @@ users:
                 False,
                 False,
                 "2.0.0",
+                False,
             )
             mock_open.assert_called_once_with("kubeconfig.yaml", "r")
 
@@ -179,6 +181,7 @@ users:
                 False,
                 True,
                 "2.0.0",
+                False,
             )
 
 

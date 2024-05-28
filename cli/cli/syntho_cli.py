@@ -259,6 +259,14 @@ def utilities():
     help=("Uses trusted registry instead " "- 'syntho-cli utilities prepull-images --help' for more info"),
     callback=validate_trusted_registry,
 )
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help=(
+        "Dry runs simulates syntho stack deployment by verifying that helm charts "
+        "with their associated values.yaml are generated successfully"
+    ),
+)
 def k8s_deployment(
     license_key: str,
     registry_user: str,
@@ -268,6 +276,7 @@ def k8s_deployment(
     trusted_registry_image_pull_secret: Optional[str],
     skip_configuration: bool,
     use_trusted_registry: bool,
+    dry_run: bool,
 ):
     try:
         validate_input_params(
@@ -308,6 +317,7 @@ def k8s_deployment(
         skip_configuration,
         use_trusted_registry,
         get_version("syntho-cli"),
+        dry_run,
     )
 
     if result.succeeded:
@@ -483,6 +493,14 @@ def k8s_logs(deployment_id: str, n: int, f: bool):
     help=("Uses offline registry instead " "- 'syntho-cli utilities activate-offline-mode --help' for more info"),
     callback=validate_offline_registry,
 )
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help=(
+        "Dry runs simulates the docker compose deployment by verifying "
+        "that compose config are generated successfully"
+    ),
+)
 def dc_deployment(
     license_key: str,
     registry_user: str,
@@ -494,6 +512,7 @@ def dc_deployment(
     skip_configuration: bool,
     use_trusted_registry: bool,
     use_offline_registry: bool,
+    dry_run: bool,
 ):
     try:
         validate_input_params(
@@ -536,6 +555,7 @@ def dc_deployment(
         use_trusted_registry,
         use_offline_registry,
         get_version("syntho-cli"),
+        dry_run,
     )
 
     if result.succeeded:

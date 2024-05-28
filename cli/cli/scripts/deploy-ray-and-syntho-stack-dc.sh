@@ -91,6 +91,8 @@ source ${DEPLOYMENT_DIR}/.docker-arch.env
 CLIENT_ARCH="$CLIENT_ARCH"
 SERVER_ARCH="$SERVER_ARCH"
 
+DRY_RUN="$DRY_RUN"
+
 
 generate_env() {
     local TEMPLATE_FILE="$DC_DIR/.env.tpl"
@@ -155,7 +157,12 @@ deploy_docker_compose() {
         fi
     done
 
-    DOCKER_HOST=$DOCKER_HOST docker compose $DOCKER_FILE_EXTENSION up -d
+    if [[ "$DRY_RUN" == "true" ]]; then
+        COMPOSE_CONFIG=$(DOCKER_CONFIG=$DOCKER_CONFIG DOCKER_HOST=$DOCKER_HOST docker compose $DOCKER_FILE_EXTENSION config)
+        echo "COMPOSE CONFIG:\n$COMPOSE_CONFIG"
+    else
+        DOCKER_HOST=$DOCKER_HOST docker compose $DOCKER_FILE_EXTENSION up -d
+    fi
 }
 
 generate_override_remote_file() {
@@ -181,6 +188,12 @@ EOF
 }
 
 wait_for_frontend_service_health() {
+    if [[ "$DRY_RUN" == "true" ]]; then
+        echo "DRY_RUN is enabled. Skipping actual health check and simulating success."
+        sleep 5
+        return 0
+    fi
+
     sleep 2
 
     is_fe_running() {

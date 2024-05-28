@@ -85,6 +85,7 @@ Destroy deployment: syntho-cli dc destroy --deployment-id dc-123456789
             False,
             False,
             self.cli_version,
+            False,
         )
 
     def test_deployment_to_default_docker_daemon_skip_configuration(self):
@@ -120,6 +121,7 @@ Destroy deployment: syntho-cli dc destroy --deployment-id dc-123456789
             False,
             False,
             self.cli_version,
+            False,
         )
 
     def test_deployment_to_remote_docker_daemon(self):
@@ -158,6 +160,7 @@ Destroy deployment: syntho-cli dc destroy --deployment-id dc-123456789
             False,
             False,
             self.cli_version,
+            False,
         )
 
     def test_deployment_from_trusted_registry(self):
@@ -196,6 +199,7 @@ Destroy deployment: syntho-cli dc destroy --deployment-id dc-123456789
                 True,
                 False,
                 self.cli_version,
+                False,
             )
 
     def test_deployment_from_offline_registry(self):
@@ -234,6 +238,7 @@ Destroy deployment: syntho-cli dc destroy --deployment-id dc-123456789
                 False,
                 True,
                 self.cli_version,
+                False,
             )
 
 
