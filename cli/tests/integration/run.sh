@@ -25,11 +25,6 @@ if [[ $REGISTRY_PWD == "" ]]; then
     exit 1
 fi
 
-if [[ $REGISTRY_PWD == "" ]]; then
-    echo "REGISTRY_PWD should be provided for running the integration tests"
-    exit 1
-fi
-
 if [[ $VERSION == "" ]]; then
     echo "VERSION should be provided for running the integration tests"
     exit 1
