@@ -83,14 +83,24 @@ run_k8s_tests() {
     DEPLOY_K8S_COMMAND="syntho-cli k8s deployment --license-key $LICENSE_KEY --registry-user $REGISTRY_USER --registry-pwd $REGISTRY_PWD --version $VERSION --kubeconfig /root/.kube/config --skip-configuration --dry-run"
     FIND_DEPLOYMENT_ID_COMMAND="DEPLOYMENT_ID=\$(syntho-cli k8s deployments | yq '.[0].id')"
     DESTROY_DEPLOYMENT_COMMAND="syntho-cli k8s destroy --deployment-id \$DEPLOYMENT_ID"
-    docker run --network $CLUSTER_NETWORK -t integration-test-image /bin/bash -c "$DEPLOY_K8S_COMMAND && $FIND_DEPLOYMENT_ID_COMMAND && $DESTROY_DEPLOYMENT_COMMAND"
+    docker run --network $CLUSTER_NETWORK -t integration-test-image /bin/bash -c "
+      set -e;
+      $DEPLOY_K8S_COMMAND || { cat /tmp/syntho/*.log; exit 1; };
+      $FIND_DEPLOYMENT_ID_COMMAND;
+      $DESTROY_DEPLOYMENT_COMMAND;
+    "
 }
 
 run_dc_tests() {
     DEPLOY_DC_COMMAND="syntho-cli dc deployment --license-key $LICENSE_KEY --registry-user $REGISTRY_USER --registry-pwd $REGISTRY_PWD --version $VERSION --skip-configuration --dry-run"
     FIND_DEPLOYMENT_ID_COMMAND="DEPLOYMENT_ID=\$(syntho-cli dc deployments | yq '.[0].id')"
     DESTROY_DEPLOYMENT_COMMAND="syntho-cli dc destroy --deployment-id \$DEPLOYMENT_ID"
-    docker run -v /var/run/docker.sock:/var/run/docker.sock -t integration-test-image /bin/bash -c "$DEPLOY_DC_COMMAND && $FIND_DEPLOYMENT_ID_COMMAND && $DESTROY_DEPLOYMENT_COMMAND"
+    docker run -v /var/run/docker.sock:/var/run/docker.sock -t integration-test-image /bin/bash -c "
+      set -e;
+      $DEPLOY_DC_COMMAND || { cat /tmp/syntho/*.log; exit 1; };
+      $FIND_DEPLOYMENT_ID_COMMAND;
+      $DESTROY_DEPLOYMENT_COMMAND;
+    "
 }
 
 cleanup() {
