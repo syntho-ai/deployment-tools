@@ -24,7 +24,8 @@ network_check() {
     echo "network_check has been started" >> $SYNTHO_CLI_PROCESS_LOGS
 
     check() {
-        if ping -c 1 google.com &> /dev/null; then
+        # ICPM traffic is blocked on CI env, therefore we used curl to mimic ping
+        if curl -s --head https://www.google.com/ >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
             echo "ping to google.com is successful"
             return 0
         else
@@ -146,8 +147,8 @@ check_if_configurations_can_be_skipped() {
     write_and_exit "$errors" "check_if_configurations_can_be_skipped"
 }
 
-with_loading "Checking network connectivity" network_check
 with_loading "Checking developer tools" developer_tools_check
+with_loading "Checking network connectivity" network_check
 with_loading "Checking if the given KUBECONFIG points to a valid k8s cluster" kubernetes_cluster_check
 
 dump_k8s_server_info

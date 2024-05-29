@@ -1,0 +1,38 @@
+name: Run CLI integration tests
+
+on:
+  pull_request:
+     paths:
+      - 'cli/**'
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v1
+
+    - name: Install Kind
+      run: |
+        curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.17.0/kind-linux-amd64
+        chmod +x ./kind
+        sudo mv ./kind /usr/local/bin/kind
+
+    - name: Create Kind cluster
+      run: kind create cluster --name integration-tests --wait 2m
+
+    # TODO matrix for testing against different Syntho stack versions TBD later on
+    - name: Run integration tests
+      working-directory: ./cli/tests/integration/
+      env:
+        CLUSTER_NAME: integration-tests
+        VERSION: 1.23.0
+        LICENSE_KEY: ${{ secrets.LICENSE_KEY }}
+        REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
+        REGISTRY_PWD: ${{ secrets.REGISTRY_PWD }}
+      run: ./run.sh

@@ -24,7 +24,8 @@ network_check() {
     echo "network_check has been started" >> $SYNTHO_CLI_PROCESS_LOGS
 
     check() {
-        if ping -c 1 google.com &> /dev/null; then
+        # ICPM traffic is blocked on CI env, therefore we used curl to mimic ping
+        if curl -s --head https://www.google.com/ >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
             echo "ping to google.com is successful"
             return 0
         else
@@ -134,8 +135,8 @@ EOF
 }
 
 
-with_loading "Checking network connectivity" network_check
 with_loading "Checking developer tools" developer_tools_check
+with_loading "Checking network connectivity" network_check
 
 if [[ $DOCKER_HOST == ssh://* ]] && [[ -n $DOCKER_SSH_USER_PRIVATE_KEY ]]; then
     eval "$(ssh-agent -s)"
