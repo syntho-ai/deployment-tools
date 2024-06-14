@@ -101,7 +101,7 @@ spec:
               memory: "2Gi"
           readinessProbe:
             httpGet:
-              path: /api/docs/
+              path: /api/v1/live/
               port: 8000
               httpHeaders:
               - name: Host
@@ -113,7 +113,7 @@ spec:
             successThreshold: 1
           livenessProbe:
             httpGet:
-              path: /api/docs/
+              path: /api/v1/live/
               port: 8000
               httpHeaders:
               - name: Host
