@@ -1,0 +1,467 @@
+---
+entrypoint: acknowledge
+questions:
+  - id: acknowledge
+    question: "Target cluster needs either a storage class installed, and this toolkit will use it to provision a volume. Or, a label value that is associated with an existing volume will need to be provided. Later necessary configuration questions will be asked. I acknowledge it. (Y/n):"
+    var: ACKNOWLEDGE
+    default: "y"
+    validation:
+      - func: regex
+        args: ["^[yYnN]$", "$ACKNOWLEDGE"]
+        success: noerror
+        err_msg: "Invalid input. Please enter 'n', 'N', 'y', or 'Y'."
+    post_processing:
+      - func: lowercase
+    next:
+      value: "$ACKNOWLEDGE"
+      conditions:
+        - when: "y"
+          question_id: use_existing_volume
+          action: proceed
+          expose: []
+        - when: "n"
+          question_id: null
+          action: exit
+          expose: []
+
+  - id: use_existing_volume
+    question: "Do you want to use an existing volume for Syntho resources? (N/y):"
+    var: USE_EXISTING_VOLUMES
+    default: "n"
+    validation:
+      - func: regex
+        args: ["^[yYnN]$", "$USE_EXISTING_VOLUMES"]
+        success: noerror
+        err_msg: "Invalid input. Please enter 'n', 'N', 'y', or 'Y'."
+    post_processing:
+      - func: lowercase
+    next:
+      value: "$USE_EXISTING_VOLUMES"
+      conditions:
+        - when: "y"
+          question_id: pv_label_key
+          action: proceed
+          expose: []
+        - when: "n"
+          question_id: use_storage_class
+          action: proceed
+          expose: []
+
+  - id: pv_label_key
+    question: "Please provide `pv-label-key` label value that will later be used as selector to bind volumes properly to Syntho resources (mandatory)?:"
+    var: PV_LABEL_KEY
+    default: ""
+    validation:
+      - func: regex
+        args: [".+", "$PV_LABEL_KEY"]
+        success: noerror
+        err_msg: "Value is mandatory. Please provide a value."
+      - func: kubectlget
+        args: ["pv", "-l", "pv-label-key=$PV_LABEL_KEY", "jsonpath=\"{.items[*].spec.storageClassName}\""]
+        success: notempty
+        err_msg: "There is no such a volume found with the given label value. Please provide a correct value."
+    post_processing: []
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: use_ingress_controller
+          action: proceed
+          expose:
+            - name: PV_LABEL_KEY
+              func: returnasis
+              args: ["$PV_LABEL_KEY"]
+            - name: STORAGE_CLASS_NAME
+              func: kubectlget
+              args: ["pv", "-l", "pv-label-key=$PV_LABEL_KEY", "jsonpath=\"{.items[*].spec.storageClassName}\""]
+            - name: STORAGE_ACCESS_MODE
+              func: returnasis
+              args: ["ReadWriteOnce"]
+
+  - id: use_storage_class
+    question: "Do you want to use your own storage class for provisioning volumes? (Y/n):"
+    var: USE_STORAGE_CLASS
+    default: "y"
+    validation:
+      - func: regex
+        args: ["^[yYnN]$", "$USE_STORAGE_CLASS"]
+        success: noerror
+        err_msg: "Invalid input. Please enter 'y', 'Y', 'n', or 'N'."
+    post_processing:
+      - func: lowercase
+    next:
+      value: "$USE_STORAGE_CLASS"
+      conditions:
+        - when: "y"
+          question_id: storage_class_name
+          action: proceed
+          expose: []
+        - when: "n"
+          question_id: use_ingress_controller
+          action: proceed
+          expose:
+            - name: PV_LABEL_KEY
+              func: returnasis
+              args: [""]
+            - name: STORAGE_CLASS_NAME
+              func: returnasis
+              args: ["local-path"]
+            - name: STORAGE_ACCESS_MODE
+              func: returnasis
+              args: ["ReadWriteOnce"]
+
+  - id: storage_class_name
+    question: "Please provide a storage class name (Later volumes will be created for Syntho resources) (mandatory)?:"
+    var: STORAGE_CLASS_NAME
+    default: ""
+    validation:
+      - func: regex
+        args: [".+", "$STORAGE_CLASS_NAME"]
+        success: noerror
+        err_msg: "Value is mandatory. Please provide a value."
+      - func: kubectlget
+        args: ["storageclass", "$STORAGE_CLASS_NAME"]
+        success: notempty
+        err_msg: "There is no such a storage class found with the given name. Please provide a correct value."
+    post_processing:
+      - func: lowercase
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: use_ingress_controller
+          action: proceed
+          expose:
+            - name: PV_LABEL_KEY
+              func: returnasis
+              args: [""]
+            - name: STORAGE_CLASS_NAME
+              func: returnasis
+              args: ["$STORAGE_CLASS_NAME"]
+            - name: STORAGE_ACCESS_MODE
+              func: returnasis
+              args: ["ReadWriteOnce"]
+
+  - id: use_ingress_controller
+    question: "Do you want to use your own ingress controller for reaching the Syntho's UI? (Y/n):"
+    var: USE_INGRESS_CONTROLLER
+    default: "y"
+    validation:
+      - func: regex
+        args: ["^[yYnN]$", "$USE_INGRESS_CONTROLLER"]
+        success: noerror
+        err_msg: "Invalid input. Please enter 'y', 'Y', 'n', or 'N'."
+    post_processing:
+      - func: lowercase
+    next:
+      value: $USE_INGRESS_CONTROLLER
+      conditions:
+        - when: "y"
+          question_id: ingress_controller
+          action: proceed
+          expose: []
+        - when: "n"
+          question_id: protocol
+          action: proceed
+          expose:
+            - name: INGRESS_CONTROLLER
+              func: returnasis
+              args: ["nginx"]
+
+  - id: ingress_controller
+    question: "Please provide the ingress controller class name that will be used in Ingress record (mandatory)?:"
+    var: INGRESS_CONTROLLER
+    default: ""
+    validation:
+      - func: regex
+        args: [".+", "$INGRESS_CONTROLLER"]
+        success: noerror
+        err_msg: "Value is mandatory. Please provide a value."
+    post_processing:
+      - func: lowercase
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: protocol
+          action: proceed
+          expose:
+            - name: INGRESS_CONTROLLER
+              func: returnasis
+              args: ["$INGRESS_CONTROLLER"]
+
+  - id: protocol
+    question: "What is the preferred protocol for reaching the UI (HTTPS/http):"
+    var: PROTOCOL
+    default: "https"
+    validation:
+      - func: regex
+        args: ["^[Hh][Tt][Tt][Pp]([Ss])?$", "$PROTOCOL"]
+        success: noerror
+        err_msg: "Invalid input. Please enter 'http' or 'https'."
+    post_processing:
+      - func: lowercase
+    next:
+      value: "$PROTOCOL"
+      conditions:
+        - when: "http"
+          question_id: domain
+          action: proceed
+          expose:
+            - name: PROTOCOL
+              func: returnasis
+              args: ["$PROTOCOL"]
+        - when: "https"
+          question_id: tls_enabled
+          action: proceed
+          expose:
+            - name: PROTOCOL
+              func: returnasis
+              args: ["$PROTOCOL"]
+
+  - id: tls_enabled
+    question: "Do you want it to be TLS secured? (Y/n):"
+    var: TLS_ENABLED
+    default: "y"
+    validation:
+      - func: regex
+        args: ["^[yYnN]$", "$TLS_ENABLED"]
+        success: noerror
+        err_msg: "Invalid input. Please enter 'y', 'Y', 'n', or 'N'."
+    post_processing:
+      - func: lowercase
+    next:
+      value: "$TLS_ENABLED"
+      conditions:
+        - when: "y"
+          question_id: own_ssl_secret
+          action: proceed
+          expose:
+            - name: TLS_ENABLED
+              func: returnasis
+              args: ["true"]
+        - when: "n"
+          question_id: domain
+          action: proceed
+          expose:
+            - name: TLS_ENABLED
+              func: returnasis
+              args: ["false"]
+
+  - id: own_ssl_secret
+    question: "Do you want to create SSL certificate secret in the cluster yourself (secret name should be `frontend-tls` in `syntho` namespace) (N/y):"
+    var: OWN_SSL_SECRET
+    default: "y"
+    validation:
+      - func: regex
+        args: ["^[yYnN]$", "$OWN_SSL_SECRET"]
+        success: noerror
+        err_msg: "Invalid input. Please enter 'y', 'Y', 'n', or 'N'."
+    post_processing:
+      - func: lowercase
+    next:
+      value: "$OWN_SSL_SECRET"
+      conditions:
+        - when: "y"
+          question_id: domain
+          action: proceed
+          expose: []
+        - when: "n"
+          question_id: ssl_cert
+          action: proceed
+          expose: []
+
+  - id: ssl_cert
+    question: "Please provide ssl-certificate.crt: (mandatory)"
+    var: SSL_CERT
+    default: ""
+    validation:
+      - func: regex
+        args: [".+", "$SSL_CERT"]
+        success: noerror
+        err_msg: "Value is mandatory. Please provide a value."
+    post_processing: []
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: ssl_p_key
+          action: proceed
+          expose:
+            - name: SSL_CERT
+              func: returnasis
+              args: ["$SSL_CERT"]
+
+  - id: ssl_p_key
+    question: "Please provide ssl-private.key: (mandatory)"
+    var: SSL_P_KEY
+    default: ""
+    validation:
+      - func: regex
+        args: [".+", "$SSL_P_KEY"]
+        success: noerror
+        err_msg: "Value is mandatory. Please provide a value."
+    post_processing: []
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: domain
+          action: proceed
+          expose:
+            - name: SSL_P_KEY
+              func: returnasis
+              args: ["$SSL_P_KEY"]
+
+  - id: domain
+    question: "What is the preferred domain for reaching the UI (default: syntho.company.com):"
+    var: DOMAIN
+    default: "syntho.company.com"
+    validation:
+      - func: regex
+        args: [".+", "$DOMAIN"]
+        success: noerror
+        err_msg: "Please provide a value a proper value."
+    post_processing:
+      - func: lowercase
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: cpu_resource_ray_head
+          action: proceed
+          expose:
+            - name: DOMAIN
+              func: returnasis
+              args: ["$DOMAIN"]
+
+  - id: cpu_resource_ray_head
+    question: "How much CPU resource would you like to use for the Ray head (in millicores, e.g., 32000)? (default: 1000):"
+    var: RAY_HEAD_CPU_LIMIT
+    default: 1000
+    validation:
+      - func: regex
+        args: ["^[1-9][0-9]*000$", "$RAY_HEAD_CPU_LIMIT"]
+        success: noerror
+        err_msg: "Invalid input. Please provide a value in millicores (e.g., 1000, 2000, 3000), where the value is a positive integer divisible by 1000."
+    post_processing: []
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: memory_resource_ray_head
+          action: proceed
+          expose:
+            - name: HALF_OF_RAY_HEAD_CPU_LIMIT
+              func: divide
+              args: ["$RAY_HEAD_CPU_LIMIT", "2"]
+            - name: RAY_HEAD_CPU_REQUESTS
+              func: concatenate
+              args: ["$HALF_OF_RAY_HEAD_CPU_LIMIT", "m"]
+            - name: RAY_HEAD_CPU_LIMIT
+              func: concatenate
+              args: ["$RAY_HEAD_CPU_LIMIT", "m"]
+
+  - id: memory_resource_ray_head
+    question: "How much memory resource (gigabytes) would you like to allocate for the Ray head (e.g., 16)? (default: 4):"
+    var: RAY_HEAD_MEMORY_LIMIT
+    default: 4
+    validation:
+      - func: regex
+        args: ["^(?!0+$)(0|[1-9][0-9]*[02468])[0-9]*$", "$RAY_HEAD_MEMORY_LIMIT"]
+        success: noerror
+        err_msg: "Invalid input. Please enter a positive integer that is divisible by 4 (e.g., 4, 8, 12, ...)."
+    post_processing: []
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: ui_admin_login_email
+          action: proceed
+          expose:
+            - name: HALF_OF_RAY_HEAD_MEMORY_LIMIT
+              func: divide
+              args: ["$RAY_HEAD_MEMORY_LIMIT", "2"]
+            - name: RAY_HEAD_MEMORY_REQUESTS
+              func: concatenate
+              args: ["$HALF_OF_RAY_HEAD_MEMORY_LIMIT", "G"]
+            - name: RAY_HEAD_MEMORY_LIMIT
+              func: concatenate
+              args: ["$RAY_HEAD_MEMORY_LIMIT", "G"]
+
+  - id: ui_admin_login_email
+    question: "Login E-mail (default: admin@company.com):"
+    var: UI_ADMIN_LOGIN_EMAIL
+    default: "admin@company.com"
+    validation:
+      - func: regex
+        args: ["^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", "$UI_ADMIN_LOGIN_EMAIL"]
+        success: noerror
+        err_msg: "Invalid input. Please enter a proper email address."
+    post_processing:
+      - func: lowercase
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: ui_admin_login_password
+          action: proceed
+          expose:
+            - name: UI_ADMIN_LOGIN_EMAIL
+              func: returnasis
+              args: ["$UI_ADMIN_LOGIN_EMAIL"]
+
+  - id: ui_admin_login_password
+    question: "Login Password (default: password!):"
+    var: UI_ADMIN_LOGIN_PASSWORD
+    default: "password!"
+    validation:
+      - func: regex
+        args: ["^.{8,}$", "$UI_ADMIN_LOGIN_PASSWORD"]
+        success: noerror
+        err_msg: "Invalid input. Password should be at least 8 characters long."
+    post_processing: []
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: null
+          action: complete
+          expose:
+            - name: UI_ADMIN_LOGIN_PASSWORD
+              func: returnasis
+              args: ["$UI_ADMIN_LOGIN_PASSWORD"]
+
+envs_configuration:
+  - scope: .config.env
+    envs:
+      - name: STORAGE_CLASS_NAME
+        default: "local-path"
+      - name: STORAGE_ACCESS_MODE
+        default: "ReadWriteOnce"
+      - name: PV_LABEL_KEY
+        default: ""
+      - name: TLS_ENABLED
+        default: "false"
+      - name: DOMAIN
+        default: "syntho.company.com"
+      - name: PROTOCOL
+        default: "http"
+      - name: INGRESS_CONTROLLER
+        default: "nginx"
+  - scope: .resources.env
+    envs:
+      - name: RAY_HEAD_CPU_REQUESTS
+        default: "500m"
+      - name: RAY_HEAD_CPU_LIMIT
+        default: "1000m"
+      - name: RAY_HEAD_MEMORY_REQUESTS
+        default: "2G"
+      - name: RAY_HEAD_MEMORY_LIMIT
+        default: "4G"
+  - scope: .auth.env
+    envs:
+      - name: UI_ADMIN_LOGIN_EMAIL
+        default: "admin@company.com"
+      - name: UI_ADMIN_LOGIN_PASSWORD
+        default: "password!"

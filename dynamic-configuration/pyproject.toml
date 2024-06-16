@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "dynamic-configuration"
+version = "1.11.1"
+description = "Schema, syntax and structure validation for dynamic question configuration"
+authors = [
+    "Syntho B.V. <info@syntho.ai>",
+    "Younes Moustaghfir <younes@syntho.ai>",
+]
+license = "MIT License"
+readme = "README.md"
+packages = [{include = "src", from = "./"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+jsonschema = "^4.22.0"
+pyyaml = "^6.0.1"
+
+[tool.poetry.group.dev.dependencies]
+ipdb = "^0.13.13"
+ipython = "^8.23.0"
+flake8 = "^7.0.0"
+
+[tool.poetry.scripts]
+validate = "src.validation:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

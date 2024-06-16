@@ -1,0 +1,99 @@
+---
+type: object
+properties:
+  entrypoint:
+    type: string
+  questions:
+    type: array
+    items:
+      type: object
+      properties:
+        id:
+          type: string
+        question:
+          type: string
+        var:
+          type: string
+        default:
+          type: ["string", "integer"]
+        validation:
+          type: array
+          items:
+            type: object
+            properties:
+              func:
+                type: string
+                enum: ["regex", "lowercase", "kubectlget"]
+              args:
+                type: array
+                items:
+                  type: string
+              success:
+                type: string
+                enum: ["noerror", "notempty"]
+              err_msg:
+                type: string
+            required: ["func", "args", "success", "err_msg"]
+        post_processing:
+          type: array
+          items:
+            type: object
+            properties:
+              func:
+                type: string
+                enum: ["lowercase"]
+        next:
+          type: object
+          properties:
+            value:
+              type: string
+            conditions:
+              type: array
+              items:
+                type: object
+                properties:
+                  when:
+                    type: string
+                  question_id:
+                    type: ["string", "null"]
+                  action:
+                    type: string
+                    enum: [exit, proceed, complete]
+                  expose:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        func:
+                          type: string
+                          enum: ["kubectlget", "returnasis", "concatenate", "divide"]
+                        args:
+                          type: array
+                          items:
+                            type: string
+                      required: ["name", "func", "args"]
+                required: ["when", "question_id", "action", "expose"]
+          required: ["value", "conditions"]
+      required: ["id", "question", "var", "default", "validation", "post_processing", "next"]
+  envs_configuration:
+    type: array
+    items:
+      type: object
+      properties:
+        scope:
+          type: string
+          enum: [".config.env", ".resources.env", ".auth.env", "runtime"]
+        envs:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              default:
+                type: ["string", "integer"]
+            required: ["name", "default"]
+      required: ["scope", "envs"]
+required: ["entrypoint", "questions", "envs_configuration"]
