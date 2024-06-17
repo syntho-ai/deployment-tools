@@ -14,14 +14,22 @@ packages = [{include = "src", from = "./"}]
 python = "^3.12"
 jsonschema = "^4.22.0"
 pyyaml = "^6.0.1"
+datamodel-code-generator = "^0.25.7"
 
 [tool.poetry.group.dev.dependencies]
 ipdb = "^0.13.13"
 ipython = "^8.23.0"
 flake8 = "^7.0.0"
+ruff = "^0.4.9"
 
 [tool.poetry.scripts]
 validate = "src.validation:main"
+generate-schema = "src.generate_schema:main"
+
+[tool.datamodel-codegen]
+input = "src/schema/questions-schema.json"
+input-file-type = true
+output = "src/schema/question_schema.py"
 
 [build-system]
 requires = ["poetry-core"]

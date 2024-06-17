@@ -12,6 +12,9 @@
 		{
 			"path": "docker-compose"
 		},
+		{
+			"path": "dynamic-configuration"
+		}
 	],
 	"settings": {}
 }

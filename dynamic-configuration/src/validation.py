@@ -1,7 +1,12 @@
+import logging
 import sys
 
 import yaml
 from jsonschema import Draft7Validator
+
+from .schema.question_schema import QuestionSchema
+
+logger = logging.getLogger(__name__)
 
 schema = yaml.safe_load(open("./src/questions-schema.yaml", "r"))
 
@@ -25,6 +30,16 @@ def validate_yaml(yaml_data, schema):
     else:
         print("Schema validation is successful. The configuration YAML file is valid.")
         check_paths(yaml_data)
+
+
+def validate_yaml_pydantic(yaml_data):
+    try:
+        QuestionSchema.model_validate(yaml_data)
+        print("Schema validation is successful. The configuration YAML file is valid.")
+        check_paths(yaml_data)
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        sys.exit(1)
 
 
 def format_error_message(error):
@@ -80,7 +95,7 @@ def main():
         print(f"[Validation for {question_file}]")
         yaml_data = load_yaml_file(question_file)
         if yaml_data:
-            validate_yaml(yaml_data, schema)
+            validate_yaml_pydantic(yaml_data)
         print("\n")
 
 
