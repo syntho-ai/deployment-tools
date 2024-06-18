@@ -16,7 +16,8 @@ def main():
     schema = QuestionSchema.model_json_schema()
 
     with open("./src/schema/questions-schema.json", "w") as schema_file:
-        json.dump(schema, schema_file)
+        json_string = json.dumps(schema, indent=2)
+        schema_file.write(json_string + "\n")
     logger.info("Schema is generated successfully.")
 
 

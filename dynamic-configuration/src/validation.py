@@ -1,14 +1,12 @@
+import argparse
 import logging
 import sys
 
 import yaml
-from jsonschema import Draft7Validator
 
 from .schema.question_schema import QuestionSchema
 
 logger = logging.getLogger(__name__)
-
-schema = yaml.safe_load(open("./src/questions-schema.yaml", "r"))
 
 
 def load_yaml_file(filename):
@@ -20,18 +18,6 @@ def load_yaml_file(filename):
             return None
 
 
-def validate_yaml(yaml_data, schema):
-    validator = Draft7Validator(schema)
-    errors = list(validator.iter_errors(yaml_data))
-    if errors:
-        for error in errors:
-            print(format_error_message(error))
-        sys.exit(1)
-    else:
-        print("Schema validation is successful. The configuration YAML file is valid.")
-        check_paths(yaml_data)
-
-
 def validate_yaml_pydantic(yaml_data):
     try:
         QuestionSchema.model_validate(yaml_data)
@@ -40,11 +26,6 @@ def validate_yaml_pydantic(yaml_data):
     except Exception as e:
         logger.error(f"Error: {e}")
         sys.exit(1)
-
-
-def format_error_message(error):
-    path = ".".join(str(p) for p in error.path)
-    return f"Error at path '{path}': {error.message}"
 
 
 def check_paths(yaml_data):
@@ -87,11 +68,16 @@ def check_paths(yaml_data):
 
 
 def main():
-    question_files = [
-        "./src/k8s_questions.yaml",
-        "./src/dc_questions.yaml",
-    ]
-    for question_file in question_files:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--dc-questions-path", help="Path to Docker Compose questions YAML file", default="./src/dc_questions.yaml"
+    )
+    parser.add_argument(
+        "--k8s-questions-path", help="Path to Kubernetes questions YAML file", default="./src/k8s_questions.yaml"
+    )
+    args = parser.parse_args()
+    question_files = [args.dc_questions_path, args.k8s_questions_path]
+    for question_file in list(question_files):
         print(f"[Validation for {question_file}]")
         yaml_data = load_yaml_file(question_file)
         if yaml_data:

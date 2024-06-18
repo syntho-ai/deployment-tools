@@ -12,7 +12,6 @@ packages = [{include = "src", from = "./"}]
 
 [tool.poetry.dependencies]
 python = "^3.12"
-jsonschema = "^4.22.0"
 pyyaml = "^6.0.1"
 datamodel-code-generator = "^0.25.7"
 

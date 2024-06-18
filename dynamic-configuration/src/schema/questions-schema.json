@@ -1,1 +1,309 @@
-{"$defs": {"ActionEnum": {"enum": ["exit", "proceed", "complete"], "title": "ActionEnum", "type": "string"}, "Condition": {"properties": {"when": {"title": "When", "type": "string"}, "question_id": {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "Question Id"}, "action": {"$ref": "#/$defs/ActionEnum"}, "expose": {"items": {"$ref": "#/$defs/ExposeAction"}, "title": "Expose", "type": "array"}}, "required": ["when", "question_id", "action", "expose"], "title": "Condition", "type": "object"}, "Env": {"properties": {"name": {"title": "Name", "type": "string"}, "default": {"anyOf": [{"type": "string"}, {"type": "integer"}], "title": "Default"}}, "required": ["name", "default"], "title": "Env", "type": "object"}, "EnvConfiguration": {"properties": {"scope": {"$ref": "#/$defs/EnvConfigurationScopeEnum"}, "envs": {"items": {"$ref": "#/$defs/Env"}, "title": "Envs", "type": "array"}}, "required": ["scope", "envs"], "title": "EnvConfiguration", "type": "object"}, "EnvConfigurationScopeEnum": {"enum": [".config.env", ".resources.env", ".auth.env", "runtime"], "title": "EnvConfigurationScopeEnum", "type": "string"}, "ExposeAction": {"properties": {"name": {"title": "Name", "type": "string"}, "func": {"$ref": "#/$defs/ExposeActionFuncEnum"}, "args": {"items": {"type": "string"}, "title": "Args", "type": "array"}}, "required": ["name", "func", "args"], "title": "ExposeAction", "type": "object"}, "ExposeActionFuncEnum": {"enum": ["kubectlget", "returnasis", "concatenate", "divide"], "title": "ExposeActionFuncEnum", "type": "string"}, "NextStep": {"properties": {"value": {"title": "Value", "type": "string"}, "conditions": {"items": {"$ref": "#/$defs/Condition"}, "title": "Conditions", "type": "array"}}, "required": ["value", "conditions"], "title": "NextStep", "type": "object"}, "PostProcessingStep": {"properties": {"func": {"$ref": "#/$defs/PostProcessingStepFuncEnum"}}, "required": ["func"], "title": "PostProcessingStep", "type": "object"}, "PostProcessingStepFuncEnum": {"const": "lowercase", "enum": ["lowercase"], "title": "PostProcessingStepFuncEnum", "type": "string"}, "Question": {"properties": {"id": {"title": "Id", "type": "string"}, "question": {"title": "Question", "type": "string"}, "var": {"title": "Var", "type": "string"}, "default": {"anyOf": [{"type": "string"}, {"type": "integer"}], "title": "Default"}, "validation": {"items": {"$ref": "#/$defs/ValidationObject"}, "title": "Validation", "type": "array"}, "post_processing": {"items": {"$ref": "#/$defs/PostProcessingStep"}, "title": "Post Processing", "type": "array"}, "next": {"$ref": "#/$defs/NextStep"}}, "required": ["id", "question", "var", "default", "validation", "post_processing", "next"], "title": "Question", "type": "object"}, "ValidationFuncEnum": {"enum": ["regex", "lowercase", "kubectlget"], "title": "ValidationFuncEnum", "type": "string"}, "ValidationObject": {"properties": {"func": {"$ref": "#/$defs/ValidationFuncEnum"}, "args": {"items": {"type": "string"}, "title": "Args", "type": "array"}, "success": {"$ref": "#/$defs/ValidationSuccessEnum"}, "err_msg": {"title": "Err Msg", "type": "string"}}, "required": ["func", "args", "success", "err_msg"], "title": "ValidationObject", "type": "object"}, "ValidationSuccessEnum": {"enum": ["noerror", "notempty"], "title": "ValidationSuccessEnum", "type": "string"}}, "properties": {"entrypoint": {"title": "Entrypoint", "type": "string"}, "questions": {"items": {"$ref": "#/$defs/Question"}, "title": "Questions", "type": "array"}, "envs_configuration": {"items": {"$ref": "#/$defs/EnvConfiguration"}, "title": "Envs Configuration", "type": "array"}}, "required": ["entrypoint", "questions", "envs_configuration"], "title": "QuestionSchema", "type": "object"}
+{
+  "$defs": {
+    "ActionEnum": {
+      "enum": [
+        "exit",
+        "proceed",
+        "complete"
+      ],
+      "title": "ActionEnum",
+      "type": "string"
+    },
+    "Condition": {
+      "properties": {
+        "when": {
+          "title": "When",
+          "type": "string"
+        },
+        "question_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Question Id"
+        },
+        "action": {
+          "$ref": "#/$defs/ActionEnum"
+        },
+        "expose": {
+          "items": {
+            "$ref": "#/$defs/ExposeAction"
+          },
+          "title": "Expose",
+          "type": "array"
+        }
+      },
+      "required": [
+        "when",
+        "question_id",
+        "action",
+        "expose"
+      ],
+      "title": "Condition",
+      "type": "object"
+    },
+    "Env": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "default": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "Default"
+        }
+      },
+      "required": [
+        "name",
+        "default"
+      ],
+      "title": "Env",
+      "type": "object"
+    },
+    "EnvConfiguration": {
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/EnvConfigurationScopeEnum"
+        },
+        "envs": {
+          "items": {
+            "$ref": "#/$defs/Env"
+          },
+          "title": "Envs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "scope",
+        "envs"
+      ],
+      "title": "EnvConfiguration",
+      "type": "object"
+    },
+    "EnvConfigurationScopeEnum": {
+      "enum": [
+        ".config.env",
+        ".resources.env",
+        ".auth.env",
+        "runtime"
+      ],
+      "title": "EnvConfigurationScopeEnum",
+      "type": "string"
+    },
+    "ExposeAction": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "func": {
+          "$ref": "#/$defs/ExposeActionFuncEnum"
+        },
+        "args": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Args",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "func",
+        "args"
+      ],
+      "title": "ExposeAction",
+      "type": "object"
+    },
+    "ExposeActionFuncEnum": {
+      "enum": [
+        "kubectlget",
+        "returnasis",
+        "concatenate",
+        "divide"
+      ],
+      "title": "ExposeActionFuncEnum",
+      "type": "string"
+    },
+    "NextStep": {
+      "properties": {
+        "value": {
+          "title": "Value",
+          "type": "string"
+        },
+        "conditions": {
+          "items": {
+            "$ref": "#/$defs/Condition"
+          },
+          "title": "Conditions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "value",
+        "conditions"
+      ],
+      "title": "NextStep",
+      "type": "object"
+    },
+    "PostProcessingStep": {
+      "properties": {
+        "func": {
+          "$ref": "#/$defs/PostProcessingStepFuncEnum"
+        }
+      },
+      "required": [
+        "func"
+      ],
+      "title": "PostProcessingStep",
+      "type": "object"
+    },
+    "PostProcessingStepFuncEnum": {
+      "const": "lowercase",
+      "enum": [
+        "lowercase"
+      ],
+      "title": "PostProcessingStepFuncEnum",
+      "type": "string"
+    },
+    "Question": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "question": {
+          "title": "Question",
+          "type": "string"
+        },
+        "var": {
+          "title": "Var",
+          "type": "string"
+        },
+        "default": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "Default"
+        },
+        "validation": {
+          "items": {
+            "$ref": "#/$defs/ValidationObject"
+          },
+          "title": "Validation",
+          "type": "array"
+        },
+        "post_processing": {
+          "items": {
+            "$ref": "#/$defs/PostProcessingStep"
+          },
+          "title": "Post Processing",
+          "type": "array"
+        },
+        "next": {
+          "$ref": "#/$defs/NextStep"
+        }
+      },
+      "required": [
+        "id",
+        "question",
+        "var",
+        "default",
+        "validation",
+        "post_processing",
+        "next"
+      ],
+      "title": "Question",
+      "type": "object"
+    },
+    "ValidationFuncEnum": {
+      "enum": [
+        "regex",
+        "lowercase",
+        "kubectlget"
+      ],
+      "title": "ValidationFuncEnum",
+      "type": "string"
+    },
+    "ValidationObject": {
+      "properties": {
+        "func": {
+          "$ref": "#/$defs/ValidationFuncEnum"
+        },
+        "args": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Args",
+          "type": "array"
+        },
+        "success": {
+          "$ref": "#/$defs/ValidationSuccessEnum"
+        },
+        "err_msg": {
+          "title": "Err Msg",
+          "type": "string"
+        }
+      },
+      "required": [
+        "func",
+        "args",
+        "success",
+        "err_msg"
+      ],
+      "title": "ValidationObject",
+      "type": "object"
+    },
+    "ValidationSuccessEnum": {
+      "enum": [
+        "noerror",
+        "notempty"
+      ],
+      "title": "ValidationSuccessEnum",
+      "type": "string"
+    }
+  },
+  "properties": {
+    "entrypoint": {
+      "title": "Entrypoint",
+      "type": "string"
+    },
+    "questions": {
+      "items": {
+        "$ref": "#/$defs/Question"
+      },
+      "title": "Questions",
+      "type": "array"
+    },
+    "envs_configuration": {
+      "items": {
+        "$ref": "#/$defs/EnvConfiguration"
+      },
+      "title": "Envs Configuration",
+      "type": "array"
+    }
+  },
+  "required": [
+    "entrypoint",
+    "questions",
+    "envs_configuration"
+  ],
+  "title": "QuestionSchema",
+  "type": "object"
+}
