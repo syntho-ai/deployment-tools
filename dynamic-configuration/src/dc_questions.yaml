@@ -1,0 +1,129 @@
+---
+entrypoint: domain
+questions:
+  - id: domain
+    question: "What is the preferred domain for reaching the UI (default: syntho.company.com):"
+    var: DOMAIN
+    default: "syntho.company.com"
+    validation:
+      - func: regex
+        args: [".+", "$DOMAIN"]
+        success: noerror
+        err_msg: "Please provide a value a proper value."
+    post_processing:
+      - func: lowercase
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: cpu_resource_ray_head
+          action: proceed
+          expose:
+            - name: DOMAIN
+              func: returnasis
+              args: ["$DOMAIN"]
+
+  - id: cpu_resource_ray_head
+    question: "How much CPU resource would you like to use for the Ray head (in cores, e.g., 32)? (default: 1):"
+    var: RAY_HEAD_CPU_LIMIT
+    default: 1
+    validation:
+      - func: regex
+        args: ["^[1-9][0-9]*$", "$RAY_HEAD_CPU_LIMIT"]
+        success: noerror
+        err_msg: "Invalid input. Please provide a value in cores (e.g., 1, 2, 3), where the value is a positive integer."
+    post_processing: []
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: memory_resource_ray_head
+          action: proceed
+          expose:
+            - name: RAY_CPUS
+              func: returnasis
+              args: ["$RAY_HEAD_CPU_LIMIT"]
+
+  - id: memory_resource_ray_head
+    question: "How much memory resource (gigabytes) would you like to allocate for the Ray head (e.g., 16)? (default: 4):"
+    var: RAY_HEAD_MEMORY_LIMIT
+    default: 4
+    validation:
+      - func: regex
+        args: ["^(?!0+$)(0|[1-9][0-9]*[02468])[0-9]*$", "$RAY_HEAD_MEMORY_LIMIT"]
+        success: noerror
+        err_msg: "Invalid input. Please enter a positive integer that is divisible by 4 (e.g., 4, 8, 12, ...)."
+    post_processing: []
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: ui_admin_login_email
+          action: proceed
+          expose:
+            - name: RAY_MEMORY
+              func: concatenate
+              args: ["$RAY_HEAD_MEMORY_LIMIT", "G"]
+
+  - id: ui_admin_login_email
+    question: "Login E-mail (default: admin@company.com):"
+    var: UI_ADMIN_LOGIN_EMAIL
+    default: "admin@company.com"
+    validation:
+      - func: regex
+        args: ["^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", "$UI_ADMIN_LOGIN_EMAIL"]
+        success: noerror
+        err_msg: "Invalid input. Please enter a proper email address."
+    post_processing:
+      - func: lowercase
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: ui_admin_login_password
+          action: proceed
+          expose:
+            - name: UI_ADMIN_LOGIN_EMAIL
+              func: returnasis
+              args: ["$UI_ADMIN_LOGIN_EMAIL"]
+
+  - id: ui_admin_login_password
+    question: "Login Password (default: password!):"
+    var: UI_ADMIN_LOGIN_PASSWORD
+    default: "password!"
+    validation:
+      - func: regex
+        args: ["^.{8,}$", "$UI_ADMIN_LOGIN_PASSWORD"]
+        success: noerror
+        err_msg: "Invalid input. Password should be at least 8 characters long."
+    post_processing: []
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: null
+          action: complete
+          expose:
+            - name: UI_ADMIN_LOGIN_PASSWORD
+              func: returnasis
+              args: ["$UI_ADMIN_LOGIN_PASSWORD"]
+
+envs_configuration:
+  - scope: .config.env
+    envs:
+      - name: DOMAIN
+        default: "syntho.company.com"
+  - scope: .resources.env
+    envs:
+      - name: RAY_CPUS
+        default: "1"
+      - name: RAY_MEMORY
+        default: "4G"
+  - scope: .auth.env
+    envs:
+      - name: UI_ADMIN_LOGIN_EMAIL
+        default: "admin@company.com"
+      - name: UI_ADMIN_LOGIN_PASSWORD
+        default: "password!"
+      - name: UI_ADMIN_LOGIN_USERNAME
+        default: "admin"
