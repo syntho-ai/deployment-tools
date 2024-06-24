@@ -1,3 +1,9 @@
+## 1.11.2 (2024-06-24)
+
+### Fix
+
+- Fix issues with secrets for Backend (#15)
+
 ## 1.11.1 (2024-05-28)
 
 ### Fix
