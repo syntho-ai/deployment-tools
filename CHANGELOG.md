@@ -1,3 +1,13 @@
+## 1.12.0 (2024-06-24)
+
+### Feat
+
+- implements dynamic configurations pattern and their validation logic (#13)
+
+### Fix
+
+- fix version of dynamic-configuration
+
 ## 1.11.3 (2024-06-24)
 
 ### Fix
