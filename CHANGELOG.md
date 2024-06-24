@@ -1,3 +1,9 @@
+## 1.13.0 (2024-06-24)
+
+### Feat
+
+- Implements predefined funcs for them to be defined in dynamic configuration questions (#16)
+
 ## 1.12.0 (2024-06-24)
 
 ### Feat
