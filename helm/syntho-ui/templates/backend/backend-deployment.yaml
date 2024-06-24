@@ -70,7 +70,7 @@ spec:
             - name: WORKERS
               value: {{quote .Values.backend.workers }}
             - name: EXTRA_ALLOWED_HOSTS
-              value: "{{ .Values.frontend_url }} {{ .Values.backend.name }}.{{ .Release.Namespace }}.svc.cluster.local"
+              value: "{{ trimAll ":3000" .Values.frontend_url }} {{ .Values.backend.name }}.{{ .Release.Namespace }}.svc.cluster.local"
           {{- if or $.Values.backend.env $.Values.backend.envSecrets }}
             {{- range $key, $value := $.Values.backend.env }}
             - name: {{ $key }}
