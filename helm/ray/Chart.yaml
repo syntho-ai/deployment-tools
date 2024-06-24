@@ -1,7 +1,7 @@
 apiVersion: v2
 description: A Helm chart for Kubernetes ray operator and cluster
 name: ray-cluster
-version: 1.11.2
+version: 1.11.3
 icon: https://github.com/ray-project/ray/raw/master/doc/source/images/ray_header_logo.png
 type: application
 maintainers:

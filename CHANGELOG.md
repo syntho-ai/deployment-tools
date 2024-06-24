@@ -1,3 +1,9 @@
+## 1.11.3 (2024-06-24)
+
+### Fix
+
+- update backend healthcheck endpoint (#12)
+
 ## 1.11.2 (2024-06-24)
 
 ### Fix
