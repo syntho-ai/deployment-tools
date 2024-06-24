@@ -1,10 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  {{- with .Values.backend.annotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    checksum/config: {{ include (print $.Template.BasePath "/backend/backend-secret.yaml") . | sha256sum }}
+    {{- with .Values.backend.annotations }}
+    {{- toYaml . | indent 4 }}
+    {{- end }}
   labels:
     {{- include "syntho-core.labels" . | nindent 4 }}
     app: {{ .Values.backend.name }}
