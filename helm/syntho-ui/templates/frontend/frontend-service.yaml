@@ -10,6 +10,7 @@ spec:
     - name: frontend-port
       port: {{ .Values.frontend.service.port }}
       targetPort: {{ .Values.frontend.service.port }}
+  type: {{ .Values.frontend.service.type | default "ClusterIP" }}
   selector:
     app: frontend
 status:
