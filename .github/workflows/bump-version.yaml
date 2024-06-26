@@ -23,20 +23,12 @@ jobs:
         with:
           changelog_increment_filename: changelog.md
           github_token: "${{ secrets.PERSONAL_ACCESS_TOKEN }}"
-      - name: Zip docker-compose and Helm charts
-        run: |
-          tar -czf docker-compose.tar.gz docker-compose
-          tar -czf ray-helm-chart.tar.gz helm/ray
-          tar -czf syntho-ui-helm-chart.tar.gz helm/syntho-ui
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           body_path: "changelog.md"
-          tag_name: ${{ env.REVISION }}
+          tag_name: syntho-cli-${{ env.REVISION }}
           files: |
             changelog.md
-            docker-compose.tar.gz
-            ray-helm-chart.tar.gz
-            syntho-ui-helm-chart.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

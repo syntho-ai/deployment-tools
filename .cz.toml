@@ -4,8 +4,6 @@ version = "1.13.0"
 tag_format = "$version"
 version_files = [
     "cli/pyproject.toml:version",
-    "helm/ray/Chart.yaml:version",
-    "helm/syntho-ui/Chart.yaml:version",
     "pyproject.toml:version",
     "dynamic-configuration/pyproject.toml:version"
 ]

@@ -1,0 +1,36 @@
+name: Create Syntho Application Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      syntho_version:
+        description: 'Syntho Application Version'
+        required: true
+        type: string
+      release_notes:
+        description: 'Release notes for this version'
+        required: false
+        type: string
+
+jobs:
+  release-cli:
+    runs-on: ubuntu-latest
+    name: "Create Draft Release for Syntho Application"
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Zip docker-compose and Helm charts
+        run: |
+          tar -czf syntho-${{ inputs.syntho_version }}.tar.gz docker-compose helm dynamic-configuration/dc_questions.yaml dynamic-configuration/k8s_questions.yaml
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          body: "${{ inputs.release_notes }}"
+          tag_name: ${{ inputs.syntho_version }}
+          files: |
+            syntho-${{ inputs.syntho_version }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
