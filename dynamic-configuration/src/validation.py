@@ -4,7 +4,7 @@ import sys
 
 import yaml
 
-from .schema.question_schema import QuestionSchema
+from cli.dynamic_configuration.schema.question_schema import QuestionSchema
 
 logger = logging.getLogger(__name__)
 
