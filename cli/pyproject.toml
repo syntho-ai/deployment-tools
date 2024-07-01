@@ -24,7 +24,7 @@ python = "^3.11"
 click = "^8.1.7"
 pyyaml = "^6.0.1"
 watchdog = "^4.0.0"
-
+datamodel-code-generator = "^0.25.7"
 
 [tool.poetry.group.dev.dependencies]
 ipdb = "^0.13.13"
@@ -43,6 +43,12 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 pre-build = "cli.pre_build:main"
 syntho-cli = "cli.syntho_cli:cli"
+generate-questions-schema = "cli.dynamic_configuration.generate_schema:main"
+
+[tool.datamodel-codegen]
+input = "cli/dynamic_configuration/schema/questions-schema.json"
+input-file-type = true
+output = "cli/dynamic_configuration/schema/question_schema.py"
 
 [tool.ruff]
 # Same as Black.
