@@ -1,3 +1,11 @@
+## 1.14.0 (2024-07-01)
+
+### Feat
+
+- adds questions schema logic under cli
+
+## 1.28.0 (2024-06-26)
+
 ## 1.13.0 (2024-06-24)
 
 ### Feat
