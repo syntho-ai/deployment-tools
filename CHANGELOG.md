@@ -1,3 +1,9 @@
+## 1.15.0 (2024-07-01)
+
+### Feat
+
+- rolling tags match pattern back to see if release-ci is triggered
+
 ## 1.14.0 (2024-07-01)
 
 ### Feat
