@@ -1,3 +1,9 @@
+## 1.16.0 (2024-07-01)
+
+### Feat
+
+- questions validations now uses schema from syntho-cli lib
+
 ## 1.15.0 (2024-07-01)
 
 ### Feat
