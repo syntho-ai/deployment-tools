@@ -45,10 +45,12 @@ users:
         self.get_architecture_patch = mock.patch("cli.syntho_cli.utils.get_architecture")
         self.k8s_deployment_start_patch = mock.patch("cli.syntho_cli.k8s_deployment_manager.start")
         self.mock_get_version_patch = mock.patch("cli.syntho_cli.get_version")
+        self.mock_get_releases_patch = mock.patch("cli.syntho_cli.get_releases")
 
         self.mock_get_architecture = self.get_architecture_patch.start()
         self.mock_k8s_deployment_start = self.k8s_deployment_start_patch.start()
         self.mock_get_version = self.mock_get_version_patch.start()
+        self.mock_get_releases = self.mock_get_releases_patch.start()
 
         self.mock_get_architecture.return_value = "amd"
         self.mock_k8s_deployment_start.return_value = DeploymentResult(
@@ -58,11 +60,13 @@ users:
             deployment_status="completed",
         )
         self.mock_get_version.return_value = "2.0.0"
+        self.mock_get_releases.return_value = [{"name": "1.0.0"}]
 
     def tearDown(self):
         self.get_architecture_patch.stop()
         self.k8s_deployment_start_patch.stop()
         self.mock_get_version_patch.stop()
+        self.mock_get_releases_patch.stop()
 
     def test_deployment_with_kubeconfig_content_and_registry_creds(self):
         result = self.runner.invoke(
@@ -208,6 +212,13 @@ Try 'deployment --help' for help.
 
 Error: --trusted-registry-image-pull-secret should be provided when --use-trusted-registry is used
 """
+        self.expected_output_invalid_version = """
+Usage: deployment [OPTIONS]
+Try 'deployment --help' for help.
+
+Error: Given application stack version (1.2.0) could not be found. Available versions:
+1.0.0
+"""
 
         self.sample_kubeconfig_content = """
 apiVersion: v1
@@ -327,9 +338,11 @@ users:
         with (
             mock.patch("cli.syntho_cli.os.path.exists") as mock_path_exists,
             mock.patch("cli.syntho_cli.prepull_images_manager.get_status") as mock_get_status,
+            mock.patch("cli.syntho_cli.get_releases") as mock_get_releases,
         ):
             mock_path_exists.return_value = True
             mock_get_status.return_value = "completed"
+            mock_get_releases.return_value = [{"name": "1.0.0"}]
 
             result = self.runner.invoke(
                 syntho_cli.k8s_deployment,
@@ -348,3 +361,30 @@ users:
             self.assertEqual(
                 result.output.strip(), self.expected_output_for_trusted_registry_missing_image_pull_secret.strip()
             )
+
+    def test_invalid_version(self):
+        with (
+            mock.patch("cli.syntho_cli.os.path.exists") as mock_path_exists,
+            mock.patch("cli.syntho_cli.get_releases") as mock_get_releases,
+        ):
+            mock_path_exists.return_value = True
+            mock_get_releases.return_value = [{"name": "1.0.0"}]
+
+            result = self.runner.invoke(
+                syntho_cli.k8s_deployment,
+                [
+                    "--license-key",
+                    "my-license-key",
+                    "--registry-user",
+                    "syntho-user",
+                    "--registry-pwd",
+                    "syntho-pwd",
+                    "--kubeconfig",
+                    self.sample_kubeconfig_content,
+                    "--version",
+                    "1.2.0",
+                ],
+            )
+
+            self.assertEqual(result.exit_code, 2)
+            self.assertEqual(result.output.strip(), self.expected_output_invalid_version.strip())

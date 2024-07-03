@@ -34,10 +34,12 @@ Destroy deployment: syntho-cli dc destroy --deployment-id dc-123456789
         self.get_architecture_patch = mock.patch("cli.syntho_cli.utils.get_architecture")
         self.dc_deployment_start_patch = mock.patch("cli.syntho_cli.dc_deployment_manager.start")
         self.mock_get_version_patch = mock.patch("cli.syntho_cli.get_version")
+        self.mock_get_releases_patch = mock.patch("cli.syntho_cli.get_releases")
 
         self.mock_get_architecture = self.get_architecture_patch.start()
         self.mock_dc_deployment_start = self.dc_deployment_start_patch.start()
         self.mock_get_version = self.mock_get_version_patch.start()
+        self.mock_get_releases = self.mock_get_releases_patch.start()
 
         self.mock_get_architecture.return_value = "amd"
         self.mock_dc_deployment_start.return_value = DeploymentResult(
@@ -47,11 +49,13 @@ Destroy deployment: syntho-cli dc destroy --deployment-id dc-123456789
             deployment_status="completed",
         )
         self.mock_get_version.return_value = self.cli_version
+        self.mock_get_releases.return_value = [{"name": "1.0.0"}]
 
     def tearDown(self):
         self.get_architecture_patch.stop()
         self.dc_deployment_start_patch.stop()
         self.mock_get_version_patch.stop()
+        self.mock_get_releases_patch.stop()
 
     def test_deployment_to_default_docker_daemon(self):
         result = self.runner.invoke(
@@ -289,6 +293,13 @@ Try 'deployment --help' for help.
 
 Error: Either provide '--registry-user' and '--registry-pwd' or use '--use-trusted-registry'.
 """
+        self.expected_output_invalid_version = """
+Usage: deployment [OPTIONS]
+Try 'deployment --help' for help.
+
+Error: Given application stack version (1.2.0) could not be found. Available versions:
+1.0.0
+"""
 
     def assert_missing_param(self, result, missing):
         self.assertEqual(result.exit_code, 2)
@@ -361,7 +372,7 @@ Error: Either provide '--registry-user' and '--registry-pwd' or use '--use-trust
             mock_get_status.return_value = "in-progress"
 
             result = self.runner.invoke(
-                syntho_cli.k8s_deployment,
+                syntho_cli.dc_deployment,
                 [
                     "--license-key",
                     "my-license-key",
@@ -378,7 +389,7 @@ Error: Either provide '--registry-user' and '--registry-pwd' or use '--use-trust
             mock_path_exists.return_value = False
 
             result = self.runner.invoke(
-                syntho_cli.k8s_deployment,
+                syntho_cli.dc_deployment,
                 [
                     "--license-key",
                     "my-license-key",
@@ -466,3 +477,30 @@ Error: Either provide '--registry-user' and '--registry-pwd' or use '--use-trust
         self.assert_with_expected_output(
             result, self.expected_output_when_a_proper_creds_or_deployment_registry_is_not_provided
         )
+
+    def test_invalid_version(self):
+        with (
+            mock.patch("cli.syntho_cli.os.path.exists") as mock_path_exists,
+            mock.patch("cli.syntho_cli.get_releases") as mock_get_releases,
+        ):
+            mock_path_exists.return_value = True
+            mock_get_releases.return_value = [{"name": "1.0.0"}]
+
+            result = self.runner.invoke(
+                syntho_cli.dc_deployment,
+                [
+                    "--license-key",
+                    "my-license-key",
+                    "--registry-user",
+                    "syntho-user",
+                    "--registry-pwd",
+                    "syntho-pwd",
+                    "--version",
+                    "1.2.0",
+                    "--docker-config",
+                    "/foo/bar.config",
+                ],
+            )
+
+            self.assertEqual(result.exit_code, 2)
+            self.assertEqual(result.output.strip(), self.expected_output_invalid_version.strip())

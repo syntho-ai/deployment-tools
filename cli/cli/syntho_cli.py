@@ -175,6 +175,22 @@ def validate_input_params(
         )
 
 
+def validate_version(version):
+    releases = get_releases()
+    found = False
+    for release in releases:
+        if version == release.get("name"):
+            found = True
+            break
+
+    if not found:
+        versions = [release.get("name") for release in releases]
+        versions_str = "\n".join(versions)
+        raise click.BadParameter(
+            f"Given application stack version ({version}) could not be found. Available versions:\n{versions_str}"
+        )
+
+
 def get_version(package_name: str):
     try:
         version = metadata.version(package_name)
@@ -251,12 +267,7 @@ def list_releases():
     required=True,
     callback=validate_kubeconfig,
 )
-@click.option(
-    "--version",
-    type=str,
-    help=("Specify a version for Syntho stack."),
-    required=True,
-)
+@click.option("--version", type=str, help=("Specify a version for Syntho stack."), required=True)
 @click.option(
     "--trusted-registry-image-pull-secret",
     type=str,
@@ -303,6 +314,9 @@ def k8s_deployment(
             trusted_registry_image_pull_secret=trusted_registry_image_pull_secret,
             is_k8s=True,
         )
+
+        validate_version(version)
+
     except click.BadParameter as exc:
         raise click.UsageError(str(exc)) from exc
 
@@ -539,6 +553,8 @@ def dc_deployment(
             trusted_registry_image_pull_secret=None,
             is_k8s=False,
         )
+
+        validate_version(version)
     except click.BadParameter as exc:
         raise click.UsageError(str(exc)) from exc
 
