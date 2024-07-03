@@ -1,3 +1,9 @@
+## 1.18.0 (2024-07-03)
+
+### Feat
+
+- validates given version when installing to docker and kubernetes
+
 ## 1.17.0 (2024-07-03)
 
 ### Feat
