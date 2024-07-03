@@ -1,3 +1,9 @@
+## 1.17.0 (2024-07-03)
+
+### Feat
+
+- adds a new cli command to list syntho application versions
+
 ## 1.16.0 (2024-07-01)
 
 ### Feat
