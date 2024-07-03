@@ -25,8 +25,9 @@ Options:
 Commands:
   dc         Manages Docker Compose Deployment
   k8s        Manages Kubernetes Deployments
+  releases   Lists Syntho application stack releases
   utilities  Utilities to streamline manual operations
-  version
+  version    Shows the installed syntho-cli version
 """
     runner = CliRunner()
     result = runner.invoke(syntho_cli.cli, ["--help"])

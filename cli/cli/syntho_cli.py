@@ -9,6 +9,7 @@ import yaml
 from cli import dc_deployment as dc_deployment_manager
 from cli import k8s_deployment as k8s_deployment_manager
 from cli import utils
+from cli.releases import get_releases
 from cli.utilities import offline_ops as offline_ops_manager
 from cli.utilities import prepull_images as prepull_images_manager
 
@@ -187,7 +188,7 @@ def cli():
     pass
 
 
-@cli.command(name="version")
+@cli.command(name="version", help="Shows the installed syntho-cli version")
 def version():
     version = get_version("syntho-cli")
     click.echo(f"syntho-cli, {version}")
@@ -206,6 +207,21 @@ def dc():
 @cli.group(help="Utilities to streamline manual operations")
 def utilities():
     pass
+
+
+@cli.command(name="releases", help="Lists Syntho application stack releases")
+def list_releases():
+    try:
+        releases = get_releases()
+    except Exception as exc:
+        click.echo(f"an unexpected error occured when fetching the releases, please try again later: {exc}")
+
+    for release in releases:
+        click.echo(f"Release: {release['name']}")
+        click.echo(f"Published at: {release['published_at']}")
+        click.echo("Release Notes: ")
+        click.echo(release["notes"])
+        click.echo("-" * 40)
 
 
 @k8s.command(name="deployment", help="Deploys the Syntho Stack into the given cluster")
