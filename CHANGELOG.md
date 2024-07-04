@@ -1,3 +1,9 @@
+## 1.19.0 (2024-07-04)
+
+### Feat
+
+- rolling back tag pattern match
+
 ## 1.18.0 (2024-07-03)
 
 ### Feat
