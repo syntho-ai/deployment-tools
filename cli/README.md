@@ -18,16 +18,16 @@ For detailed information on the CLI's usage, please refer to the [relevant secti
 
 #### Development Mode
 
-- `poetry run pre-build && poetry shell`
+- `poetry run poetry shell`
 
 #### CLI mode - DEV
 
-- Option 1: `poetry run pre-build && poetry run syntho-cli --help`
-- Option 2: `poetry run pre-build && poetry shell` && `syntho-cli --help`
+- Option 1: `poetry run poetry run syntho-cli --help`
+- Option 2: `poetry run poetry shell` && `syntho-cli --help`
 
 #### CLI Mode - PROD
 
-- `poetry run pre-build && poetry build` -> this will create wheels under ./dist
+- `poetry run poetry build` -> this will create wheels under ./dist
 - `pip install ./dist/cli-<VERSION>.tar.gz`
 
 ### Running tests

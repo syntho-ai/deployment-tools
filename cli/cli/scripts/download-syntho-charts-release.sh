@@ -7,8 +7,7 @@ DEPLOYMENT_DIR="$DEPLOYMENT_DIR"
 source $DEPLOYMENT_DIR/.env --source-only
 
 VERSION="$VERSION"
-DEPLOYMENT_TOOLS_VERSION="$DEPLOYMENT_TOOLS_VERSION"
-CHARTS_ARCHIVE_LOCATION=${SCRIPT_DIR}/syntho-charts.tar.gz
+CHARTS_RELEASE_ASSET_URL=https://github.com/syntho-ai/deployment-tools/releases/download/${VERSION}/syntho-${VERSION}.tar.gz
 TARBALL_DESTINATION=${DEPLOYMENT_DIR}/syntho-charts-${VERSION}.tar.gz
 EXTRACT_LOCATION=${DEPLOYMENT_DIR}
 
@@ -32,8 +31,14 @@ replace_version_in_images_env() {
 download_release() {
     local errors=""
 
-    if ! cp "${CHARTS_ARCHIVE_LOCATION}" "${TARBALL_DESTINATION}" >/dev/null 2>&1; then
-        errors+="Failed to download release..\n"
+    if ! command_exists "curl"; then
+        if ! curl -LJ "${CHARTS_RELEASE_ASSET_URL}" -o "${TARBALL_DESTINATION}" >/dev/null 2>&1; then
+            errors+="Failed to download release using curl. Make sure that the given version exists.\n"
+        fi
+    else
+        if ! wget "${CHARTS_RELEASE_ASSET_URL}" -O "${TARBALL_DESTINATION}" >/dev/null 2>&1; then
+            errors+="Failed to download release using wget. Make sure that the given version exists.\n"
+        fi
     fi
 
     write_and_exit "$errors" "download_release"
@@ -43,8 +48,9 @@ extract_release() {
     sleep 1
     local errors=""
 
+    mkdir -p "${EXTRACT_LOCATION}/syntho-charts"
 
-    if ! tar -xzvf "${TARBALL_DESTINATION}" -C "${EXTRACT_LOCATION}" >/dev/null 2>&1; then
+    if ! tar -xzvf "${TARBALL_DESTINATION}" -C "${EXTRACT_LOCATION}/syntho-charts" >/dev/null 2>&1; then
         errors+="Failed to extract the release\n"
     fi
 

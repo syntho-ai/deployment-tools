@@ -42,7 +42,6 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-pre-build = "cli.pre_build:main"
 syntho-cli = "cli.syntho_cli:cli"
 generate-questions-schema = "cli.dynamic_configuration.generate_schema:main"
 

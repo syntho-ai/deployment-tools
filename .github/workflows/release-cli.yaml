@@ -4,7 +4,7 @@ on:
   push:
     # Pattern matched against refs/tags
     tags:
-      - 'syntho-cli-*'
+      - '*'
 
 jobs:
   release-cli:
@@ -44,7 +44,7 @@ jobs:
       - name: Install project
         run: poetry install --no-interaction
       - name: Poetry build & publish
-        run: poetry run pre-build && poetry build
+        run: poetry run poetry build
       - run: ls dist
       - name: Publish to PyPi
         uses: pypa/gh-action-pypi-publish@release/v1

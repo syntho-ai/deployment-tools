@@ -22,7 +22,7 @@ ENV PATH="/root/.local/bin:${PATH}"
 COPY temp-workspace ./temp-workspace
 WORKDIR /app/temp-workspace/cli
 RUN poetry install --no-root
-RUN poetry run pre-build && poetry build
+RUN poetry run poetry build
 RUN poetry version | awk '{print $2}' > ./dist/.version
 
 ### BUILDING DIST ###
