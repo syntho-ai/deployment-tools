@@ -96,6 +96,7 @@
         ".config.env",
         ".resources.env",
         ".auth.env",
+        ".pre.deployment.ops.env",
         "runtime"
       ],
       "title": "EnvConfigurationScopeEnum",

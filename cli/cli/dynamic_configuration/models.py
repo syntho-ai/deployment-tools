@@ -112,6 +112,7 @@ class EnvConfigurationScopeEnum(str, Enum):
     configenv = ".config.env"
     resourcesenv = ".resources.env"
     authenv = ".auth.env"
+    predeploymentopsenv = ".pre.deployment.ops.env"
     runtime = "runtime"
 
 
