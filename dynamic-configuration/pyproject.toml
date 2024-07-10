@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dynamic-configuration"
-version = "1.19.0"
+version = "1.19.1"
 description = "Schema, syntax and structure validation for dynamic question configuration"
 authors = [
     "Syntho B.V. <info@syntho.ai>",
