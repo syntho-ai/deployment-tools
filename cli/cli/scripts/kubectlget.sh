@@ -17,7 +17,7 @@ if [ -z "$KUBECONFIG" ]; then
     exit 1
 fi
 
-output=$(kubectl --kubeconfig "$KUBECONFIG" $PARAMS 2>&1)
+output=$(eval "kubectl --kubeconfig \"$KUBECONFIG\" get $PARAMS" 2>&1)
 
 if [ $? -eq 0 ]; then
     output="${output%\"}"

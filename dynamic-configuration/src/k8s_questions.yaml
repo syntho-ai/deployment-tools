@@ -57,7 +57,7 @@ questions:
         success: noerror
         err_msg: "Value is mandatory. Please provide a value."
       - func: kubectlget
-        args: ["get", "pv", "-l", "pv-label-key=$PV_LABEL_KEY", "jsonpath=\"{.items[*].spec.storageClassName}\""]
+        args: ["pv", "-l", "pv-label-key=$PV_LABEL_KEY", "-o", "json", "|", "jq", "-r", "'.items[].spec.storageClassName'"]
         success: notempty
         err_msg: "There is no such a volume found with the given label value. Please provide a correct value."
     post_processing: []
@@ -73,7 +73,7 @@ questions:
               args: ["$PV_LABEL_KEY"]
             - name: STORAGE_CLASS_NAME
               func: kubectlget
-              args: ["get", "pv", "-l", "pv-label-key=$PV_LABEL_KEY", "jsonpath=\"{.items[*].spec.storageClassName}\""]
+              args: ["pv", "-l", "pv-label-key=$PV_LABEL_KEY", "-o", "json", "|", "jq", "-r", "'.items[].spec.storageClassName'"]
             - name: STORAGE_ACCESS_MODE
               func: returnasis
               args: ["ReadWriteOnce"]
@@ -120,7 +120,7 @@ questions:
         success: noerror
         err_msg: "Value is mandatory. Please provide a value."
       - func: kubectlget
-        args: ["get", "storageclass", "$STORAGE_CLASS_NAME"]
+        args: ["storageclass", "$STORAGE_CLASS_NAME"]
         success: notempty
         err_msg: "There is no such a storage class found with the given name. Please provide a correct value."
     post_processing:
