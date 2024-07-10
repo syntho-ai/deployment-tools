@@ -65,6 +65,7 @@ if [[ "$USE_TRUSTED_REGISTRY" == "true" ]]; then
         ACTIVE_IMAGE_PULL_SECRET="$IMAGE_PULL_SECRET"
     fi
 fi
+IMAGE_PULL_SECRET="$ACTIVE_IMAGE_PULL_SECRET"
 echo "final image pull secret is: $ACTIVE_IMAGE_PULL_SECRET" >> $SYNTHO_CLI_PROCESS_LOGS
 
 
@@ -110,23 +111,21 @@ generate_ray_values() {
     local TEMPLATE_FILE="$CHARTS_DIR/ray/values.yaml.tpl"
     local OUTPUT_FILE="$CHARTS_DIR/ray/values-generated.yaml"
 
-    sed "s|{{ LICENSE_KEY }}|$LICENSE_KEY|g; \
-         s|{{ RAY_OPERATOR_IMG_REPO }}|$RAY_OPERATOR_IMG_REPO|g; \
-         s|{{ RAY_OPERATOR_IMG_TAG }}|$RAY_OPERATOR_IMG_TAG|g; \
-         s|{{ RAY_IMAGE_IMG_REPO }}|$RAY_IMAGE_IMG_REPO|g; \
-         s|{{ RAY_IMAGE_IMG_TAG }}|$RAY_IMAGE_IMG_TAG|g; \
-         s|{{ RAY_HEAD_CPU_LIMIT }}|$RAY_HEAD_CPU_LIMIT|g; \
-         s|{{ RAY_HEAD_MEMORY_LIMIT }}|$RAY_HEAD_MEMORY_LIMIT|g; \
-         s|{{ RAY_HEAD_CPU_REQUESTS }}|$RAY_HEAD_CPU_REQUESTS|g; \
-         s|{{ RAY_HEAD_MEMORY_REQUESTS }}|$RAY_HEAD_MEMORY_REQUESTS|g; \
-         s|{{ RAY_WORKER_CPU_LIMIT }}|$RAY_WORKER_CPU_LIMIT|g; \
-         s|{{ RAY_WORKER_MEMORY_LIMIT }}|$RAY_WORKER_MEMORY_LIMIT|g; \
-         s|{{ RAY_WORKER_CPU_REQUESTS }}|$RAY_WORKER_CPU_REQUESTS|g; \
-         s|{{ RAY_WORKER_MEMORY_REQUESTS }}|$RAY_WORKER_MEMORY_REQUESTS|g; \
-         s|{{ PV_LABEL_KEY }}|$PV_LABEL_KEY|g; \
-         s|{{ IMAGE_PULL_SECRET }}|$ACTIVE_IMAGE_PULL_SECRET|g; \
-         s|{{ STORAGE_CLASS_NAME }}|$STORAGE_CLASS_NAME|g; \
-         s|{{ STORAGE_ACCESS_MODE }}|$STORAGE_ACCESS_MODE|g" "$TEMPLATE_FILE" > "$OUTPUT_FILE"
+    # Create a copy of the template file to work with
+    cp "$TEMPLATE_FILE" "$OUTPUT_FILE"
+
+    # Iterate over all environment variables
+    for VAR in $(compgen -v); do
+      echo "processing: $VAR: ${!VAR}"
+      # Check the operating system
+      if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS uses BSD sed
+        sed -i '' "s|{{ $VAR }}|${!VAR}|g" "$OUTPUT_FILE"
+      else
+        # Linux uses GNU sed
+        sed -i "s|{{ $VAR }}|${!VAR}|g" "$OUTPUT_FILE"
+      fi
+    done
 }
 
 deploy_ray() {
@@ -193,26 +192,21 @@ generate_synthoui_values() {
     local TEMPLATE_FILE="$CHARTS_DIR/syntho-ui/values.yaml.tpl"
     local OUTPUT_FILE="$CHARTS_DIR/syntho-ui/values-generated.yaml"
 
-    sed "s|{{ DOMAIN }}|$DOMAIN|g; \
-         s|{{ PROTOCOL }}|$PROTOCOL|g; \
-         s|{{ LICENSE_KEY }}|$LICENSE_KEY|g; \
-         s|{{ SYNTHO_UI_CORE_IMG_REPO }}|$SYNTHO_UI_CORE_IMG_REPO|g; \
-         s|{{ SYNTHO_UI_CORE_IMG_TAG }}|$SYNTHO_UI_CORE_IMG_TAG|g; \
-         s|{{ SYNTHO_UI_BACKEND_IMG_REPO }}|$SYNTHO_UI_BACKEND_IMG_REPO|g; \
-         s|{{ SYNTHO_UI_BACKEND_IMG_TAG }}|$SYNTHO_UI_BACKEND_IMG_TAG|g; \
-         s|{{ UI_LOGIN_EMAIL }}|$UI_LOGIN_EMAIL|g; \
-         s|{{ UI_LOGIN_PASSWORD }}|$UI_LOGIN_PASSWORD|g; \
-         s|{{ SYNTHO_UI_FRONTEND_IMG_REPO }}|$SYNTHO_UI_FRONTEND_IMG_REPO|g; \
-         s|{{ SYNTHO_UI_FRONTEND_IMG_TAG }}|$SYNTHO_UI_FRONTEND_IMG_TAG|g; \
-         s|{{ POSTGRES_IMG_REPO }}|$POSTGRES_IMG_REPO|g; \
-         s|{{ POSTGRES_IMG_TAG }}|$POSTGRES_IMG_TAG|g; \
-         s|{{ REDIS_IMG_REPO }}|$REDIS_IMG_REPO|g; \
-         s|{{ REDIS_IMG_TAG }}|$REDIS_IMG_TAG|g; \
-         s|{{ INGRESS_CONTROLLER }}|$INGRESS_CONTROLLER|g; \
-         s|{{ IMAGE_PULL_SECRET }}|$ACTIVE_IMAGE_PULL_SECRET|g; \
-         s|{{ TLS_ENABLED }}|$TLS_ENABLED|g; \
-         s|{{ STORAGE_CLASS_NAME }}|$STORAGE_CLASS_NAME|g; \
-         s|{{ PV_LABEL_KEY }}|$PV_LABEL_KEY|g" "$TEMPLATE_FILE" > "$OUTPUT_FILE"
+    # Create a copy of the template file to work with
+    cp "$TEMPLATE_FILE" "$OUTPUT_FILE"
+
+    # Iterate over all environment variables
+    for VAR in $(compgen -v); do
+      echo "processing: $VAR: ${!VAR}"
+      # Check the operating system
+      if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS uses BSD sed
+        sed -i '' "s|{{ $VAR }}|${!VAR}|g" "$OUTPUT_FILE"
+      else
+        # Linux uses GNU sed
+        sed -i "s|{{ $VAR }}|${!VAR}|g" "$OUTPUT_FILE"
+      fi
+    done
 }
 
 deploy_synthoui() {
@@ -340,7 +334,7 @@ deploy_ray_cluster() {
     SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/deploy_ray_cluster.log"
 
     echo "deploy_ray_cluster:generate_ray_values has been started" >> $SYNTHO_CLI_PROCESS_LOGS
-    if ! generate_ray_values >/dev/null 2>&1; then
+    if ! generate_ray_values >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="values.yaml generation error for the Ray Cluster\n"
     fi
     echo "deploy_ray_cluster:generate_ray_values has been done" >> $SYNTHO_CLI_PROCESS_LOGS
@@ -365,7 +359,7 @@ deploy_syntho_ui() {
     SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/deploy_syntho_ui.log"
 
     echo "deploy_syntho_ui:generate_synthoui_values has been started" >> $SYNTHO_CLI_PROCESS_LOGS
-    if ! generate_synthoui_values >/dev/null 2>&1; then
+    if ! generate_synthoui_values >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
         errors+="values.yaml generation error for the Syntho Stack\n"
     fi
     echo "deploy_syntho_ui:generate_synthoui_values has been done" >> $SYNTHO_CLI_PROCESS_LOGS

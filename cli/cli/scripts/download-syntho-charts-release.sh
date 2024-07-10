@@ -62,8 +62,6 @@ extract_release() {
 }
 
 
-
-
 with_loading "Downloading the release: $VERSION" download_release
 with_loading "Extracting the release: $VERSION" extract_release
 
@@ -71,10 +69,3 @@ with_loading "Extracting the release: $VERSION" extract_release
 RELEASE_CONFIG_DIR=${DEPLOYMENT_DIR}/syntho-charts-${VERSION}/helm/config
 cp ${RELEASE_CONFIG_DIR}/images.env ${DEPLOYMENT_DIR}/.images.env
 cp ${RELEASE_CONFIG_DIR}/images-arm.env ${DEPLOYMENT_DIR}/.images-arm.env
-
-source ${DEPLOYMENT_DIR}/.images.env --source-only
-IMAGE_REGISTRY_SERVER="${IMAGE_REGISTRY_SERVER-syntho.azurecr.io}"
-echo "IMAGE_REGISTRY_SERVER=$IMAGE_REGISTRY_SERVER" >> "$DEPLOYMENT_DIR/.pre.deployment.ops.env"
-
-CHARTS_DIR=${DEPLOYMENT_DIR}/syntho-charts-${VERSION}/helm
-echo "CHARTS_DIR=$CHARTS_DIR" >> "$DEPLOYMENT_DIR/.pre.deployment.ops.env"

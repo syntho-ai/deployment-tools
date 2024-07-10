@@ -69,7 +69,6 @@ extract_release() {
 
 
 
-
 with_loading "Downloading the release: $VERSION" download_release
 with_loading "Extracting the release: $VERSION" extract_release
 
@@ -77,6 +76,3 @@ with_loading "Extracting the release: $VERSION" extract_release
 RELEASE_CONFIG_DIR=${DEPLOYMENT_DIR}/syntho-charts-${VERSION}/docker-compose/config
 cp ${RELEASE_CONFIG_DIR}/images.env ${DEPLOYMENT_DIR}/.images.env
 cp ${RELEASE_CONFIG_DIR}/images-arm.env ${DEPLOYMENT_DIR}/.images-arm.env
-
-DC_DIR=${DEPLOYMENT_DIR}/syntho-charts-${VERSION}/docker-compose
-echo "DC_DIR=$DC_DIR" >> "$DEPLOYMENT_DIR/.pre.deployment.ops.env"
