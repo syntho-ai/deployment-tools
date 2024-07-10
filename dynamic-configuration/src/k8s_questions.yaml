@@ -77,6 +77,9 @@ questions:
             - name: STORAGE_ACCESS_MODE
               func: returnasis
               args: ["ReadWriteOnce"]
+            - name: DEPLOY_LOCAL_VOLUME_PROVISIONER
+              func: returnasis
+              args: ["n"]
 
   - id: use_storage_class
     question: "Do you want to use your own storage class for provisioning volumes? (Y/n):"
@@ -95,7 +98,10 @@ questions:
         - when: "y"
           question_id: storage_class_name
           action: proceed
-          expose: []
+          expose:
+            - name: DEPLOY_LOCAL_VOLUME_PROVISIONER
+              func: returnasis
+              args: ["n"]
         - when: "n"
           question_id: use_ingress_controller
           action: proceed
@@ -109,6 +115,9 @@ questions:
             - name: STORAGE_ACCESS_MODE
               func: returnasis
               args: ["ReadWriteOnce"]
+            - name: DEPLOY_LOCAL_VOLUME_PROVISIONER
+              func: returnasis
+              args: ["y"]
 
   - id: storage_class_name
     question: "Please provide a storage class name (Later volumes will be created for Syntho resources) (mandatory)?:"
@@ -159,7 +168,10 @@ questions:
         - when: "y"
           question_id: ingress_controller
           action: proceed
-          expose: []
+          expose:
+            - name: DEPLOY_INGRESS_CONTROLLER
+              func: returnasis
+              args: ["n"]
         - when: "n"
           question_id: protocol
           action: proceed
@@ -167,6 +179,9 @@ questions:
             - name: INGRESS_CONTROLLER
               func: returnasis
               args: ["nginx"]
+            - name: DEPLOY_INGRESS_CONTROLLER
+              func: returnasis
+              args: ["y"]
 
   - id: ingress_controller
     question: "Please provide the ingress controller class name that will be used in Ingress record (mandatory)?:"
@@ -177,6 +192,10 @@ questions:
         args: [".+", "$INGRESS_CONTROLLER"]
         success: noerror
         err_msg: "Value is mandatory. Please provide a value."
+      - func: kubectlget
+        args: ["ingressclass", "$INGRESS_CONTROLLER"]
+        success: notempty
+        err_msg: "There is no such a ingress class found with the given name. Please provide a correct value."
     post_processing:
       - func: lowercase
     next:
@@ -265,11 +284,17 @@ questions:
         - when: "y"
           question_id: domain
           action: proceed
-          expose: []
+          expose:
+            - name: CREATE_SECRET_FOR_SSL
+              func: returnasis
+              args: ["n"]
         - when: "n"
           question_id: ssl_cert
           action: proceed
-          expose: []
+          expose:
+            - name: CREATE_SECRET_FOR_SSL
+              func: returnasis
+              args: ["y"]
 
   - id: ssl_cert
     question: "Please provide ssl-certificate.crt: (mandatory)"
@@ -465,3 +490,15 @@ envs_configuration:
         default: "admin@company.com"
       - name: UI_ADMIN_LOGIN_PASSWORD
         default: "password!"
+  - scope: .pre.deployment.ops.env
+    envs:
+      - name: DEPLOY_LOCAL_VOLUME_PROVISIONER
+        default: "y"
+      - name: DEPLOY_INGRESS_CONTROLLER
+        default: "y"
+      - name: CREATE_SECRET_FOR_SSL
+        default: "n"
+      - name: SSL_CERT
+        default: ""
+      - name: SSL_P_KEY
+        default: ""
