@@ -1,3 +1,11 @@
+## 1.20.0 (2024-07-10)
+
+### Feat
+
+- dynamic configuration schema update
+
+## 1.28.2 (2024-07-10)
+
 ## 1.19.1 (2024-07-10)
 
 ### Fix
