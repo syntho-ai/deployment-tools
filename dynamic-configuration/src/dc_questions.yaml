@@ -50,9 +50,9 @@ questions:
     default: 4
     validation:
       - func: regex
-        args: ["^(?!0+$)(0|[1-9][0-9]*[02468])[0-9]*$", "$RAY_HEAD_MEMORY_LIMIT"]
+        args: ["^[0-9]*[2468]$", "$RAY_HEAD_MEMORY_LIMIT"]
         success: noerror
-        err_msg: "Invalid input. Please enter a positive integer that is divisible by 4 (e.g., 4, 8, 12, ...)."
+        err_msg: "Invalid input. Please enter a positive integer that is divisible by 2 (e.g., 2, 4, 6, ...)."
     post_processing: []
     next:
       value: "any"
