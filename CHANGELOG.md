@@ -9,17 +9,6 @@
 - questions validations now uses schema from syntho-cli lib
 - rolling tags match pattern back to see if release-ci is triggered
 - adds questions schema logic under cli
-
-### Fix
-
-- fix tag creation for Syntho CLI release
-- sigh
-- question params for kubectlget
-
-## 1.28.0 (2024-06-26)
-
-### Feat
-
 - Implements predefined funcs for them to be defined in dynamic configuration questions (#16)
 - implements dynamic configurations pattern and their validation logic (#13)
 - implements --dry-run functionality for deployments
@@ -27,6 +16,9 @@
 
 ### Fix
 
+- fix tag creation for Syntho CLI release
+- sigh
+- question params for kubectlget
 - fix version of dynamic-configuration
 - update backend healthcheck endpoint (#12)
 - Fix issues with secrets for Backend (#15)
