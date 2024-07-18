@@ -4,21 +4,24 @@ from typing import Any, Tuple
 from cli.utils import run_script
 
 
-def regex(pattern, text) -> bool:
+def regex(deployment_dir, pattern, text) -> bool:
     """
     Check if the provided text matches the given regex pattern.
 
+    :param deployment_dir: The deployment_dir for a specific deployment that holds.
     :param pattern: The regex pattern to match against.
     :param text: The text to be matched.
     :return: True if the text matches the pattern, False otherwise.
     """
-    return bool(re.match(pattern, text))
+    if not bool(re.match(pattern, text)):
+        raise Exception("invalid value")
 
 
-def lowercase(val) -> str:
+def lowercase(deployment_dir, val) -> str:
     """
     Convert the given string to lowercase.
 
+    :param deployment_dir: The deployment_dir for a specific deployment that holds.
     :param val: The string to be converted.
     :return: The lowercase version of the input string.
     """
@@ -29,42 +32,47 @@ def kubectlget(deployment_dir, *args) -> Tuple[bool, str]:
     """
     Placeholder function to execute a kubectl get command.
 
-    :param deployments_dir: The deployments_dir for a specific deployment that holds.
+    :param deployment_dir: The deployment_dir for a specific deployment that holds.
     :param args: The arguments for the kubectl get command.
     :return: The output of the kubectl get command.
     """
     length = len(args)
     args_with_spaces = [f"{arg}{"" if i == length - 1 else " "}" for i, arg in enumerate(args)]
-    params = concatenate(*args_with_spaces)
+    params = concatenate(deployment_dir, *args_with_spaces)
     scripts_dir, _, _ = deployment_dir.rsplit("/", 2)
     result = run_script(scripts_dir, deployment_dir, "kubectlget.sh", capture_output=True, **{"PARAMS": params})
-    return result.exitcode == 0, result.output
+    if result.exitcode != 0:
+        return ""
+    return result.output
 
 
-def returnasis(val) -> Any:
+def returnasis(deployment_dir, val) -> Any:
     """
     Return the input value as is.
 
+    :param deployment_dir: The deployment_dir for a specific deployment that holds.
     :param val: The value to be returned.
     :return: The input value, unchanged.
     """
     return val
 
 
-def concatenate(*args) -> str:
+def concatenate(deployment_dir, *args) -> str:
     """
     Concatenate the given arguments into a single string.
 
+    :param deployment_dir: The deployment_dir for a specific deployment that holds.
     :param args: The arguments to be concatenated.
     :return: A single string formed by concatenating the input arguments.
     """
     return "".join([str(arg) for arg in args])
 
 
-def divide(dividend, divisor):
+def divide(deployment_dir, dividend, divisor):
     """
     Divide the dividend by the divisor and return the result.
 
+    :param deployment_dir: The deployment_dir for a specific deployment that holds.
     :param dividend: The value to be divided.
     :param divisor: The value to divide by.
     :return: The result of the division.
@@ -79,4 +87,4 @@ def divide(dividend, divisor):
     except Exception as exc:
         raise ValueError("Conversion error") from exc
 
-    return dividend / divisor
+    return int(dividend / divisor)

@@ -8,7 +8,10 @@ from typing import Dict, List, NoReturn
 
 import click
 import yaml
+from pydantic import parse_obj_as
 
+from cli.dynamic_configuration.core import dump_envs, enrich_envs, make_envs, proceed_with_questions
+from cli.dynamic_configuration.schema.question_schema import QuestionSchema
 from cli.utilities.prepull_images import generate_prepull_images_dir
 from cli.utils import (
     CleanUpLevel,
@@ -117,21 +120,29 @@ def start(
 
     set_cluster_name(scripts_dir, deployment_id)
 
-    succeeded = configuration_questions(scripts_dir, deployment_id, skip_configuration)
-    if not succeeded:
-        return DeploymentResult(
-            succeeded=False,
-            deployment_id=deployment_id,
-            error=("Pre deployment operations failed - Configuration"),
-            deployment_status=DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED,
-        )
-
     succeeded = download_syntho_charts_release(scripts_dir, deployment_id)
     if not succeeded:
         return DeploymentResult(
             succeeded=False,
             deployment_id=deployment_id,
             error=("Pre deployment operations failed - Downloading syntho-charts release"),
+            deployment_status=DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED,
+        )
+
+    succeeded = configuration_questions(
+        scripts_dir,
+        deployment_id,
+        skip_configuration,
+        version,
+        license_key,
+        registry_user,
+        registry_pwd,
+    )
+    if not succeeded:
+        return DeploymentResult(
+            succeeded=False,
+            deployment_id=deployment_id,
+            error=("Pre deployment operations failed - Configuration"),
             deployment_status=DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED,
         )
 
@@ -434,12 +445,40 @@ def start_deployment(scripts_dir: str, deployment_id: str) -> bool:
     return result.succeeded
 
 
-def configuration_questions(scripts_dir: str, deployment_id: str, skip_configuration) -> bool:
-    if not skip_configuration:
-        click.echo("Step 2: Configuration;")
-    else:
+def configuration_questions(
+    scripts_dir: str,
+    deployment_id: str,
+    skip_configuration: bool,
+    version: str,
+    license_key: str,
+    registry_user: str,
+    registry_pwd: str,
+) -> bool:
+    deployment_dir = f"{scripts_dir}/deployments/{deployment_id}"
+    configuration_questions_yaml_location = (
+        f"{deployment_dir}/syntho-charts-{version}" "/dynamic-configuration/src/k8s_questions.yaml"
+    )
+
+    with open(configuration_questions_yaml_location, "r") as f:
+        questions_config = yaml.safe_load(f)
+
+    question_schema_obj = parse_obj_as(QuestionSchema, questions_config)
+    all_envs = make_envs(question_schema_obj.envs_configuration)
+
+    if skip_configuration:
         skipped_text = click.style("[SKIPPED]", bg="yellow", fg="white", bold=True)
-        click.echo(f"Step 2: Configuration; {skipped_text}")
+        click.echo(f"Step 3: Configuration; {skipped_text}")
+    else:
+        click.echo("Step 3: Configuration;")
+
+        all_envs, interrupted = proceed_with_questions(
+            deployment_dir, all_envs, question_schema_obj.questions, question_schema_obj.entrypoint
+        )
+        if interrupted:
+            return False
+
+    enrich_envs(all_envs, license_key, registry_user, registry_pwd)
+    dump_envs(all_envs, deployment_dir)
 
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
@@ -453,7 +492,7 @@ def configuration_questions(scripts_dir: str, deployment_id: str, skip_configura
 
 
 def download_syntho_charts_release(scripts_dir: str, deployment_id: str) -> bool:
-    click.echo("Step 3: Downloading the release;")
+    click.echo("Step 2: Downloading the release;")
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
     set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_IN_PROGRESS)

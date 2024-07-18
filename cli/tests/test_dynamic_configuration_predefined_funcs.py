@@ -13,12 +13,22 @@ class TestRegex(TestCase):
 
     def validate(self, pattern, valid_inputs, invalid_inputs):
         for valid_input in valid_inputs:
-            is_valid = regex(pattern, valid_input)
-            self.assertTrue(is_valid, f"Valid input '{valid_input}' failed the regex test")
+            exc = None
+            try:
+                regex("test-dir", pattern, valid_input)
+            except Exception as e:
+                exc = e
+
+            self.assertTrue(exc is None, f"Valid input '{valid_input}' failed the regex test")
 
         for invalid_input in invalid_inputs:
-            is_valid = regex(pattern, invalid_input)
-            self.assertFalse(is_valid, f"Invalid input '{invalid_input}' passed the regex test")
+            exc = None
+            try:
+                regex("test-dir", pattern, invalid_input)
+            except Exception as e:
+                exc = e
+
+            self.assertTrue(exc is not None, f"Invalid input '{invalid_input}' passed the regex test")
 
     def test_only_y_and_n(self):
         pattern = "^[yYnN]$"
@@ -73,36 +83,36 @@ def test_lowercase():
     inp = "CamelCase"
     out = "camelcase"
 
-    assert lowercase(inp) == out
+    assert lowercase("test-dir", inp) == out
 
 
 def test_returnasis():
     inp = "foobar"
     out = "foobar"
 
-    assert returnasis(inp) == out
+    assert returnasis("test-dir", inp) == out
 
 
 def test_concatenate():
     args = ["this", "is", 1, "foo", "bar"]
     out = "thisis1foobar"
 
-    assert concatenate(*args) == out
+    assert concatenate("test-dir", *args) == out
 
 
 class TestDivide(TestCase):
     def test_divide(self):
-        self.assertTrue(divide(4, 2) == 2)
-        self.assertTrue(divide(100, 25) == 4)
+        self.assertTrue(divide("test-dir", 4, 2) == 2)
+        self.assertTrue(divide("test-dir", 100, 25) == 4)
 
     def test_divide_conversion_error(self):
         with self.assertRaises(ValueError) as context:
-            divide("string", 2)
+            divide("test-dir", "string", 2)
         self.assertTrue("Conversion error" in str(context.exception))
 
     def test_divide_by_zero(self):
         with self.assertRaises(ValueError) as context:
-            divide(10, 0)
+            divide("test-dir", 10, 0)
         self.assertTrue("The divisor cannot be zero." in str(context.exception))
 
 
@@ -113,9 +123,8 @@ def test_kubectlget():
         mock_run_script.return_value = SubprocessResult(succeeded=True, output="local-path", exitcode=0)
         deployment_dir = "foo/bar/scripts/deployments/a-deployment-id"
         args = ["get", "pv", "-l", "pv-label-key=mylabel", "-o", 'jsonpath="{.items[*].spec.storageClassName}"']
-        is_success, value = kubectlget(deployment_dir, *args)
+        value = kubectlget(deployment_dir, *args)
 
-        assert is_success is True
         assert value == "local-path"
 
         mock_run_script.assert_called_with(

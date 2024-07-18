@@ -26,6 +26,7 @@ mkdir -p "$SHARED"
 SYNTHO_CLI_PROCESS_DIR="$SHARED/process"
 mkdir -p "$SYNTHO_CLI_PROCESS_DIR"
 source $DEPLOYMENT_DIR/.auth.env --source-only
+# shellcheck disable=SC2034
 ADMIN_USERNAME="${UI_ADMIN_LOGIN_USERNAME}"
 ADMIN_PASSWORD="${UI_ADMIN_LOGIN_PASSWORD}"
 ADMIN_EMAIL="${UI_ADMIN_LOGIN_EMAIL}"
@@ -98,25 +99,21 @@ generate_env() {
     local TEMPLATE_FILE="$DC_DIR/.env.tpl"
     local OUTPUT_FILE="$DC_DIR/.env"
 
-    sed "s|{{ LICENSE_KEY }}|$LICENSE_KEY|g; \
-         s|{{ RAY_IMAGE_IMG_REPO }}|$RAY_IMAGE_IMG_REPO|g; \
-         s|{{ RAY_IMAGE_IMG_TAG }}|$RAY_IMAGE_IMG_TAG|g; \
-         s|{{ RAY_CPUS }}|$RAY_CPUS|g; \
-         s|{{ RAY_MEMORY }}|$RAY_MEMORY|g; \
-         s|{{ SYNTHO_UI_CORE_IMG_REPO }}|$SYNTHO_UI_CORE_IMG_REPO|g; \
-         s|{{ SYNTHO_UI_CORE_IMG_TAG }}|$SYNTHO_UI_CORE_IMG_TAG|g; \
-         s|{{ SYNTHO_UI_BACKEND_IMG_REPO }}|$SYNTHO_UI_BACKEND_IMG_REPO|g; \
-         s|{{ SYNTHO_UI_BACKEND_IMG_TAG }}|$SYNTHO_UI_BACKEND_IMG_TAG|g; \
-         s|{{ SYNTHO_UI_FRONTEND_IMG_REPO }}|$SYNTHO_UI_FRONTEND_IMG_REPO|g; \
-         s|{{ SYNTHO_UI_FRONTEND_IMG_TAG }}|$SYNTHO_UI_FRONTEND_IMG_TAG|g; \
-         s|{{ POSTGRES_IMG_REPO }}|$POSTGRES_IMG_REPO|g; \
-         s|{{ POSTGRES_IMG_TAG }}|$POSTGRES_IMG_TAG|g; \
-         s|{{ REDIS_IMG_REPO }}|$REDIS_IMG_REPO|g; \
-         s|{{ REDIS_IMG_TAG }}|$REDIS_IMG_TAG|g; \
-         s|{{ DOMAIN }}|$DOMAIN|g; \
-         s|{{ ADMIN_EMAIL }}|$ADMIN_EMAIL|g; \
-         s|{{ ADMIN_PASSWORD }}|$ADMIN_PASSWORD|g; \
-         s|{{ ADMIN_USERNAME }}|$ADMIN_USERNAME|g" "$TEMPLATE_FILE" > "$OUTPUT_FILE"
+    # Create a copy of the template file to work with
+    cp "$TEMPLATE_FILE" "$OUTPUT_FILE"
+
+    # Iterate over all environment variables
+    for VAR in $(compgen -v); do
+      echo "processing: $VAR: ${!VAR}"
+      # Check the operating system
+      if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS uses BSD sed
+        sed -i '' "s|{{ $VAR }}|${!VAR}|g" "$OUTPUT_FILE"
+      else
+        # Linux uses GNU sed
+        sed -i "s|{{ $VAR }}|${!VAR}|g" "$OUTPUT_FILE"
+      fi
+    done
 }
 
 deploy_docker_compose() {
@@ -329,7 +326,7 @@ if [[ "$USE_OFFLINE_REGISTRY" == "true" ]]; then
     with_loading "Deploying offline image registry with necessary images in it" deploy_offline_image_registry
 fi
 
-with_loading "Deploying Syntho Stack" deploy_syntho_stack 1200 deployment_failure_callback
+with_loading "Deploying Syntho Stack" deploy_syntho_stack 1800 deployment_failure_callback
 with_loading "Waiting for Syntho UI to be healthy" wait_for_fe_health 300 deployment_failure_callback
 
 if [[ -f "${DEPLOYMENT_DIR}/.ssh-sock.env" ]] && [[ -f "${DEPLOYMENT_DIR}/.ssh-agent-pid.env" ]]; then
