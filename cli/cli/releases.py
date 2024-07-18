@@ -32,4 +32,4 @@ def get_releases():
             }
         )
 
-        return releases
+    return releases

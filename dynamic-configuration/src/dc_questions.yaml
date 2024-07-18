@@ -2,9 +2,9 @@
 entrypoint: domain
 questions:
   - id: domain
-    question: "What is the preferred domain for reaching the UI (default: syntho.company.com):"
+    question: "What is the preferred domain for reaching the UI (default: localhost):"
     var: DOMAIN
-    default: "syntho.company.com"
+    default: "localhost"
     validation:
       - func: regex
         args: [".+", "$DOMAIN"]
@@ -112,7 +112,7 @@ envs_configuration:
   - scope: .config.env
     envs:
       - name: DOMAIN
-        default: "syntho.company.com"
+        default: "localhost"
   - scope: .resources.env
     envs:
       - name: RAY_CPUS
