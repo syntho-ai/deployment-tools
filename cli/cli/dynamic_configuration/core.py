@@ -4,12 +4,25 @@ import click
 
 
 def find_question_by_id(questions, question_id):
+    """
+    Find a question object by its ID from a list of questions.
+
+    :param questions: List of question objects.
+    :param question_id: The ID of the question to find.
+    :return: The question object with the specified ID, or None if not found.
+    """
     for question in questions:
         if question.id == question_id:
             return question
 
 
 def make_envs(envs_configuration):
+    """
+    Create a dictionary of environments based on the provided configuration.
+
+    :param envs_configuration: List of environment configuration objects.
+    :return: Dictionary of environments with their respective configurations.
+    """
     envs = {}
     for env_configuration in envs_configuration:
         envs[env_configuration.scope.value] = []
@@ -25,6 +38,15 @@ def make_envs(envs_configuration):
 
 
 def proceed_with_questions(deployment_dir, all_envs, questions, entrypoint_id):
+    """
+    Proceed with asking questions and updating environments based on user input.
+
+    :param deployment_dir: The deployment directory.
+    :param all_envs: The current environments dictionary.
+    :param questions: List of question objects.
+    :param entrypoint_id: The ID of the entrypoint question.
+    :return: Updated environments dictionary and a boolean indicating if the process was interrupted.
+    """
     next_question_id = entrypoint_id
     action = "proceed"
 
@@ -52,6 +74,14 @@ def proceed_with_questions(deployment_dir, all_envs, questions, entrypoint_id):
 
 
 def ask_question(deployment_dir, question_obj):
+    """
+    Ask a question to the user and validate the response.
+
+    :param deployment_dir: The deployment directory.
+    :param question_obj: The question object containing the question details.
+    :return: A dictionary containing the name and value of the answered environment variable,
+        and a boolean indicating if the process was interrupted.
+    """
     predefined_funcs_module = importlib.import_module("cli.dynamic_configuration.predefined_funcs")
 
     keep_asking = True
@@ -103,6 +133,15 @@ def ask_question(deployment_dir, question_obj):
 
 
 def next_question(deployment_dir, questions, question_obj, answer_ctx):
+    """
+    Determine the next question to ask based on the current question's answer.
+
+    :param deployment_dir: The deployment directory.
+    :param questions: List of question objects.
+    :param question_obj: The current question object.
+    :param answer_ctx: The context of the answered question.
+    :return: The ID of the next question, the action to take, and a list of exposed environments.
+    """
     predefined_funcs_module = importlib.import_module("cli.dynamic_configuration.predefined_funcs")
     next_condition_value = question_obj.next.value.replace(f"${answer_ctx["name"]}", str(answer_ctx["value"]))
     for condition in question_obj.next.conditions:
@@ -144,6 +183,14 @@ def next_question(deployment_dir, questions, question_obj, answer_ctx):
 
 
 def update_envs(all_envs, all_exposed, scope_envs):
+    """
+    Update the environments with the exposed variables.
+
+    :param all_envs: The current environments dictionary.
+    :param all_exposed: List of all exposed environment variables.
+    :param scope_envs: List of scope-specific environment variables.
+    :return: Updated environments dictionary.
+    """
     exposed_mapping = make_exposed_mapping(all_exposed)
     for _, envs in all_envs.items():
         for env in envs:
@@ -154,6 +201,12 @@ def update_envs(all_envs, all_exposed, scope_envs):
 
 
 def make_exposed_mapping(all_exposed):
+    """
+    Create a mapping of exposed environment variables.
+
+    :param all_exposed: List of all exposed environment variables.
+    :return: Dictionary mapping environment variable names to their values.
+    """
     mapping = {}
     for exposed in all_exposed:
         name = exposed["name"]
@@ -163,6 +216,15 @@ def make_exposed_mapping(all_exposed):
 
 
 def enrich_envs(envs, license_key, registry_user, registry_pwd):
+    """
+    Enrich the environments with additional variables like LICENSE_KEY, REGISTRY_USER, and REGISTRY_PWD.
+
+    :param envs: The current environments dictionary.
+    :param license_key: The license key to be added.
+    :param registry_user: The registry user to be added.
+    :param registry_pwd: The registry password to be added.
+    :return: Updated environments dictionary.
+    """
     envs[".config.env"].append({"name": "LICENSE_KEY", "value": license_key})
     if ".pre.deployment.ops.env" in envs:
         envs[".pre.deployment.ops.env"].append({"name": "REGISTRY_USER", "value": registry_user})
@@ -171,6 +233,12 @@ def enrich_envs(envs, license_key, registry_user, registry_pwd):
 
 
 def dump_envs(all_envs, deployment_dir):
+    """
+    Dump the environments to files in the deployment directory.
+
+    :param all_envs: The current environments dictionary.
+    :param deployment_dir: The deployment directory.
+    """
     for scope, scope_envs in all_envs.items():
         scope_envs_as_mapping = make_exposed_mapping(scope_envs)
         env_file_path = f"{deployment_dir}/{scope}"
