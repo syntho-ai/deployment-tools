@@ -21,6 +21,8 @@ services:
     # Additional volumes for Kerberos as an example
     # Uncomment if volumes are required
     #  - /krb/krb5.conf:/etc/krb5.conf
+    volumes:
+      - ${SYNTHO_LOCALFS:-/dev/null}:/data/localfs/
     healthcheck:
       test: wget --no-verbose --tries=1 -O /dev/null http://localhost:${CORE_PORT}/api/v1/status || exit 1
       interval: 10s
@@ -52,6 +54,8 @@ services:
     # Additional volumes for Kerberos as an example
     # Uncomment if volumes are required
     #  - /krb/krb5.conf:/etc/krb5.conf
+    volumes:
+      - ${SYNTHO_LOCALFS:-/dev/null}:/data/localfs/
     depends_on:
       redis:
         condition: service_healthy
@@ -176,6 +180,8 @@ services:
     # Additional volumes for Kerberos as an example
     # Uncomment if volumes are required
     #  - /krb/krb5.conf:/etc/krb5.conf
+    volumes:
+      - ${SYNTHO_LOCALFS:-/dev/null}:/data/localfs/
     ulimits:
       nofile:
         soft: 65536
