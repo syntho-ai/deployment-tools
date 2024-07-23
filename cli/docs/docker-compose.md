@@ -27,9 +27,9 @@ Below are examples of common tasks you might want to perform with `syntho-cli` i
 
 > TL;DR: `syntho-cli dc --help`
 
-### Deploy a Resource
+### Deploy a Release
 
-To deploy a new resource:
+To deploy a new release:
 
 
 Option 1;

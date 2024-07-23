@@ -296,6 +296,7 @@ def initialize_deployment(deployment_id: str, deployment_dir: str, deployments_d
     deployment = {
         "id": deployment_id,
         "status": DeploymentStatus.INITIALIZING.get(),
+        "initial_version": version,
         "version": version,
         "started_at": started_at,
         "finished_at": None,
@@ -515,3 +516,109 @@ def major_predeployment_operations(scripts_dir: str, deployment_id: str) -> bool
         set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED)
 
     return result.succeeded
+
+
+@with_working_directory
+def update_k8s_deployment(
+    scripts_dir: str,
+    deployment_id: str,
+    new_version: str,
+) -> str:
+    deployments_dir = get_deployments_dir(scripts_dir)
+    deployment_dir = f"{deployments_dir}/{deployment_id}"
+    deployment = get_deployment(scripts_dir, deployment_id)
+
+    initial_version = deployment["initial_version"]
+    current_version = deployment["version"]
+
+    deployment_status = get_deployment_status(deployments_dir, deployment_dir, deployment_id)
+    if deployment_status and not deployment_status.get() == DeploymentStatus.COMPLETED.get():
+        return DeploymentResult(
+            succeeded=False,
+            deployment_id=deployment_id,
+            error=(
+                "Deployment remained unfinished and " "it needs to be destroyed first. Please see syntho-cli k8s --help"
+            ),
+            deployment_status=None,
+        )
+
+    is_compatible = compatibility_check(scripts_dir, deployment_id, current_version, new_version)
+    if not is_compatible:
+        return DeploymentResult(
+            succeeded=False,
+            deployment_id=deployment_id,
+            error=(
+                "Given version and the current version are not backwards-compatible. "
+                "Please reach out to support@syntho.ai for further support."
+            ),
+            deployment_status=None,
+        )
+
+    is_success = update_release(scripts_dir, deployment_id, initial_version, current_version, new_version)
+    if not is_success:
+        return DeploymentResult(
+            succeeded=False,
+            deployment_id=deployment_id,
+            error=("Updating release has been failed. " "Please reach out to support@syntho.ai for further support."),
+            deployment_status=None,
+        )
+
+    set_version(deployment_id, deployments_dir, new_version)
+
+    return DeploymentResult(
+        succeeded=True,
+        deployment_id=deployment_id,
+        error=None,
+        deployment_status=None,
+    )
+
+
+def compatibility_check(scripts_dir: str, deployment_id: str, current_version: str, new_version: str) -> bool:
+    click.echo("Step 1: Further compatibility analysis is being made;")
+    deployments_dir = f"{scripts_dir}/deployments"
+    deployment_dir = f"{deployments_dir}/{deployment_id}"
+
+    result = run_script(
+        scripts_dir,
+        deployment_dir,
+        "compatibility-check.sh",
+        **{
+            "DEPLOYMENT_TOOLING": "helm",
+            "CONFIGURATION_QUESTIONS_PREFIX": "k8s",
+            "CURRENT_VERSION": current_version,
+            "NEW_VERSION": new_version,
+        },
+    )
+
+    return result.succeeded
+
+
+def update_release(
+    scripts_dir: str, deployment_id: str, initial_version: str, current_version: str, new_version: str
+) -> bool:
+    click.echo("Step 2: Rolling out new release;")
+    deployments_dir = f"{scripts_dir}/deployments"
+    deployment_dir = f"{deployments_dir}/{deployment_id}"
+
+    result = run_script(
+        scripts_dir,
+        deployment_dir,
+        "update-release.sh",
+        **{
+            "DEPLOYMENT_TOOLING": "helm",
+            "INITIAL_VERSION": initial_version,
+            "CURRENT_VERSION": current_version,
+            "NEW_VERSION": new_version,
+        },
+    )
+
+    return result.succeeded
+
+
+def set_version(deployment_id: str, deployments_dir: str, new_version: str):
+    deployments_state = get_deployments_state(deployments_dir)
+    for deployment in deployments_state["deployments"]:
+        if deployment["id"] == deployment_id:
+            deployment["version"] = new_version
+
+    update_deployments_state(deployments_dir, deployments_state)

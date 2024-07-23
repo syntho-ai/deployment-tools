@@ -19,6 +19,8 @@ Deployment is successful. See helpful commands below.
 
 Deployment status: syntho-cli k8s status --deployment-id k8s-123456789
 Destroy deployment: syntho-cli k8s destroy --deployment-id k8s-123456789
+Update release: syntho-cli k8s update --deployment-id k8s-123456789 --new-version <version>
+See all releases: syntho-cli releases
 """
 
         self.sample_kubeconfig_content = """
