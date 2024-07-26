@@ -345,7 +345,10 @@ def prepare_env(
                 if cred_helpers:
                     secondary_docker_config.update({"credHelpers": cred_helpers})
                 if auths:
-                    secondary_docker_config["auths"].update(auths)
+                    if secondary_docker_config.get("auths"):
+                        secondary_docker_config["auths"].update(auths)
+                    else:
+                        secondary_docker_config["auths"] = auths
 
             except ValueError:
                 pass
