@@ -3,6 +3,7 @@
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$SCRIPT_DIR/utils.sh" --source-only
+SUPPORT_EMAIL="$SUPPORT_EMAIL"
 
 DEPLOYMENT_DIR="$DEPLOYMENT_DIR"
 source $DEPLOYMENT_DIR/.env --source-only
@@ -261,7 +262,7 @@ get_all_logs() {
 
 deployment_failure_callback() {
     with_loading "Please wait until the necessary materials are being prepared for diagnosis" get_all_logs "" "" 2
-    with_loading "Please share this file (/tmp/syntho/diagnosis-dc.tar.gz) with support@syntho.ai" do_nothing "" "" 2
+    with_loading "Please share this file (/tmp/syntho/diagnosis-dc.tar.gz) with ${SUPPORT_EMAIL}" do_nothing "" "" 2
 }
 
 deploy_offline_image_registry() {

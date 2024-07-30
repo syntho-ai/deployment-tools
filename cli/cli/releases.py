@@ -10,7 +10,7 @@ def fetch_releases():
         raise Exception(f"Failed to fetch releases: {response.status_code}")
 
 
-def get_releases():
+def get_releases(with_compatibility=None):
     releases = []
     raw_releases = fetch_releases()
     for raw_release in raw_releases:
@@ -31,5 +31,10 @@ def get_releases():
                 "asset_url": asset_url,
             }
         )
+
+    if with_compatibility:
+        major_ver, _, _ = with_compatibility.split(".")
+        compatible_releases = list(filter(lambda r: r["name"].startswith(major_ver), releases))
+        releases = compatible_releases
 
     return releases

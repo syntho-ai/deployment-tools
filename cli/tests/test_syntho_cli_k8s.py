@@ -19,6 +19,8 @@ Deployment is successful. See helpful commands below.
 
 Deployment status: syntho-cli k8s status --deployment-id k8s-123456789
 Destroy deployment: syntho-cli k8s destroy --deployment-id k8s-123456789
+Update release: syntho-cli k8s update --deployment-id k8s-123456789 --new-version <version>
+See all releases: syntho-cli releases
 """
 
         self.sample_kubeconfig_content = """
@@ -388,3 +390,175 @@ users:
 
             self.assertEqual(result.exit_code, 2)
             self.assertEqual(result.output.strip(), self.expected_output_invalid_version.strip())
+
+
+class TestK8sUpdateDeploymentHappyPath(TestCase):
+    def setUp(self):
+        self.runner = CliRunner()
+
+        self.expected_output = """
+-- Syntho stack is going to be updated from (1.0.0) to (1.1.0) (Kubernetes) --
+
+
+The application stack has been successfully rolled out to a given version. See helpful commands below.
+
+Deployment status: syntho-cli k8s status --deployment-id k8s-123456789
+Destroy deployment: syntho-cli k8s destroy --deployment-id k8s-123456789
+Update release: syntho-cli k8s update --deployment-id k8s-123456789 --new-version <version>
+See all releases: syntho-cli releases
+"""
+
+        self.deployment = {"version": "1.0.0", "deployment_id": "k8s-123456789"}
+
+        self.get_deployment_patch = mock.patch("cli.syntho_cli.k8s_deployment_manager.get_deployment")
+        self.get_releases_patch = mock.patch("cli.syntho_cli.get_releases")
+        self.update_k8s_deployment_patch = mock.patch("cli.syntho_cli.k8s_deployment_manager.update_k8s_deployment")
+
+        self.mock_get_deployment = self.get_deployment_patch.start()
+        self.mock_get_releases = self.get_releases_patch.start()
+        self.mock_update_k8s_deployment = self.update_k8s_deployment_patch.start()
+
+        self.mock_get_deployment.return_value = self.deployment
+        self.mock_get_releases.return_value = [{"name": "1.1.0"}, {"name": "2.0.0"}]
+        self.mock_update_k8s_deployment.return_value = DeploymentResult(
+            succeeded=True,
+            deployment_id="k8s-123456789",
+            error=None,
+            deployment_status="completed",
+        )
+
+    def tearDown(self):
+        self.get_deployment_patch.stop()
+        self.get_releases_patch.stop()
+        self.update_k8s_deployment_patch.stop()
+
+    def test_update_deployment(self):
+        result = self.runner.invoke(
+            syntho_cli.k8s_deployment_update,
+            [
+                "--deployment-id",
+                "k8s-123456789",
+                "--new-version",
+                "1.1.0",
+            ],
+        )
+
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(result.output.strip(), self.expected_output.strip())
+        self.mock_get_deployment.assert_called_with(syntho_cli.scripts_dir, "k8s-123456789")
+        self.mock_get_releases.assert_called_with(with_compatibility="1.0.0")
+        self.mock_update_k8s_deployment.assert_called_with(
+            syntho_cli.scripts_dir,
+            "k8s-123456789",
+            "1.1.0",
+        )
+
+
+class TestK8sUpdateDeploymentSadPath(TestCase):
+    def setUp(self):
+        self.runner = CliRunner()
+
+        self.expected_output_for_same_version = """
+Usage: update [OPTIONS]
+Try 'update --help' for help.
+
+Error: Given version (1.0.0) is already deployed within the current stack (1.0.0).
+Compatible releases:
+
+
+"""
+
+        self.expected_output_for_not_existing_version = """
+Usage: update [OPTIONS]
+Try 'update --help' for help.
+
+Error: Given application stack version (2.0.0) could not be found. Available versions:
+1.1.0
+
+"""
+
+        self.expected_output_for_not_compatible_version = """
+Usage: update [OPTIONS]
+Try 'update --help' for help.
+
+Error: Given version (2.0.0) is not compatible within the current stack (1.0.0).
+Compatible releases:
+1.1.0
+
+"""
+
+        self.deployment = {"version": "1.0.0", "deployment_id": "k8s-123456789"}
+
+        self.get_deployment_patch = mock.patch("cli.syntho_cli.k8s_deployment_manager.get_deployment")
+        self.get_releases_patch = mock.patch("cli.syntho_cli.get_releases")
+        self.update_k8s_deployment_patch = mock.patch("cli.syntho_cli.k8s_deployment_manager.update_k8s_deployment")
+
+        self.mock_get_deployment = self.get_deployment_patch.start()
+        self.mock_get_releases = self.get_releases_patch.start()
+        self.mock_update_k8s_deployment = self.update_k8s_deployment_patch.start()
+
+        self.mock_get_deployment.return_value = self.deployment
+        self.mock_get_releases.return_value = [{"name": "1.0.0"}]
+        self.mock_update_k8s_deployment.return_value = DeploymentResult(
+            succeeded=True,
+            deployment_id="k8s-123456789",
+            error=None,
+            deployment_status="completed",
+        )
+
+    def tearDown(self):
+        self.get_deployment_patch.stop()
+        self.get_releases_patch.stop()
+        self.update_k8s_deployment_patch.stop()
+
+    def test_update_deployment_same_version(self):
+        result = self.runner.invoke(
+            syntho_cli.k8s_deployment_update,
+            [
+                "--deployment-id",
+                "k8s-123456789",
+                "--new-version",
+                "1.0.0",
+            ],
+        )
+
+        self.assertEqual(result.exit_code, 2)
+        self.assertEqual(result.output.strip(), self.expected_output_for_same_version.strip())
+        self.mock_get_deployment.assert_called_with(syntho_cli.scripts_dir, "k8s-123456789")
+        self.mock_get_releases.assert_called_with(with_compatibility="1.0.0")
+
+    def test_update_deployment_not_existing_version(self):
+        self.mock_get_releases.return_value = [{"name": "1.1.0"}]
+        result = self.runner.invoke(
+            syntho_cli.k8s_deployment_update,
+            [
+                "--deployment-id",
+                "k8s-123456789",
+                "--new-version",
+                "2.0.0",
+            ],
+        )
+
+        self.assertEqual(result.exit_code, 2)
+        self.assertEqual(result.output.strip(), self.expected_output_for_not_existing_version.strip())
+        self.mock_get_releases.assert_called_with()
+
+    def test_update_deployment_not_compatible_version(self):
+        self.mock_get_releases.side_effect = [
+            [{"name": "1.0.0"}, {"name": "1.1.0"}, {"name": "2.0.0"}, {"name": "3.0.0"}],
+            [{"name": "1.0.0"}, {"name": "1.1.0"}],
+        ]
+        result = self.runner.invoke(
+            syntho_cli.k8s_deployment_update,
+            [
+                "--deployment-id",
+                "k8s-123456789",
+                "--new-version",
+                "2.0.0",
+            ],
+        )
+
+        self.assertEqual(result.exit_code, 2)
+        self.assertEqual(result.output.strip(), self.expected_output_for_not_compatible_version.strip())
+        self.mock_get_deployment.assert_called_with(syntho_cli.scripts_dir, "k8s-123456789")
+        self.mock_get_releases.assert_called_with(with_compatibility="1.0.0")

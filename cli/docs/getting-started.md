@@ -34,6 +34,11 @@ You should see `syntho-cli, version x.y.z` as the output.
 ## Usage
 `syntho-cli` provides the flexibility to manage resources in both Docker and Kubernetes ecosystems. Follow the guides below based on your specific needs:
 
+### Syntho Application Releases
+To llist all the available releases, please run below command;
+
+`syntho-cli releases`
+
 ### Docker Compose
 To learn how to manage resources in a Docker environment with `syntho-cli`, visit the [Docker Compose guide](./docker-compose.md).
 
