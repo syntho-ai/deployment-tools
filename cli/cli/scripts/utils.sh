@@ -7,6 +7,8 @@ BACKGROUND_PIDS="$SHARED/background.pids"
 if [[ $DEPLOYMENT_DIR != "" ]]; then
     mkdir -p "$SHARED"
 fi
+# shellcheck disable=SC2034
+SUPPORT_EMAIL="support@syntho.ai"
 
 # shellcheck disable=SC2034
 RED='\033[0;31m'

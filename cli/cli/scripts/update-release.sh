@@ -2,6 +2,7 @@
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$SCRIPT_DIR/utils.sh" --source-only
+SUPPORT_EMAIL="$SUPPORT_EMAIL"
 
 DEPLOYMENT_DIR="$DEPLOYMENT_DIR"
 
@@ -100,7 +101,7 @@ do_rollout_docker_compose() {
 rollout_failure_callback() {
     with_loading "Deployment rollout to new release has been timedout." do_nothing "" "" 2
     with_loading "However, please check pods in syntho namespace, perhaps the deployment is still being rolled out." do_nothing "" "" 2
-    with_loading "Contact support@syntho.ai in case the issue persists." do_nothing "" "" 2
+    with_loading "Contact ${SUPPORT_EMAIL} in case the issue persists." do_nothing "" "" 2
 }
 
 

@@ -87,4 +87,4 @@ cleanup_files_and_directories() {
 
 with_loading "Fetching the releases: $CURRENT_VERSION vs $NEW_VERSION" fetch_releases
 with_loading "Checking if the releases are compatible: $CURRENT_VERSION vs $NEW_VERSION" check_if_compatible
-with_loading "Cleanup tempoary files and directories" cleanup_files_and_directories
+with_loading "Cleanup temporary files and directories" cleanup_files_and_directories
