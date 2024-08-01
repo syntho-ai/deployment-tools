@@ -707,8 +707,23 @@ def dc_deployment(
             fg="white",
             bold=True,
         )
+        update_deployment_text = click.style(
+            f"Update release: syntho-cli dc update --deployment-id {result.deployment_id} --new-version <version>",
+            fg="white",
+            bold=True,
+        )
+        releases_text = click.style(
+            "See all releases: syntho-cli releases",
+            fg="white",
+            bold=True,
+        )
         click.echo(
-            "\n" f"{deployment_successful_text}\n\n" f"{deployment_status_text}\n" f"{destroy_deployment_text}\n"
+            "\n"
+            f"{deployment_successful_text}\n\n"
+            f"{deployment_status_text}\n"
+            f"{destroy_deployment_text}\n"
+            f"{update_deployment_text}\n"
+            f"{releases_text}\n"
         )
     else:
         deployment_failed_text = click.style(f"Error deploying to docker compose: {result.error}", fg="red")
@@ -724,6 +739,102 @@ def dc_deployment(
             )
             click.echo(f"\n\n{destroy_failed_text}{next_command_text}", err=True)
         sys.exit(1)
+
+
+@dc.command(name="update", help="Updates the deployment with a given version")
+@click.option(
+    "--deployment-id",
+    type=str,
+    help="Specify the deployment id to be status checked",
+    required=False,
+    default="",
+    callback=validate_dc_deployment_id,
+)
+@click.option("--new-version", type=str, help=("Specify a version for Syntho stack."), required=True)
+def dc_deployment_update(deployment_id: str, new_version: str):
+    try:
+        validate_version(new_version)
+    except click.BadParameter as exc:
+        raise click.UsageError(str(exc)) from exc
+
+    deployment = dc_deployment_manager.get_deployment(scripts_dir, deployment_id)
+    if not deployment:
+        raise click.UsageError(f"There is no release found with the given deployment id ({deployment_id})")
+
+    current_version = deployment["version"]
+    releases = get_releases(with_compatibility=current_version)
+    versions = [release.get("name") for release in releases if release["name"] != current_version]
+    versions_str = "\n".join(versions)
+
+    new_version_major_ver, _, _ = new_version.split(".")
+    if not current_version.startswith(new_version_major_ver):
+        raise click.UsageError(
+            f"Given version ({new_version}) is not compatible "
+            f"within the current stack ({current_version}).\nCompatible releases:\n{versions_str}"
+        )
+
+    if current_version == new_version:
+        raise click.UsageError(
+            f"Given version ({new_version}) is already deployed "
+            f"within the current stack ({current_version}).\nCompatible releases:\n{versions_str}"
+        )
+
+    if not deployment.get("is_local"):
+        raise click.UsageError("Only local docker daemon deployments can be updated for now.")
+
+    if deployment.get("use_trusted_registry"):
+        raise click.UsageError("Deployments that was made via trusted registry can not be updated for now.")
+
+    if deployment.get("use_offline_registry"):
+        raise click.UsageError("Deployments that was made via offline registry can not be updated for now.")
+
+    starting_text = click.style(
+        f"-- Syntho stack is going to be updated from ({current_version}) to ({new_version}) (Docker Compose) --",
+        fg="white",
+        blink=True,
+        bold=True,
+    )
+    click.echo(f"{starting_text}\n")
+
+    result = dc_deployment_manager.update_dc_deployment(scripts_dir, deployment_id, new_version)
+    if not result.succeeded:
+        deployment_failed_text = click.style(f"Error updating the release {result.error}", fg="red")
+        error_text = click.style(result.error, fg="red")
+        click.echo(f"\n\n{deployment_failed_text} - {error_text}", err=True)
+    else:
+        deployment_successful_text = click.style(
+            "The application stack has been successfully rolled out to a given version. See helpful commands below.",
+            fg="white",
+            bold=True,
+        )
+        deployment_status_text = click.style(
+            f"Deployment status: syntho-cli dc status --deployment-id {result.deployment_id}",
+            fg="white",
+            bold=True,
+        )
+        destroy_deployment_text = click.style(
+            f"Destroy deployment: syntho-cli dc destroy --deployment-id {result.deployment_id}",
+            fg="white",
+            bold=True,
+        )
+        update_deployment_text = click.style(
+            f"Update release: syntho-cli dc update --deployment-id {result.deployment_id} --new-version <version>",
+            fg="white",
+            bold=True,
+        )
+        releases_text = click.style(
+            "See all releases: syntho-cli releases",
+            fg="white",
+            bold=True,
+        )
+        click.echo(
+            "\n"
+            f"{deployment_successful_text}\n\n"
+            f"{deployment_status_text}\n"
+            f"{destroy_deployment_text}\n"
+            f"{update_deployment_text}\n"
+            f"{releases_text}\n"
+        )
 
 
 @dc.command(name="status", help="Shows the deployment status of the given deployment")
