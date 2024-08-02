@@ -6,7 +6,7 @@ For detailed information on the CLI's usage, please refer to the [relevant secti
 
 ### Pre-requirements
 
-- Python `3.12.*` (hint: pyenv)
+- Python `3.11.*` (hint: pyenv)
 - Poetry (`pip install poetry`)
 
 

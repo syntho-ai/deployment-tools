@@ -143,7 +143,7 @@ def next_question(deployment_dir, questions, question_obj, answer_ctx):
     :return: The ID of the next question, the action to take, and a list of exposed environments.
     """
     predefined_funcs_module = importlib.import_module("cli.dynamic_configuration.predefined_funcs")
-    next_condition_value = question_obj.next.value.replace(f"${answer_ctx["name"]}", str(answer_ctx["value"]))
+    next_condition_value = question_obj.next.value.replace(f"${answer_ctx['name']}", str(answer_ctx["value"]))
     for condition in question_obj.next.conditions:
         if condition.when != next_condition_value:
             continue
@@ -159,7 +159,7 @@ def next_question(deployment_dir, questions, question_obj, answer_ctx):
             args = expose.args
             replaced_args = []
             for arg in args:
-                arg = arg.replace(f"${answer_ctx["name"]}", str(answer_ctx["value"]))
+                arg = arg.replace(f"${answer_ctx['name']}", str(answer_ctx["value"]))
                 replaced_args.append(arg)
 
             for previous_exposed in exposed:
