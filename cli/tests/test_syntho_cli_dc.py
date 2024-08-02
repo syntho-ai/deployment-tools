@@ -19,6 +19,8 @@ Deployment is successful. See helpful commands below.
 
 Deployment status: syntho-cli dc status --deployment-id dc-123456789
 Destroy deployment: syntho-cli dc destroy --deployment-id dc-123456789
+Update release: syntho-cli dc update --deployment-id dc-123456789 --new-version <version>
+See all releases: syntho-cli releases
 """
 
         self.license_key = "my-license-key"
@@ -504,3 +506,253 @@ Error: Given application stack version (1.2.0) could not be found. Available ver
 
             self.assertEqual(result.exit_code, 2)
             self.assertEqual(result.output.strip(), self.expected_output_invalid_version.strip())
+
+
+class TestDcUpdateDeploymentHappyPath(TestCase):
+    def setUp(self):
+        self.runner = CliRunner()
+
+        self.expected_output = """
+-- Syntho stack is going to be updated from (1.0.0) to (1.1.0) (Docker Compose) --
+
+
+The application stack has been successfully rolled out to a given version. See helpful commands below.
+
+Deployment status: syntho-cli dc status --deployment-id dc-123456789
+Destroy deployment: syntho-cli dc destroy --deployment-id dc-123456789
+Update release: syntho-cli dc update --deployment-id dc-123456789 --new-version <version>
+See all releases: syntho-cli releases
+"""
+
+        self.deployment = {
+            "version": "1.0.0",
+            "deployment_id": "dc-123456789",
+            "is_local": True,
+            "use_trusted_registry": False,
+            "use_offline_registry": False,
+        }
+
+        self.get_deployment_patch = mock.patch("cli.syntho_cli.dc_deployment_manager.get_deployment")
+        self.get_releases_patch = mock.patch("cli.syntho_cli.get_releases")
+        self.update_dc_deployment_patch = mock.patch("cli.syntho_cli.dc_deployment_manager.update_dc_deployment")
+
+        self.mock_get_deployment = self.get_deployment_patch.start()
+        self.mock_get_releases = self.get_releases_patch.start()
+        self.mock_update_dc_deployment = self.update_dc_deployment_patch.start()
+
+        self.mock_get_deployment.return_value = self.deployment
+        self.mock_get_releases.return_value = [{"name": "1.1.0"}, {"name": "2.0.0"}]
+        self.mock_update_dc_deployment.return_value = DeploymentResult(
+            succeeded=True,
+            deployment_id="dc-123456789",
+            error=None,
+            deployment_status="completed",
+        )
+
+    def tearDown(self):
+        self.get_deployment_patch.stop()
+        self.get_releases_patch.stop()
+        self.update_dc_deployment_patch.stop()
+
+    def test_update_deployment(self):
+        result = self.runner.invoke(
+            syntho_cli.dc_deployment_update,
+            [
+                "--deployment-id",
+                "dc-123456789",
+                "--new-version",
+                "1.1.0",
+            ],
+        )
+
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(result.output.strip(), self.expected_output.strip())
+        self.mock_get_deployment.assert_called_with(syntho_cli.scripts_dir, "dc-123456789")
+        self.mock_get_releases.assert_called_with(with_compatibility="1.0.0")
+        self.mock_update_dc_deployment.assert_called_with(
+            syntho_cli.scripts_dir,
+            "dc-123456789",
+            "1.1.0",
+        )
+
+
+class TestDcUpdateDeploymentSadPath(TestCase):
+    def setUp(self):
+        self.runner = CliRunner()
+
+        self.expected_output_for_same_version = """
+Usage: update [OPTIONS]
+Try 'update --help' for help.
+
+Error: Given version (1.0.0) is already deployed within the current stack (1.0.0).
+Compatible releases:
+
+
+"""
+
+        self.expected_output_for_not_existing_version = """
+Usage: update [OPTIONS]
+Try 'update --help' for help.
+
+Error: Given application stack version (2.0.0) could not be found. Available versions:
+1.1.0
+
+"""
+
+        self.expected_output_for_not_compatible_version = """
+Usage: update [OPTIONS]
+Try 'update --help' for help.
+
+Error: Given version (2.0.0) is not compatible within the current stack (1.0.0).
+Compatible releases:
+1.1.0
+
+"""
+
+        self.expected_output_for_non_local = """
+Usage: update [OPTIONS]
+Try 'update --help' for help.
+
+Error: Only local docker daemon deployments can be updated for now.
+"""
+
+        self.expected_output_for_trusted_registry = """
+Usage: update [OPTIONS]
+Try 'update --help' for help.
+
+Error: Deployments that was made via trusted registry can not be updated for now.
+"""
+
+        self.expected_output_for_offline_registry = """
+Usage: update [OPTIONS]
+Try 'update --help' for help.
+
+Error: Deployments that was made via offline registry can not be updated for now.
+"""
+
+        self.deployment = {
+            "version": "1.0.0",
+            "deployment_id": "dc-123456789",
+            "is_local": True,
+            "use_trusted_registry": False,
+            "use_offline_registry": False,
+        }
+
+        self.get_deployment_patch = mock.patch("cli.syntho_cli.dc_deployment_manager.get_deployment")
+        self.get_releases_patch = mock.patch("cli.syntho_cli.get_releases")
+        self.update_dc_deployment_patch = mock.patch("cli.syntho_cli.dc_deployment_manager.update_dc_deployment")
+
+        self.mock_get_deployment = self.get_deployment_patch.start()
+        self.mock_get_releases = self.get_releases_patch.start()
+        self.mock_update_dc_deployment = self.update_dc_deployment_patch.start()
+
+        self.mock_get_deployment.return_value = self.deployment
+        self.mock_get_releases.return_value = [{"name": "1.0.0"}]
+
+    def tearDown(self):
+        self.get_deployment_patch.stop()
+        self.get_releases_patch.stop()
+        self.update_dc_deployment_patch.stop()
+
+    def test_update_deployment_same_version(self):
+        result = self.runner.invoke(
+            syntho_cli.dc_deployment_update,
+            [
+                "--deployment-id",
+                "dc-123456789",
+                "--new-version",
+                "1.0.0",
+            ],
+        )
+
+        self.assertEqual(result.exit_code, 2)
+        self.assertEqual(result.output.strip(), self.expected_output_for_same_version.strip())
+        self.mock_get_deployment.assert_called_with(syntho_cli.scripts_dir, "dc-123456789")
+        self.mock_get_releases.assert_called_with(with_compatibility="1.0.0")
+
+    def test_update_deployment_not_existing_version(self):
+        self.mock_get_releases.return_value = [{"name": "1.1.0"}]
+        result = self.runner.invoke(
+            syntho_cli.dc_deployment_update,
+            [
+                "--deployment-id",
+                "dc-123456789",
+                "--new-version",
+                "2.0.0",
+            ],
+        )
+
+        self.assertEqual(result.exit_code, 2)
+        self.assertEqual(result.output.strip(), self.expected_output_for_not_existing_version.strip())
+        self.mock_get_releases.assert_called_with()
+
+    def test_update_deployment_not_compatible_version(self):
+        self.mock_get_releases.side_effect = [
+            [{"name": "1.0.0"}, {"name": "1.1.0"}, {"name": "2.0.0"}, {"name": "3.0.0"}],
+            [{"name": "1.0.0"}, {"name": "1.1.0"}],
+        ]
+        result = self.runner.invoke(
+            syntho_cli.dc_deployment_update,
+            [
+                "--deployment-id",
+                "dc-123456789",
+                "--new-version",
+                "2.0.0",
+            ],
+        )
+
+        self.assertEqual(result.exit_code, 2)
+        self.assertEqual(result.output.strip(), self.expected_output_for_not_compatible_version.strip())
+        self.mock_get_deployment.assert_called_with(syntho_cli.scripts_dir, "dc-123456789")
+        self.mock_get_releases.assert_called_with(with_compatibility="1.0.0")
+
+    def test_update_deployment_non_local(self):
+        self.mock_get_releases.return_value = [{"name": "1.1.0"}]
+        self.deployment["is_local"] = False
+        result = self.runner.invoke(
+            syntho_cli.dc_deployment_update,
+            [
+                "--deployment-id",
+                "dc-123456789",
+                "--new-version",
+                "1.1.0",
+            ],
+        )
+
+        self.assertEqual(result.exit_code, 2)
+        self.assertEqual(result.output.strip(), self.expected_output_for_non_local.strip())
+        self.mock_get_deployment.assert_called_with(syntho_cli.scripts_dir, "dc-123456789")
+
+    def test_update_deployment_trusted_registry(self):
+        self.mock_get_releases.return_value = [{"name": "1.1.0"}]
+        self.deployment["use_trusted_registry"] = True
+        result = self.runner.invoke(
+            syntho_cli.dc_deployment_update,
+            [
+                "--deployment-id",
+                "dc-123456789",
+                "--new-version",
+                "1.1.0",
+            ],
+        )
+
+        self.assertEqual(result.exit_code, 2)
+        self.assertEqual(result.output.strip(), self.expected_output_for_trusted_registry.strip())
+        self.mock_get_deployment.assert_called_with(syntho_cli.scripts_dir, "dc-123456789")
+
+    def test_update_deployment_offline_registry(self):
+        self.mock_get_releases.return_value = [{"name": "1.1.0"}]
+        self.deployment["use_offline_registry"] = True
+        result = self.runner.invoke(
+            syntho_cli.dc_deployment_update,
+            [
+                "--deployment-id",
+                "dc-123456789",
+                "--new-version",
+                "1.1.0",
+            ],
+        )
+
+        self.assertEqual(result.exit_code, 2)
+        self.assertEqual(result.output.strip(), self.expected_output_for_offline_registry.strip())
+        self.mock_get_deployment.assert_called_with(syntho_cli.scripts_dir, "dc-123456789")
