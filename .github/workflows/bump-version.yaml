@@ -21,14 +21,11 @@ jobs:
       - name: Create bump and changelog
         uses: commitizen-tools/commitizen-action@master
         with:
-          changelog_increment_filename: changelog.md
           github_token: "${{ secrets.PERSONAL_ACCESS_TOKEN }}"
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           body_path: "changelog.md"
           tag_name: syntho-cli-${{ env.REVISION }}
-          files: |
-            changelog.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

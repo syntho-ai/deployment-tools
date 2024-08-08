@@ -7,5 +7,3 @@ version_files = [
     "pyproject.toml:version",
     "dynamic-configuration/pyproject.toml:version"
 ]
-changelog_incremental = true
-update_changelog_on_bump = true
