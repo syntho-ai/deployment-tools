@@ -37,7 +37,7 @@ def kubectlget(deployment_dir, *args) -> Tuple[bool, str]:
     :return: The output of the kubectl get command.
     """
     length = len(args)
-    args_with_spaces = [f"{arg}{"" if i == length - 1 else " "}" for i, arg in enumerate(args)]
+    args_with_spaces = [f"{arg}{'' if i == length - 1 else ' '}" for i, arg in enumerate(args)]
     params = concatenate(deployment_dir, *args_with_spaces)
     scripts_dir, _, _ = deployment_dir.rsplit("/", 2)
     result = run_script(scripts_dir, deployment_dir, "kubectlget.sh", capture_output=True, **{"PARAMS": params})
