@@ -22,6 +22,7 @@ jobs:
         uses: commitizen-tools/commitizen-action@master
         with:
           github_token: "${{ secrets.PERSONAL_ACCESS_TOKEN }}"
+          changelog: false
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
