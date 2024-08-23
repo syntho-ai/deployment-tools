@@ -268,7 +268,7 @@ questions:
               args: ["false"]
 
   - id: own_ssl_secret
-    question: "Do you want to create SSL certificate secret in the cluster yourself (secret name should be `frontend-tls` in `syntho` namespace) (N/y):"
+    question: "Do you want to create SSL certificate secret in the cluster yourself (secret name should be `frontend-tls` in `syntho` namespace) (Y/n):"
     var: OWN_SSL_SECRET
     default: "y"
     validation:
