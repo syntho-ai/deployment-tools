@@ -1,6 +1,6 @@
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "1.22.1"
+version = "1.22.2"
 tag_format = "syntho-cli-$version"
 version_files = [
     "cli/pyproject.toml:version",
