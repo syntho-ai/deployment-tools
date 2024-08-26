@@ -43,7 +43,7 @@ head:
     #   requests:
     #     cpu: "500m"
     #     memory: "512Mi"
-  init_container_enabled: false
+  init_container_enabled: true
   initContainer:
     arguments: ["chmod", "-R", "777", "/tmp/ray-workflows"]
     securityContext: {}
