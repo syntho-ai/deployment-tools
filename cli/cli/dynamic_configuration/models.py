@@ -42,6 +42,7 @@ class ValidationFuncEnum(str, Enum):
     regex = "regex"
     lowercase = "lowercase"
     kubectlget = "kubectlget"
+    onlythesevalues = "onlythesevalues"
 
 
 class ValidationSuccessEnum(str, Enum):
@@ -113,6 +114,7 @@ class EnvConfigurationScopeEnum(str, Enum):
     resourcesenv = ".resources.env"
     authenv = ".auth.env"
     predeploymentopsenv = ".pre.deployment.ops.env"
+    postdeploymentopsenv = ".post.deployment.ops.env"
     runtime = "runtime"
 
 

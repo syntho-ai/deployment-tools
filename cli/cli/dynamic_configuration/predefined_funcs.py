@@ -88,3 +88,21 @@ def divide(deployment_dir, dividend, divisor):
         raise ValueError("Conversion error") from exc
 
     return int(dividend / divisor)
+
+
+def onlythesevalues(deployment_dir, given_value: str, allowed_values: str) -> bool:
+    """
+    Check if the given value is one of the allowed values.
+
+    :param deployment_dir: The deployment_dir for a specific deployment that holds.
+    :param given_value: The value to be checked.
+    :param allowed_values: A comma-separated string of allowed values.
+    :return: True if the given value is one of the allowed values, False otherwise.
+    :raises ValueError: If the given value is not one of the allowed values.
+    """
+
+    allowed_values_list = allowed_values.split(",")
+    if given_value not in allowed_values_list:
+        raise ValueError(f"Invalid value: {given_value}. Allowed values are: {allowed_values_list}")
+
+    return True
