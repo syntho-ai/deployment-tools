@@ -1,6 +1,14 @@
 from unittest import TestCase, mock
 
-from cli.dynamic_configuration.predefined_funcs import concatenate, divide, kubectlget, lowercase, regex, returnasis
+from cli.dynamic_configuration.predefined_funcs import (
+    concatenate,
+    divide,
+    kubectlget,
+    lowercase,
+    onlythesevalues,
+    regex,
+    returnasis,
+)
 from cli.utils import SubprocessResult
 
 
@@ -134,3 +142,32 @@ def test_kubectlget():
             capture_output=True,
             **{"PARAMS": 'get pv -l pv-label-key=mylabel -o jsonpath="{.items[*].spec.storageClassName}"'},
         )
+
+
+class TestOnlyTheseValues(TestCase):
+    def validate(self, given_value, allowed_values, should_raise):
+        exc = None
+        try:
+            result = onlythesevalues("test-dir", given_value, allowed_values)
+        except Exception as e:
+            exc = e
+
+        if should_raise:
+            self.assertTrue(exc is not None, f"Invalid input '{given_value}' passed the validation")
+        else:
+            self.assertTrue(exc is None, f"Valid input '{given_value}' failed the validation")
+            self.assertTrue(result, f"Valid input '{given_value}' did not return True")
+
+    def test_valid_values(self):
+        allowed_values = "1,2,3"
+        valid_inputs = ["1", "2", "3"]
+
+        for valid_input in valid_inputs:
+            self.validate(valid_input, allowed_values, should_raise=False)
+
+    def test_invalid_values(self):
+        allowed_values = "1,2,3"
+        invalid_inputs = ["4", "5", "a", ""]
+
+        for invalid_input in invalid_inputs:
+            self.validate(invalid_input, allowed_values, should_raise=True)

@@ -97,6 +97,7 @@
         ".resources.env",
         ".auth.env",
         ".pre.deployment.ops.env",
+        ".post.deployment.ops.env",
         "runtime"
       ],
       "title": "EnvConfigurationScopeEnum",
@@ -237,7 +238,8 @@
       "enum": [
         "regex",
         "lowercase",
-        "kubectlget"
+        "kubectlget",
+        "onlythesevalues"
       ],
       "title": "ValidationFuncEnum",
       "type": "string"
