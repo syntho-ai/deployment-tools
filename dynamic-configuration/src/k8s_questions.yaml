@@ -268,7 +268,7 @@ questions:
               args: ["false"]
 
   - id: ssl_secret_options
-    question: "How do you want to configure SSL certification?:\n1. Ingress record annotation to issue the certificate by using an issuer (issue must be installed in the cluster)\n2. Other\n:"
+    question: "How do you want to configure SSL certification?:\n1. Ingress record annotation to issue the certificate by using an issuer like Certmanager (issuer must be installed in the cluster)\n2. Other\n:"
     var: SSL_SECRET_OPTIONS
     default: ""
     validation:
