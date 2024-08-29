@@ -31,6 +31,9 @@ source $DEPLOYMENT_DIR/.k8s-cluster-info.env --source-only
 NUM_OF_NODES=$NUM_OF_NODES
 IS_MANAGED="$IS_MANAGED"
 
+source $DEPLOYMENT_DIR/.post.deployment.ops.env --source-only
+INGRESS_ANNOTATION="$INGRESS_ANNOTATION"
+
 SHARED="$DEPLOYMENT_DIR/shared"
 mkdir -p "$SHARED"
 SYNTHO_CLI_PROCESS_DIR="$SHARED/process"
@@ -424,6 +427,30 @@ get_all_logs() {
     write_and_exit "$errors" "get_all_logs"
 }
 
+post_deployment() {
+    local errors=""
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/post_deployment.log"
+
+    echo "post_deployment:annotate_ingress has been started" >> $SYNTHO_CLI_PROCESS_LOGS
+    if ! annotate_ingress >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
+        errors+="Annoting ingress has been unexpectedly failed.\n"
+    fi
+    echo "post_deployment:annotate_ingress has been finalized" >> $SYNTHO_CLI_PROCESS_LOGS
+
+    write_and_exit "$errors" "post_deployment"
+}
+
+annotate_ingress() {
+    if [ -n "$INGRESS_ANNOTATION" ]; then
+        echo "annotating ingress"
+        kubectl --kubeconfig "$KUBECONFIG" --namespace syntho annotate ingress frontend-ingress "$INGRESS_ANNOTATION"
+        # just waiting random seconds for issuer to take necessary actions
+        sleep 10
+    else
+        echo "not annotating ingress"
+    fi
+}
+
 deployment_failure_callback() {
     with_loading "Please wait until the necessary materials are being prepared for diagnosis" get_all_logs "" "" 2
     with_loading "Please share this file (/tmp/syntho/diagnosis-k8s.tar.gz) with ${SUPPORT_EMAIL}" do_nothing "" "" 2
@@ -435,6 +462,7 @@ if [[ "$USE_TRUSTED_REGISTRY" == "true"  && "$IMAGE_PULL_SECRET" != "" ]]; then
 fi
 with_loading "Deploying Ray Cluster" deploy_ray_cluster 600 deployment_failure_callback
 with_loading "Deploying Syntho Stack" deploy_syntho_ui 600 deployment_failure_callback
+with_loading "Post-deployment operations are being conducted" post_deployment
 
 
 if [[ ($DEPLOY_INGRESS_CONTROLLER == "y" && $PROTOCOL == "http") || ($SKIP_CONFIGURATION == "true") ]]; then
