@@ -253,7 +253,7 @@ questions:
       value: "$TLS_ENABLED"
       conditions:
         - when: "y"
-          question_id: own_ssl_secret
+          question_id: ssl_secret_options
           action: proceed
           expose:
             - name: TLS_ENABLED
@@ -266,6 +266,53 @@ questions:
             - name: TLS_ENABLED
               func: returnasis
               args: ["false"]
+
+  - id: ssl_secret_options
+    question: "How do you want to configure SSL certification?:\n1. Ingress record annotation to issue the certificate by using an issuer like Certmanager (issuer must be installed in the cluster)\n2. Other\n:"
+    var: SSL_SECRET_OPTIONS
+    default: ""
+    validation:
+      - func: onlythesevalues
+        args: ["$SSL_SECRET_OPTIONS", "1,2"]
+        success: noerror
+        err_msg: "Invalid input. Please enter '1' or '2'."
+    post_processing: []
+    next:
+      value: "$SSL_SECRET_OPTIONS"
+      conditions:
+        - when: "1"
+          question_id: ingress_annotation
+          action: proceed
+          expose: []
+        - when: "2"
+          question_id: own_ssl_secret
+          action: proceed
+          expose: []
+
+  - id: ingress_annotation
+    question: "Please provide the annotation key and label: (eg. cert-manager.io/cluster-issuer=\"letsencrypt-production\")"
+    var: INGRESS_ANNOTATION
+    default: ""
+    validation:
+      - func: regex
+        args: [".+", "$INGRESS_ANNOTATION"]
+        success: noerror
+        err_msg: "Value is mandatory. Please provide a value."
+      - func: regex
+        args: ["^[a-zA-Z0-9.-]+\\/[a-zA-Z0-9.-]+=\"[^\"]+\"$", "$INGRESS_ANNOTATION"]
+        success: noerror
+        err_msg: "Invalid value. Please provide a valid annotation key and value based on the given example."
+    post_processing: []
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: domain
+          action: proceed
+          expose:
+            - name: INGRESS_ANNOTATION
+              func: returnasis
+              args: ["$INGRESS_ANNOTATION"]
 
   - id: own_ssl_secret
     question: "Do you want to create SSL certificate secret in the cluster yourself (secret name should be `frontend-tls` in `syntho` namespace) (Y/n):"
@@ -501,4 +548,8 @@ envs_configuration:
       - name: SSL_CERT
         default: ""
       - name: SSL_P_KEY
+        default: ""
+  - scope: .post.deployment.ops.env
+    envs:
+      - name: INGRESS_ANNOTATION
         default: ""

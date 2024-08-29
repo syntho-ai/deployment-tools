@@ -11,9 +11,9 @@ readme = "README.md"
 packages = [{include = "src", from = "./"}]
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.11"
 pyyaml = "^6.0.1"
-syntho-cli = "^1.19.2"
+syntho-cli = "^1.23.0"
 
 [tool.poetry.group.dev.dependencies]
 ipdb = "^0.13.13"
