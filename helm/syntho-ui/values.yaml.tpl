@@ -100,6 +100,7 @@ frontend:
         - hosts:
           - {{ DOMAIN }}
           secretName: frontend-tls
+      annotation: {{ INGRESS_ANNOTATION }}
       enabled: {{ TLS_ENABLED }}
 
 db:

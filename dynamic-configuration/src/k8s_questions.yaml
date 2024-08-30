@@ -290,7 +290,7 @@ questions:
           expose: []
 
   - id: ingress_annotation
-    question: "Please provide the annotation key and label: (eg. cert-manager.io/cluster-issuer=\"letsencrypt-production\")"
+    question: "Please provide the annotation key and label: (eg. cert-manager.io/cluster-issuer: \"letsencrypt-production\")"
     var: INGRESS_ANNOTATION
     default: ""
     validation:
@@ -299,7 +299,7 @@ questions:
         success: noerror
         err_msg: "Value is mandatory. Please provide a value."
       - func: regex
-        args: ["^[a-zA-Z0-9.-]+\\/[a-zA-Z0-9.-]+=\"[^\"]+\"$", "$INGRESS_ANNOTATION"]
+        args: ["^[a-zA-Z0-9.-]+/[a-zA-Z0-9.-]+:\\s*\"[^\"]+\"$", "$INGRESS_ANNOTATION"]
         success: noerror
         err_msg: "Invalid value. Please provide a valid annotation key and value based on the given example."
     post_processing: []

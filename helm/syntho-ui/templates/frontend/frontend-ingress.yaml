@@ -20,10 +20,13 @@ metadata:
   name:  {{ .Values.frontend.ingress.name }}
   labels:
     {{- include "syntho-core.labels" . | nindent 4 }}
-  {{- with .Values.frontend.ingress.annotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- with .Values.frontend.ingress.annotations }}
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- if and .Values.frontend.ingress.tls.annotation (not (eq .Values.frontend.ingress.tls.annotation "")) }}
+      {{ .Values.frontend.ingress.tls.annotation | nindent 4 }}
+    {{- end }}
 spec:
   {{- if and .Values.frontend.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
   ingressClassName: {{ .Values.frontend.ingress.className }}
