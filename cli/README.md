@@ -16,7 +16,7 @@ For detailed information on the CLI's usage, please refer to the [relevant secti
 
 ### Usage
 
-#### Development Mode
+#### Development mode
 
 - `poetry run poetry shell`
 
