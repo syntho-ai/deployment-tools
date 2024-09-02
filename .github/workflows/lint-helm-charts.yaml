@@ -9,7 +9,7 @@ jobs:
       matrix:
         include:
           - dir: 'helm/syntho-ui'
-            dyff_args: '--exclude "frontend_url" --exclude "frontend_path" --exclude "frontend_protocol" --exclude "SynthoLicense" --exclude-regexp "core.image.*" --exclude-regexp "backend.image.*" --exclude-regexp "backend.user.*" --exclude-regexp "frontend.image.*" --exclude-regexp "redis.image.*" --exclude-regexp "db.image.*" --exclude "db.storageClassName" --exclude "db.pvLabelKey" --exclude "redis.storageClassName" --exclude "redis.pvLabelKey" --exclude "frontend.ingress.className" --exclude "frontend.ingress.hosts.0.host" --exclude "frontend.ingress.hosts.0.host" --exclude "frontend.ingress.tls.enabled" --exclude "frontend.ingress.tls.conf.0.hosts.0" --exclude "imagePullSecrets"'
+            dyff_args: '--exclude "frontend_url" --exclude "frontend_path" --exclude "frontend_protocol" --exclude "SynthoLicense" --exclude-regexp "core.image.*" --exclude-regexp "backend.image.*" --exclude-regexp "backend.user.*" --exclude-regexp "frontend.image.*" --exclude-regexp "redis.image.*" --exclude-regexp "db.image.*" --exclude "db.storageClassName" --exclude "db.pvLabelKey" --exclude "redis.storageClassName" --exclude "redis.pvLabelKey" --exclude "frontend.ingress.className" --exclude "frontend.ingress.hosts.0.host" --exclude "frontend.ingress.hosts.0.host" --exclude "frontend.ingress.tls.enabled" --exclude "frontend.ingress.tls.annotation" --exclude "frontend.ingress.tls.conf.0.hosts.0" --exclude "imagePullSecrets"'
           - dir: 'helm/ray'
             dyff_args: '--exclude-regexp "head.resources.*" --exclude-regexp "storage.*" --exclude-regexp "operatorImage.*" --exclude-regexp "image.*" --exclude "SynthoLicense"'
     steps:
