@@ -244,7 +244,4 @@ def dump_envs(all_envs, deployment_dir):
         env_file_path = f"{deployment_dir}/{scope}"
         with open(env_file_path, "w") as file:
             for key, value in scope_envs_as_mapping.items():
-                # Manually escape double quotes within the value
-                escaped_value = value.replace('"', '\\"')
-                # Wrap the value in double quotes
-                file.write(f'{key}="{escaped_value}"\n')
+                file.write(f"{key}={value}\n")
