@@ -445,7 +445,7 @@ annotate_ingress() {
         echo "annotating ingress"
         kubectl --kubeconfig "$KUBECONFIG" --namespace syntho annotate ingress frontend-ingress "$INGRESS_ANNOTATION"
         # just waiting random seconds for issuer to take necessary actions
-        sleep 10
+        sleep 30
     else
         echo "not annotating ingress"
     fi
