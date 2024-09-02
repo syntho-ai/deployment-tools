@@ -122,7 +122,7 @@ deployment-tools
    ```sh
    curl -sSL https://install.python-poetry.org | python3 -
    ```
-3. Install Python Packages in root
+3. Install Python packages in root
    ```sh
    poetry install --no-root
    ```
