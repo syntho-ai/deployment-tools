@@ -408,9 +408,9 @@ questions:
               args: ["$DOMAIN"]
 
   - id: cpu_resource_ray_head
-    question: "How much CPU resource would you like to use for the Ray head (in millicores, e.g., 32000)? (default: 1000):"
+    question: "How much CPU resource would you like to use for the Ray head (in millicores, e.g., 32000)? (default: 4000):"
     var: RAY_HEAD_CPU_LIMIT
-    default: 1000
+    default: 4000
     validation:
       - func: regex
         args: ["^[1-9][0-9]*000$", "$RAY_HEAD_CPU_LIMIT"]
@@ -435,9 +435,9 @@ questions:
               args: ["$RAY_HEAD_CPU_LIMIT", "m"]
 
   - id: memory_resource_ray_head
-    question: "How much memory resource (gigabytes) would you like to allocate for the Ray head (e.g., 16)? (default: 4):"
+    question: "How much memory resource (gigabytes) would you like to allocate for the Ray head (e.g., 32)? (default: 32):"
     var: RAY_HEAD_MEMORY_LIMIT
-    default: 4
+    default: 32
     validation:
       - func: regex
         args: ["^[0-9]*[2468]$", "$RAY_HEAD_MEMORY_LIMIT"]
@@ -524,13 +524,13 @@ envs_configuration:
   - scope: .resources.env
     envs:
       - name: RAY_HEAD_CPU_REQUESTS
-        default: "500m"
+        default: "4000m"
       - name: RAY_HEAD_CPU_LIMIT
-        default: "1000m"
+        default: "4000m"
       - name: RAY_HEAD_MEMORY_REQUESTS
-        default: "2G"
+        default: "32G"
       - name: RAY_HEAD_MEMORY_LIMIT
-        default: "4G"
+        default: "32G"
   - scope: .auth.env
     envs:
       - name: UI_ADMIN_LOGIN_EMAIL
