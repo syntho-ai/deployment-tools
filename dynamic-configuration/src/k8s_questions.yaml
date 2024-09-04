@@ -152,9 +152,9 @@ questions:
               args: ["ReadWriteOnce"]
 
   - id: use_ingress_controller
-    question: "Do you want to use your own ingress controller for reaching the Syntho's UI? (Y/n):"
+    question: "Do you want to use your own ingress controller for reaching the Syntho's UI? (n/Y):"
     var: USE_INGRESS_CONTROLLER
-    default: "y"
+    default: "n"
     validation:
       - func: regex
         args: ["^[yYnN]$", "$USE_INGRESS_CONTROLLER"]
@@ -408,9 +408,9 @@ questions:
               args: ["$DOMAIN"]
 
   - id: cpu_resource_ray_head
-    question: "How much CPU resource would you like to use for the Ray head (in millicores, e.g., 32000)? (default: 4000):"
+    question: "How much CPU resource would you like to use for the Ray head (in millicores, e.g., 32000)? (default: 6000):"
     var: RAY_HEAD_CPU_LIMIT
-    default: 4000
+    default: 6000
     validation:
       - func: regex
         args: ["^[1-9][0-9]*000$", "$RAY_HEAD_CPU_LIMIT"]
@@ -524,9 +524,9 @@ envs_configuration:
   - scope: .resources.env
     envs:
       - name: RAY_HEAD_CPU_REQUESTS
-        default: "4000m"
+        default: "6000m"
       - name: RAY_HEAD_CPU_LIMIT
-        default: "4000m"
+        default: "6000m"
       - name: RAY_HEAD_MEMORY_REQUESTS
         default: "32G"
       - name: RAY_HEAD_MEMORY_LIMIT
@@ -542,7 +542,7 @@ envs_configuration:
       - name: DEPLOY_LOCAL_VOLUME_PROVISIONER
         default: "y"
       - name: DEPLOY_INGRESS_CONTROLLER
-        default: "y"
+        default: "n"
       - name: CREATE_SECRET_FOR_SSL
         default: "n"
       - name: SSL_CERT
