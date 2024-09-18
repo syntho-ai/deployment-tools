@@ -152,7 +152,7 @@ questions:
               args: ["ReadWriteOnce"]
 
   - id: use_ingress_controller
-    question: "Do you want to use your own ingress controller for reaching the Syntho's UI? (n/Y):"
+    question: "Do you want to use your own ingress controller for reaching the Syntho's UI? (Y/n) (default: n):"
     var: USE_INGRESS_CONTROLLER
     default: "n"
     validation:
