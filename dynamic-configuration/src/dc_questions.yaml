@@ -116,9 +116,9 @@ envs_configuration:
   - scope: .resources.env
     envs:
       - name: RAY_CPUS
-        default: "6"
+        default: "1"
       - name: RAY_MEMORY
-        default: "32G"
+        default: "4G"
   - scope: .auth.env
     envs:
       - name: UI_ADMIN_LOGIN_EMAIL
