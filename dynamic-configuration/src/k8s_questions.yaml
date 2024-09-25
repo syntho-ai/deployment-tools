@@ -152,9 +152,9 @@ questions:
               args: ["ReadWriteOnce"]
 
   - id: use_ingress_controller
-    question: "Do you want to use your own ingress controller for reaching the Syntho's UI? (Y/n) (default: n):"
+    question: "Do you want to use your own ingress controller for reaching the Syntho's UI? (Y/n) (default: y):"
     var: USE_INGRESS_CONTROLLER
-    default: "n"
+    default: "y"
     validation:
       - func: regex
         args: ["^[yYnN]$", "$USE_INGRESS_CONTROLLER"]
@@ -524,13 +524,13 @@ envs_configuration:
   - scope: .resources.env
     envs:
       - name: RAY_HEAD_CPU_REQUESTS
-        default: "6000m"
+        default: "500m"
       - name: RAY_HEAD_CPU_LIMIT
-        default: "6000m"
+        default: "1000m"
       - name: RAY_HEAD_MEMORY_REQUESTS
-        default: "32G"
+        default: "2G"
       - name: RAY_HEAD_MEMORY_LIMIT
-        default: "32G"
+        default: "4G"
   - scope: .auth.env
     envs:
       - name: UI_ADMIN_LOGIN_EMAIL
@@ -542,7 +542,7 @@ envs_configuration:
       - name: DEPLOY_LOCAL_VOLUME_PROVISIONER
         default: "y"
       - name: DEPLOY_INGRESS_CONTROLLER
-        default: "n"
+        default: "y"
       - name: CREATE_SECRET_FOR_SSL
         default: "n"
       - name: SSL_CERT
