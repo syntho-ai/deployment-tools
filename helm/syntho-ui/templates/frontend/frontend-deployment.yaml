@@ -21,7 +21,7 @@ spec:
     spec:
       initContainers:
         - name: wait-for-backend-service
-          image: busybox
+          image: {{ .Values.frontend.busyboxImage | default "busybox" }}
           command:
             - 'sh'
             - '-c'
