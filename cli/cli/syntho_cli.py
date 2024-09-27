@@ -494,7 +494,6 @@ def k8s_deployment_update(deployment_id: str, new_version: str):
     default="",
     callback=validate_k8s_deployment_id,
 )
-@click.option("--version", type=str, help=("Specify a version for Syntho stack."), required=True)
 def k8s_deployment_status(deployment_id: str):
     deployment = k8s_deployment_manager.get_deployment(scripts_dir, deployment_id)
     if deployment:
