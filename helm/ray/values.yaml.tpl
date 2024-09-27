@@ -47,7 +47,7 @@ head:
   initContainer:
     arguments: ["chmod", "-R", "777", "/tmp/ray-workflows", "/tmp/ray-data"]
     securityContext: {}
-    image: busybox:1.28
+    image: "{{ BUSYBOX_IMG_REPO }}:{{ BUSYBOX_IMG_TAG }}"
   labels: {}
   rayStartParams:
     dashboard-host: '0.0.0.0'
@@ -113,7 +113,7 @@ worker:
   labels: {}
   rayStartParams:
     block: 'true'
-  initContainerImage: 'busybox:1.28'  # Enable users to specify the image for init container. Users can pull the busybox image from their private repositories.
+  initContainerImage: '{{ BUSYBOX_IMG_REPO }}:{{ BUSYBOX_IMG_TAG }}'  # Enable users to specify the image for init container. Users can pull the busybox image from their private repositories.
   # Security context for the init container.
   initContainerSecurityContext: {}
   # containerEnv specifies environment variables for the Ray container,
