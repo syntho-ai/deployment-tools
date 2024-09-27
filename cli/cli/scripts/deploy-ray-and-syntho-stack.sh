@@ -105,6 +105,8 @@ POSTGRES_IMG_REPO="$POSTGRES_IMG_REPO"
 POSTGRES_IMG_TAG="$POSTGRES_IMG_TAG"
 REDIS_IMG_REPO="$REDIS_IMG_REPO"
 REDIS_IMG_TAG="$REDIS_IMG_TAG"
+BUSYBOX_IMG_REPO="$BUSYBOX_IMG_REPO"
+BUSYBOX_IMG_TAG="$BUSYBOX_IMG_TAG"
 INGRESS_CONTROLLER="$INGRESS_CONTROLLER"
 TLS_ENABLED="$TLS_ENABLED"
 STORAGE_CLASS_NAME="$STORAGE_CLASS_NAME"
@@ -274,7 +276,7 @@ wait_local_nginx() {
         local INGRESS_CONTROLLER_NAMESPACE="syntho"
         local DOMAIN="$DOMAIN"
 
-        kubectl run -i --tty --rm busybox-2 --image=busybox --restart=Never --namespace syntho -- /bin/sh -c "wget -O- \
+        kubectl run -i --tty --rm busybox-2 --image=$BUSYBOX_IMG_REPO:$BUSYBOX_IMG_TAG --restart=Never --namespace syntho -- /bin/sh -c "wget -O- \
         --header=\"Host: $DOMAIN\" --server-response \
         http://$INGRESS_CONTROLLER_SERVICE_NAME.$INGRESS_CONTROLLER_NAMESPACE.svc.cluster.local/login/ \
         2>&1 | grep 'HTTP/' | awk '{print \$2}'" | grep -q 200
