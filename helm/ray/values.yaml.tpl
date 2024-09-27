@@ -47,7 +47,7 @@ head:
   initContainer:
     arguments: ["chmod", "-R", "777", "/tmp/ray-workflows", "/tmp/ray-data"]
     securityContext: {}
-    image: {{ BUSYBOX_IMG_REPO }}:{{ BUSYBOX_IMG_TAG }}
+    image: "{{ BUSYBOX_IMG_REPO }}:{{ BUSYBOX_IMG_TAG }}"
   labels: {}
   rayStartParams:
     dashboard-host: '0.0.0.0'
