@@ -72,6 +72,7 @@ frontend:
   image:
     repository: {{ SYNTHO_UI_FRONTEND_IMG_REPO }}
     tag: {{ SYNTHO_UI_FRONTEND_IMG_TAG }}
+  busyboxImage: busybox:1.28.0
   port: 3000
   service:
     port: 3000
