@@ -65,13 +65,13 @@ backend:
   volumes: []
   volumeMounts: []
 
-
 frontend:
   replicaCount: 1
   name: frontend
   image:
     repository: syntho.azurecr.io/syntho-core-frontend
     tag: latest
+  busyboxImage: busybox:1.28.0
   port: 3000
   service:
     port: 3000
