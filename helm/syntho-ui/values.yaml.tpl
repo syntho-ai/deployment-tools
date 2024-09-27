@@ -1,7 +1,3 @@
-# Default values for syntho-core.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
 frontend_path:
 frontend_url: {{ DOMAIN }}
 frontend_protocol: {{ PROTOCOL }}
@@ -71,7 +67,7 @@ frontend:
   image:
     repository: {{ SYNTHO_UI_FRONTEND_IMG_REPO }}
     tag: {{ SYNTHO_UI_FRONTEND_IMG_TAG }}
-  busyboxImage: {{ BUSYBOX_IMG_REPO }}:{{ BUSYBOX_IMG_TAG }}
+  busyboxImage: "{{ BUSYBOX_IMG_REPO }}:{{ BUSYBOX_IMG_TAG }}"
   port: 3000
   service:
     port: 3000
