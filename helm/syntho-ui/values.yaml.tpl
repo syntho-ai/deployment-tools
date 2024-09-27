@@ -65,14 +65,13 @@ backend:
   volumes: []
   volumeMounts: []
 
-
 frontend:
   replicaCount: 1
   name: frontend
   image:
     repository: {{ SYNTHO_UI_FRONTEND_IMG_REPO }}
     tag: {{ SYNTHO_UI_FRONTEND_IMG_TAG }}
-  busyboxImage: busybox:1.28.0
+  busyboxImage: {{ BUSYBOX_IMG_REPO }}:{{ BUSYBOX_IMG_TAG }}
   port: 3000
   service:
     port: 3000
