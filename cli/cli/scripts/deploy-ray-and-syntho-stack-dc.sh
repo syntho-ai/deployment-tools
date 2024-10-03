@@ -10,6 +10,7 @@ source $DEPLOYMENT_DIR/.env --source-only
 DOCKER_CONFIG="$DOCKER_CONFIG"
 SECONDARY_DOCKER_CONFIG="$SECONDARY_DOCKER_CONFIG"
 DOCKER_HOST="$DOCKER_HOST"
+VERSION="$VERSION"
 SKIP_CONFIGURATION="$SKIP_CONFIGURATION"
 USE_TRUSTED_REGISTRY="$USE_TRUSTED_REGISTRY"
 USE_OFFLINE_REGISTRY="$USE_OFFLINE_REGISTRY"
@@ -322,6 +323,47 @@ do_deploy_offline_image_registry() {
     fi
 }
 
+post_deployment() {
+    local errors=""
+    SYNTHO_CLI_PROCESS_LOGS="$SYNTHO_CLI_PROCESS_DIR/post_deployment.log"
+
+    echo "post_deployment:gather_envs has been started" >> $SYNTHO_CLI_PROCESS_LOGS
+    if ! gather_envs >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
+        errors+="Gathering env files has been unexpectedly failed.\n"
+    fi
+    echo "post_deployment:gather_envs has been finalized" >> $SYNTHO_CLI_PROCESS_LOGS
+
+    echo "post_deployment:mark_as_deployed has been started" >> $SYNTHO_CLI_PROCESS_LOGS
+    if ! mark_as_deployed >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
+        errors+="Marking as deployed has been unexpectedly failed.\n"
+    fi
+    echo "post_deployment:mark_as_deployed has been finalized" >> $SYNTHO_CLI_PROCESS_LOGS
+
+    write_and_exit "$errors" "post_deployment"
+}
+
+gather_envs() {
+    local env_files
+    local target_dir="$DEPLOYMENT_DIR/syntho-charts-$VERSION/docker-compose/envs"
+
+    # Create the target directory if it does not exist
+    if [ ! -d "$target_dir" ]; then
+        mkdir -p "$target_dir"
+    fi
+
+    # Find and copy files ending with .env
+    env_files=$(find "$DEPLOYMENT_DIR" -maxdepth 1 -type f -name "*.env")
+
+    for file in $env_files; do
+        cp "$file" "$target_dir"
+    done
+}
+
+mark_as_deployed() {
+    marker=$DEPLOYMENT_DIR/syntho-charts-$VERSION/docker-compose/.deployed
+    touch $marker
+}
+
 
 if [[ "$USE_OFFLINE_REGISTRY" == "true" ]]; then
     with_loading "Deploying offline image registry with necessary images in it" deploy_offline_image_registry
@@ -329,6 +371,7 @@ fi
 
 with_loading "Deploying Syntho Stack" deploy_syntho_stack 1800 deployment_failure_callback
 with_loading "Waiting for Syntho UI to be healthy" wait_for_fe_health 300 deployment_failure_callback
+with_loading "Post-deployment operations are being conducted" post_deployment
 
 if [[ -f "${DEPLOYMENT_DIR}/.ssh-sock.env" ]] && [[ -f "${DEPLOYMENT_DIR}/.ssh-agent-pid.env" ]]; then
     source ${DEPLOYMENT_DIR}/.ssh-agent-pid.env --source-only

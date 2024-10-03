@@ -16,7 +16,9 @@ from cli.utilities.prepull_images import generate_prepull_images_dir
 from cli.utils import (
     CleanUpLevel,
     DeploymentResult,
+    UpdateStrategy,
     get_deployments_dir,
+    get_new_release_rollout_strategy,
     run_script,
     thread_safe,
     with_working_directory,
@@ -356,7 +358,7 @@ def prepare_env(
         "SKIP_CONFIGURATION": "true" if skip_configuration else "false",
         "USE_TRUSTED_REGISTRY": "true" if use_trusted_registry else "false",
         "PREPULL_IMAGES_DIR": generate_prepull_images_dir(scripts_dir),
-        "IMAGE_PULL_SECRET": trusted_registry_image_pull_secret,
+        "IMAGE_PULL_SECRET": trusted_registry_image_pull_secret or "syntho-cr-secret",
         "DEPLOYMENT_TOOLS_VERSION": deployment_tools_version,
         "DRY_RUN": "true" if dry_run else "false",
     }
@@ -554,12 +556,26 @@ def update_k8s_deployment(
             deployment_status=None,
         )
 
-    is_success = update_release(scripts_dir, deployment_id, initial_version, current_version, new_version)
+    update_strategy = get_new_release_rollout_strategy(
+        deployment_dir, initial_version, current_version, new_version, "k8s"
+    )
+    if update_strategy == UpdateStrategy.UNKNOWN:
+        return DeploymentResult(
+            succeeded=False,
+            deployment_id=deployment_id,
+            error=("Unsupported update strategy. Please reach out to support@syntho.ai for further support."),
+            deployment_status=None,
+        )
+
+    is_success = update_release(
+        scripts_dir, deployment_id, initial_version, current_version, new_version, update_strategy
+    )
+
     if not is_success:
         return DeploymentResult(
             succeeded=False,
             deployment_id=deployment_id,
-            error=("Updating release has been failed. " "Please reach out to support@syntho.ai for further support."),
+            error=("Updating release has been failed. Please reach out to support@syntho.ai for further support."),
             deployment_status=None,
         )
 
@@ -594,21 +610,39 @@ def compatibility_check(scripts_dir: str, deployment_id: str, current_version: s
 
 
 def update_release(
-    scripts_dir: str, deployment_id: str, initial_version: str, current_version: str, new_version: str
+    scripts_dir: str,
+    deployment_id: str,
+    initial_version: str,
+    current_version: str,
+    new_version: str,
+    update_strategy: UpdateStrategy,
 ) -> bool:
-    click.echo("Step 2: Rolling out new release;")
+    # initial step was 1
+    step = 1
+
+    if update_strategy == UpdateStrategy.WITH_CONFIGURATION_CHANGES:
+        step += 1
+        click.echo(f"Step {step}: (Changes Detected) Configuration Questions;")
+        time.sleep(5)
+        # TODO
+        # proceed with questions
+        pass
+
+    step += 1
+
+    click.echo(f"Step {step}: Rolling out new release;")
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
 
     result = run_script(
         scripts_dir,
         deployment_dir,
-        "update-release.sh",
+        update_strategy.script(),
         **{
             "DEPLOYMENT_TOOLING": "helm",
-            "INITIAL_VERSION": initial_version,
             "CURRENT_VERSION": current_version,
             "NEW_VERSION": new_version,
+            **update_strategy.extra_params(),
         },
     )
 

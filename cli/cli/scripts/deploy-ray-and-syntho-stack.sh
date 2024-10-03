@@ -8,6 +8,7 @@ SUPPORT_EMAIL="$SUPPORT_EMAIL"
 DEPLOYMENT_DIR="$DEPLOYMENT_DIR"
 source $DEPLOYMENT_DIR/.env --source-only
 KUBECONFIG="$KUBECONFIG"
+VERSION="$VERSION"
 SKIP_CONFIGURATION="$SKIP_CONFIGURATION"
 USE_TRUSTED_REGISTRY="$USE_TRUSTED_REGISTRY"
 IMAGE_PULL_SECRET="$IMAGE_PULL_SECRET"
@@ -439,6 +440,18 @@ post_deployment() {
     fi
     echo "post_deployment:annotate_ingress has been finalized" >> $SYNTHO_CLI_PROCESS_LOGS
 
+    echo "post_deployment:gather_envs has been started" >> $SYNTHO_CLI_PROCESS_LOGS
+    if ! gather_envs >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
+        errors+="Gathering env files has been unexpectedly failed.\n"
+    fi
+    echo "post_deployment:gather_envs has been finalized" >> $SYNTHO_CLI_PROCESS_LOGS
+
+    echo "post_deployment:mark_as_deployed has been started" >> $SYNTHO_CLI_PROCESS_LOGS
+    if ! mark_as_deployed >> $SYNTHO_CLI_PROCESS_LOGS 2>&1; then
+        errors+="Marking as deployed has been unexpectedly failed.\n"
+    fi
+    echo "post_deployment:mark_as_deployed has been finalized" >> $SYNTHO_CLI_PROCESS_LOGS
+
     write_and_exit "$errors" "post_deployment"
 }
 
@@ -451,6 +464,28 @@ annotate_ingress() {
     else
         echo "not annotating ingress"
     fi
+}
+
+gather_envs() {
+    local env_files
+    local target_dir="$DEPLOYMENT_DIR/syntho-charts-$VERSION/helm/envs"
+
+    # Create the target directory if it does not exist
+    if [ ! -d "$target_dir" ]; then
+        mkdir -p "$target_dir"
+    fi
+
+    # Find and copy files ending with .env
+    env_files=$(find "$DEPLOYMENT_DIR" -maxdepth 1 -type f -name "*.env")
+
+    for file in $env_files; do
+        cp "$file" "$target_dir"
+    done
+}
+
+mark_as_deployed() {
+    marker=$DEPLOYMENT_DIR/syntho-charts-$VERSION/helm/.deployed
+    touch $marker
 }
 
 deployment_failure_callback() {

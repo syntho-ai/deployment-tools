@@ -2,6 +2,7 @@ import base64
 import json
 import os
 import shutil
+import time
 from datetime import datetime
 from enum import Enum
 from hashlib import md5
@@ -18,7 +19,9 @@ from cli.utilities.prepull_images import generate_prepull_images_dir
 from cli.utils import (
     CleanUpLevel,
     DeploymentResult,
+    UpdateStrategy,
     get_deployments_dir,
+    get_new_release_rollout_strategy,
     run_script,
     thread_safe,
     with_working_directory,
@@ -566,12 +569,25 @@ def update_dc_deployment(
             deployment_status=None,
         )
 
-    is_success = update_release(scripts_dir, deployment_id, initial_version, current_version, new_version)
+    update_strategy = get_new_release_rollout_strategy(
+        deployment_dir, initial_version, current_version, new_version, "dc"
+    )
+    if update_strategy == UpdateStrategy.UNKNOWN:
+        return DeploymentResult(
+            succeeded=False,
+            deployment_id=deployment_id,
+            error=("Unsupported update strategy. Please reach out to support@syntho.ai for further support."),
+            deployment_status=None,
+        )
+
+    is_success = update_release(
+        scripts_dir, deployment_id, initial_version, current_version, new_version, update_strategy
+    )
     if not is_success:
         return DeploymentResult(
             succeeded=False,
             deployment_id=deployment_id,
-            error=("Updating release has been failed. " "Please reach out to support@syntho.ai for further support."),
+            error=("Updating release has been failed. Please reach out to support@syntho.ai for further support."),
             deployment_status=None,
         )
 
@@ -606,21 +622,39 @@ def compatibility_check(scripts_dir: str, deployment_id: str, current_version: s
 
 
 def update_release(
-    scripts_dir: str, deployment_id: str, initial_version: str, current_version: str, new_version: str
+    scripts_dir: str,
+    deployment_id: str,
+    initial_version: str,
+    current_version: str,
+    new_version: str,
+    update_strategy: UpdateStrategy,
 ) -> bool:
-    click.echo("Step 2: Rolling out new release;")
+    # initial step was 1
+    step = 1
+
+    if update_strategy == UpdateStrategy.WITH_CONFIGURATION_CHANGES:
+        step += 1
+        click.echo(f"Step {step}: (Changes Detected) Configuration Questions;")
+        time.sleep(5)
+        # TODO
+        # proceed with questions
+        pass
+
+    step += 1
+
+    click.echo(f"Step {step}: Rolling out new release;")
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
 
     result = run_script(
         scripts_dir,
         deployment_dir,
-        "update-release.sh",
+        update_strategy.script(),
         **{
             "DEPLOYMENT_TOOLING": "docker-compose",
-            "INITIAL_VERSION": initial_version,
             "CURRENT_VERSION": current_version,
             "NEW_VERSION": new_version,
+            **update_strategy.extra_params(),
         },
     )
 
