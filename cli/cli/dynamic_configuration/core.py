@@ -1,4 +1,5 @@
 import importlib
+import readline
 
 import click
 
@@ -37,7 +38,7 @@ def make_envs(envs_configuration):
     return envs
 
 
-def proceed_with_questions(deployment_dir, all_envs, questions, entrypoint_id):
+def proceed_with_questions(deployment_dir, all_envs, questions, entrypoint_id, with_previous_answers=None):
     """
     Proceed with asking questions and updating environments based on user input.
 
@@ -45,11 +46,13 @@ def proceed_with_questions(deployment_dir, all_envs, questions, entrypoint_id):
     :param all_envs: The current environments dictionary.
     :param questions: List of question objects.
     :param entrypoint_id: The ID of the entrypoint question.
+    :param with_previous_answers: None or previous answers recorded.
     :return: Updated environments dictionary and a boolean indicating if the process was interrupted.
     """
     next_question_id = entrypoint_id
     action = "proceed"
 
+    initial_answers = []
     all_exposed = []
     scope_envs = []
     while action in ["proceed", "exit", "complete"]:
@@ -60,9 +63,12 @@ def proceed_with_questions(deployment_dir, all_envs, questions, entrypoint_id):
             break
 
         question_obj = find_question_by_id(questions, next_question_id)
-        answer_ctx, interrupted = ask_question(deployment_dir, question_obj)
+        previous_answer = with_previous_answers.get(question_obj.var) if with_previous_answers else None
+        answer_ctx, interrupted = ask_question(deployment_dir, question_obj, with_previous_answer=previous_answer)
         if interrupted:
             return all_envs, True
+
+        initial_answers.append(answer_ctx)
 
         next_question_id, action, exposed = next_question(deployment_dir, questions, question_obj, answer_ctx)
 
@@ -70,10 +76,32 @@ def proceed_with_questions(deployment_dir, all_envs, questions, entrypoint_id):
         all_exposed.extend(exposed)
 
     envs = update_envs(all_envs, all_exposed, scope_envs)
+    envs[".answers.env"] = initial_answers
+
     return envs, False
 
 
-def ask_question(deployment_dir, question_obj):
+def input_with_answer(question: str, with_previous_answer: str):
+    """
+    Asks a question by filling the answer in advance, but use can mutate it
+
+    :param question: Question to be asked.
+    :param with_previous_answer: Pre-filled answer.
+    :return: Value of the given input.
+    """
+
+    def pre_input_hook():
+        readline.insert_text(with_previous_answer)
+        readline.redisplay()
+
+    readline.set_pre_input_hook(pre_input_hook)
+    try:
+        return input(question)
+    finally:
+        readline.set_pre_input_hook()
+
+
+def ask_question(deployment_dir, question_obj, with_previous_answer=None):
     """
     Ask a question to the user and validate the response.
 
@@ -88,7 +116,11 @@ def ask_question(deployment_dir, question_obj):
     while keep_asking:
         env = question_obj.var
         try:
-            val = input(f"\t- {question_obj.question}")
+            question = f"\t- {question_obj.question}"
+            if not with_previous_answer:
+                val = input(question)
+            else:
+                val = input_with_answer(question, with_previous_answer)
         except KeyboardInterrupt:
             return {
                 "name": env,

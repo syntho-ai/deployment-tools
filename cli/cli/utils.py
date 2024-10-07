@@ -347,19 +347,15 @@ def get_architecture():
 
 class UpdateStrategy(Enum):
     UNKNOWN = ("", "", "")
-    DEFAULT_NOT_DEPLOYED_YET = ("update-release", "update-release.sh", {"DEPLOYED": "false"})
-    DEFAULT_ALREADY_DEPLOYED = ("update-release", "update-release.sh", {"DEPLOYED": "true"})
-    WITH_CONFIGURATION_CHANGES = (
-        "update-release-with-configuration-changes",
-        "update-release-with-configuration-changes.sh",
-        {},
-    )
+    DEFAULT_NOT_DEPLOYED_YET = ("update-release.sh", {"DEPLOYED": "false"})
+    DEFAULT_ALREADY_DEPLOYED = ("update-release.sh", {"DEPLOYED": "true"})
+    WITH_CONFIGURATION_CHANGES = ("update-release.sh", {"WITH_CONFIGURATION_CHANGES": "true"})
 
     def script(self):
-        return self.value[1]
+        return self.value[0]
 
     def extra_params(self):
-        return self.value[2]
+        return self.value[1]
 
 
 def get_new_release_rollout_strategy(

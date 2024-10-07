@@ -1,5 +1,8 @@
 import requests
 
+# TODO keep this in mind that in case of an excessive API call there is a throttling, and only
+# authenticated requests can by pass it.
+
 # from requests.auth import HTTPBasicAuth
 
 

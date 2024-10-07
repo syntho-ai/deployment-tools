@@ -92,7 +92,7 @@ def start(
                 deployment_status=deployment_status,
             )
 
-    initialize_deployment(deployment_id, deployment_dir, deployments_dir, version)
+    initialize_deployment(deployment_id, deployment_dir, deployments_dir, version, use_trusted_registry)
 
     prepare_env(
         deployment_id,
@@ -287,7 +287,9 @@ def get_deployments_state(deployments_dir: str) -> Dict:
     }
 
 
-def initialize_deployment(deployment_id: str, deployment_dir: str, deployments_dir: str, version: str) -> NoReturn:
+def initialize_deployment(
+    deployment_id: str, deployment_dir: str, deployments_dir: str, version: str, use_trusted_registry: bool
+) -> NoReturn:
     deployments_state = get_deployments_state(deployments_dir)
 
     started_at = datetime.utcnow().isoformat()
@@ -303,6 +305,7 @@ def initialize_deployment(deployment_id: str, deployment_dir: str, deployments_d
         "started_at": started_at,
         "finished_at": None,
         "cluster_name": None,
+        "use_trusted_registry": use_trusted_registry,
     }
     deployments_state["deployments"].append(deployment)
     deployments_state["active_deployment_id"] = deployment_id
@@ -471,6 +474,8 @@ def configuration_questions(
     if skip_configuration:
         skipped_text = click.style("[SKIPPED]", bg="yellow", fg="white", bold=True)
         click.echo(f"Step 3: Configuration; {skipped_text}")
+        default_answers = make_default_answers_when_skipped_configuration(question_schema_obj)
+        all_envs[".answers.env"] = default_answers
     else:
         click.echo("Step 3: Configuration;")
 
@@ -492,6 +497,70 @@ def configuration_questions(
         set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED)
 
     return result.succeeded
+
+
+def make_default_answers_when_skipped_configuration(question_schema_obj):
+    ### This section is for backwards-compatibility - START ###
+
+    # below env vars are differ as their default value when they are asked vs when the conf is
+    # skipped, so we are actually overriding the answers, as if the answers are like below.
+    # --skip-configuration is already going to be deleted eventually, and it is meant to be for
+    # experimental purposes to make the deployments faster
+
+    # sorry for being too implicit below, but being exception free is something we don't want free
+    # as we are assuming those values exist. In case they are gone, then it needs to raise an
+    # exception so that we can be aware of
+
+    resources_env_when_skipped = list(
+        filter(lambda e: e.scope.value == ".resources.env", question_schema_obj.envs_configuration)
+    )[0]
+    config_env_when_skipped = list(
+        filter(lambda e: e.scope.value == ".config.env", question_schema_obj.envs_configuration)
+    )[0]
+
+    ray_head_cpu_limit = list(filter(lambda e: e.name == "RAY_HEAD_CPU_LIMIT", resources_env_when_skipped.envs))[
+        0
+    ].default.replace("m", "")
+    ray_head_memory_limit = list(filter(lambda e: e.name == "RAY_HEAD_MEMORY_LIMIT", resources_env_when_skipped.envs))[
+        0
+    ].default.replace("G", "")
+
+    use_storage_class = "n"
+    storage_class_name = list(filter(lambda e: e.name == "STORAGE_CLASS_NAME", config_env_when_skipped.envs))[0].default
+
+    use_ingress_controller = "n"
+    ingress_controller = list(filter(lambda e: e.name == "INGRESS_CONTROLLER", config_env_when_skipped.envs))[0].default
+
+    protocol = list(filter(lambda e: e.name == "PROTOCOL", config_env_when_skipped.envs))[0].default
+    tls_enabled = "n"
+    overrides = {
+        "RAY_HEAD_CPU_LIMIT": {"name": "RAY_HEAD_CPU_LIMIT", "value": ray_head_cpu_limit},
+        "RAY_HEAD_MEMORY_LIMIT": {"name": "RAY_HEAD_MEMORY_LIMIT", "value": ray_head_memory_limit},
+        "USE_STORAGE_CLASS": {"name": "USE_STORAGE_CLASS", "value": use_storage_class},
+        "STORAGE_CLASS_NAME": {"name": "STORAGE_CLASS_NAME", "value": storage_class_name},
+        "USE_INGRESS_CONTROLLER": {"name": "USE_INGRESS_CONTROLLER", "value": use_ingress_controller},
+        "INGRESS_CONTROLLER": {"name": "INGRESS_CONTROLLER", "value": ingress_controller},
+        "PROTOCOL": {"name": "PROTOCOL", "value": protocol},
+        "TLS_ENABLED": {"name": "TLS_ENABLED", "value": tls_enabled},
+    }
+
+    ### This section is for backwards-compatibility - END ###
+
+    questions = question_schema_obj.questions
+    answers = []
+    for question in questions:
+        override = overrides.get(question.var)
+        if not override:
+            answers.append(
+                {
+                    "name": question.var,
+                    "value": question.default,
+                }
+            )
+        else:
+            answers.append(override)
+
+    return answers
 
 
 def download_syntho_charts_release(scripts_dir: str, deployment_id: str) -> bool:
@@ -617,22 +686,22 @@ def update_release(
     new_version: str,
     update_strategy: UpdateStrategy,
 ) -> bool:
+    deployments_dir = f"{scripts_dir}/deployments"
+    deployment_dir = f"{deployments_dir}/{deployment_id}"
+
     # initial step was 1
     step = 1
 
     if update_strategy == UpdateStrategy.WITH_CONFIGURATION_CHANGES:
         step += 1
-        click.echo(f"Step {step}: (Changes Detected) Configuration Questions;")
-        time.sleep(5)
-        # TODO
-        # proceed with questions
-        pass
+        click.echo(f"Step {step}: (Changes Detected) Configuration;")
+        succeeded = reask_configuration_questions(deployment_id, deployment_dir, current_version, new_version)
+        if not succeeded:
+            return False
 
     step += 1
 
     click.echo(f"Step {step}: Rolling out new release;")
-    deployments_dir = f"{scripts_dir}/deployments"
-    deployment_dir = f"{deployments_dir}/{deployment_id}"
 
     result = run_script(
         scripts_dir,
@@ -647,6 +716,50 @@ def update_release(
     )
 
     return result.succeeded
+
+
+def reask_configuration_questions(
+    deployment_id: str, deployment_dir: str, current_version: str, new_version: str
+) -> bool:
+    previous_answers = make_previous_answers_kv_map(deployment_dir, current_version)
+
+    new_configuration_questions_yaml_location = (
+        f"{deployment_dir}/temp-compatibility-check/syntho-{new_version}/dynamic-configuration/src/k8s_questions.yaml"
+    )
+
+    with open(new_configuration_questions_yaml_location, "r") as f:
+        new_questions_config = yaml.safe_load(f)
+
+    new_question_schema_obj = parse_obj_as(QuestionSchema, new_questions_config)
+    new_all_envs = make_envs(new_question_schema_obj.envs_configuration)
+
+    new_all_envs, interrupted = proceed_with_questions(
+        deployment_dir,
+        new_all_envs,
+        new_question_schema_obj.questions,
+        new_question_schema_obj.entrypoint,
+        with_previous_answers=previous_answers,
+    )
+    if interrupted:
+        return False
+
+    temp_deployment_dir = f"{deployment_dir}/temp-compatibility-check/syntho-{new_version}/helm/new_envs"
+    os.makedirs(temp_deployment_dir, exist_ok=True)
+    dump_envs(new_all_envs, temp_deployment_dir)
+    return True
+
+
+def make_previous_answers_kv_map(deployment_dir: str, current_version: str):
+    previous_answers_env_path = f"{deployment_dir}/syntho-charts-{current_version}/helm/envs/.answers.env"
+    env_var_map = {}
+
+    with open(previous_answers_env_path, "r") as f:
+        for line in f:
+            line = line.strip()
+            key, value = line.split("=", 1)
+            env_var_map[key.strip()] = value.strip()
+
+    return env_var_map
 
 
 def set_version(deployment_id: str, deployments_dir: str, new_version: str):
