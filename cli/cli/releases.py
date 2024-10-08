@@ -1,5 +1,20 @@
 import requests
 
+# TODO keep this in mind that in case of an excessive API call there is a throttling, and only
+# authenticated requests can by pass it.
+
+# from requests.auth import HTTPBasicAuth
+
+
+# def fetch_releases():
+#     url = "https://api.github.com/repos/syntho-ai/deployment-tools/releases"
+#     auth = HTTPBasicAuth("baranbartu", "************")
+#     response = requests.get(url, auth=auth, timeout=10)
+#     if response.status_code == 200:
+#         return response.json()
+#     else:
+#         raise Exception(f"Failed to fetch releases: {response.status_code}")
+
 
 def fetch_releases():
     url = "https://api.github.com/repos/syntho-ai/deployment-tools/releases"

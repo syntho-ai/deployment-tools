@@ -436,6 +436,9 @@ def k8s_deployment_update(deployment_id: str, new_version: str):
             f"within the current stack ({current_version}).\nCompatible releases:\n{versions_str}"
         )
 
+    if deployment.get("use_trusted_registry"):
+        raise click.UsageError("Deployments that was made via trusted registry can not be updated for now.")
+
     starting_text = click.style(
         f"-- Syntho stack is going to be updated from ({current_version}) to ({new_version}) (Kubernetes) --",
         fg="white",

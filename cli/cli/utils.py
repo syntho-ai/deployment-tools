@@ -1,4 +1,5 @@
 import fcntl
+import filecmp
 import glob
 import os
 import platform
@@ -342,3 +343,59 @@ def get_architecture():
         return "arm"
     else:
         return arch_info
+
+
+class UpdateStrategy(Enum):
+    UNKNOWN = ("", "", "")
+    DEFAULT_NOT_DEPLOYED_YET = ("update-release.sh", {"DEPLOYED": "false"})
+    DEFAULT_ALREADY_DEPLOYED = ("update-release.sh", {"DEPLOYED": "true"})
+    WITH_CONFIGURATION_CHANGES = ("update-release.sh", {"WITH_CONFIGURATION_CHANGES": "true"})
+
+    def script(self):
+        return self.value[0]
+
+    def extra_params(self):
+        return self.value[1]
+
+
+def get_new_release_rollout_strategy(
+    deployment_dir: str,
+    initial_version: str,
+    current_version: str,
+    new_version: str,
+    deployment: str,
+) -> UpdateStrategy:
+    deployment_directory = "helm" if deployment == "k8s" else "docker-compose" if deployment == "dc" else None
+    if deployment_directory is None:
+        return UpdateStrategy.UNKNOWN
+
+    question_file_prefix = "k8s" if deployment_directory == "helm" else "dc"
+
+    if initial_version == new_version:
+        return UpdateStrategy.DEFAULT_ALREADY_DEPLOYED
+
+    is_new_release_deployed_previously = os.path.exists(
+        f"{deployment_dir}/syntho-charts-{new_version}/{deployment_directory}/.deployed"
+    )
+    if is_new_release_deployed_previously:
+        return UpdateStrategy.DEFAULT_ALREADY_DEPLOYED
+
+    current_release_deployment_questions_path = (
+        f"{deployment_dir}/temp-compatibility-check/"
+        f"syntho-{current_version}/dynamic-configuration/src"
+        f"/{question_file_prefix}_questions.yaml"
+    )
+    new_release_deployment_questions_path = (
+        f"{deployment_dir}/temp-compatibility-check/"
+        f"syntho-{new_version}/dynamic-configuration/src"
+        f"/{question_file_prefix}_questions.yaml"
+    )
+
+    has_question_diff = not filecmp.cmp(
+        current_release_deployment_questions_path, new_release_deployment_questions_path, shallow=False
+    )
+
+    if not has_question_diff:
+        return UpdateStrategy.DEFAULT_NOT_DEPLOYED_YET
+
+    return UpdateStrategy.WITH_CONFIGURATION_CHANGES
