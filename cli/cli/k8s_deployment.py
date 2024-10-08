@@ -507,7 +507,7 @@ def make_default_answers_when_skipped_configuration(question_schema_obj):
     # --skip-configuration is already going to be deleted eventually, and it is meant to be for
     # experimental purposes to make the deployments faster
 
-    # sorry for being too implicit below, but being exception free is something we don't want free
+    # sorry for being too implicit below, but being exception free is something we don't want
     # as we are assuming those values exist. In case they are gone, then it needs to raise an
     # exception so that we can be aware of
 

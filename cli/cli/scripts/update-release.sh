@@ -244,6 +244,9 @@ do_rollout_docker_compose() {
         echo "$NEW_VERSION isn't deployed previously. Altering the envs."
         clean_generated_env
         replace_images_in_env_files
+        if [[ "$WITH_CONFIGURATION_CHANGES" == "true" ]]; then
+            copy_new_envs
+        fi
         generate_new_env_for_docker
         pull_new_images_for_docker
     fi
@@ -287,6 +290,34 @@ generate_new_env_for_docker() {
         # shellcheck disable=SC1090
         source $ARM_ENV_FILE --source-only
     fi
+
+    ## WITH_CONFIGURATION_CHANGES START ##
+    # here we will override the original env variables from previous release with the new config
+    # a.k.a with new answers from the user
+    if [[ "$WITH_CONFIGURATION_CHANGES" == "true" ]]; then
+        echo "WITH_CONFIGURATION_CHANGES: there are config changes, new env vars will be exposed, the old ones will be overridden"
+
+        local ALL_NEW_ENV_FILES_DIR=$NEW_RELEASE_DIR/docker-compose/new_envs
+        # shellcheck disable=SC2044
+        for env_file in $(find "$ALL_NEW_ENV_FILES_DIR" -name "*.env" -type f); do
+            # Skip .images*.env files
+            if [[ "$env_file" == *".images-arm.env" || "$env_file" == *".images.env" ]]; then
+                echo "Skipping $env_file"
+                # we already processed .images*.env above, here we are only processing config
+                # changes if any
+                continue
+            fi
+
+            echo "env_file is: $env_file"
+            # Check if the file exists (find ensures this, but let's keep it for safety)
+            if [[ -f "$env_file" ]]; then
+                echo "sourcing $env_file"
+                # shellcheck disable=SC1090
+                source "$env_file" --source-only
+            fi
+        done
+    fi
+    ## WITH_CONFIGURATION_CHANGES END ##
 
     # Backwards-compatibility start
     # FIXME later, directly use env vars in .tpl files
