@@ -36,4 +36,4 @@ In this example, we've set a limit of 12 CPUs and 100G for the AI cluster part (
 
 ## Deployment
 
-Once the variables have been adjusted in `.env`, this should provide a minimal working version of the Syntho Application. The command `docker-compose up -d` can be used to spawn the application. After some time, you should be able to go to the application using the following URL: <hostname/ip-of-machine>:3000. If you're accessing the application from the same machine, localhost can be used ([localhost:3000](localhost:3000)).
+Once the variables have been adjusted in `.env`, this should provide a minimal working version of the Syntho Application. The command `docker compose up -d` can be used to spawn the application. After some time, you should be able to go to the application using the following URL: <hostname/ip-of-machine>:3000. If you're accessing the application from the same machine, localhost can be used ([localhost:3000](localhost:3000)).
