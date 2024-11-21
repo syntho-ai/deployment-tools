@@ -1,0 +1,17 @@
+{{- if .Values.backend.podDisruptionBudget -}}
+{{ if $.Capabilities.APIVersions.Has "policy/v1/PodDisruptionBudget" -}}
+apiVersion: policy/v1
+{{- else -}}
+apiVersion: policy/v1beta1
+{{- end }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ .Values.backend.name }}
+  labels:
+    {{- include "syntho-core.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.backend.name }}
+{{ toYaml .Values.backend.podDisruptionBudget | indent 2 }}
+{{- end -}}

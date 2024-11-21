@@ -31,6 +31,8 @@ core:
     db: 1
   ray_address: ray-cluster-head-svc.syntho.svc.cluster.local
   workers: 1
+  # Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+  podDisruptionBudget: {}
 
 backend:
   replicaCount: 1
@@ -60,6 +62,8 @@ backend:
     email: {{ UI_LOGIN_EMAIL }}
   volumes: []
   volumeMounts: []
+  # Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+  podDisruptionBudget: {}
 
 frontend:
   replicaCount: 1
@@ -97,6 +101,8 @@ frontend:
           - {{ DOMAIN }}
           secretName: frontend-tls
       enabled: {{ TLS_ENABLED }}
+  # Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+  podDisruptionBudget: {}
 
 db:
   image:
@@ -104,6 +110,8 @@ db:
     tag: {{ POSTGRES_IMG_TAG }}
   storageClassName: "{{ STORAGE_CLASS_NAME }}"
   pvLabelKey: "{{ PV_LABEL_KEY }}"
+  # Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+  podDisruptionBudget: {}
 
 redis:
   replicaCount: 1
@@ -112,6 +120,8 @@ redis:
     tag: {{ REDIS_IMG_TAG }}
   storageClassName: "{{ STORAGE_CLASS_NAME }}"
   pvLabelKey: "{{ PV_LABEL_KEY }}"
+  # Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+  podDisruptionBudget: {}
 
 imagePullSecrets:
   - name: {{ IMAGE_PULL_SECRET }}
