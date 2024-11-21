@@ -1,9 +1,12 @@
-name: Bump version
+name: Bump CLI version
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'cli/cli/**'
+      - 'cli/poetry/lock'
 
 jobs:
   bump-version:
