@@ -18,7 +18,9 @@ from cli.utilities.prepull_images import generate_prepull_images_dir
 from cli.utils import (
     CleanUpLevel,
     DeploymentResult,
+    UpdateStrategy,
     get_deployments_dir,
+    get_new_release_rollout_strategy,
     run_script,
     thread_safe,
     with_working_directory,
@@ -476,6 +478,8 @@ def configuration_questions(
     if skip_configuration:
         skipped_text = click.style("[SKIPPED]", bg="yellow", fg="white", bold=True)
         click.echo(f"Step 3: Configuration; {skipped_text}")
+        default_answers = make_default_answers_when_skipped_configuration(question_schema_obj)
+        all_envs[".answers.env"] = default_answers
     else:
         click.echo("Step 3: Configuration;")
 
@@ -497,6 +501,51 @@ def configuration_questions(
         set_state(deployment_id, deployments_dir, DeploymentStatus.PRE_DEPLOYMENT_OPERATIONS_FAILED)
 
     return result.succeeded
+
+
+def make_default_answers_when_skipped_configuration(question_schema_obj):
+    ### This section is for backwards-compatibility - START ###
+
+    # below env vars are differ as their default value when they are asked vs when the conf is
+    # skipped, so we are actually overriding the answers, as if the answers are like below.
+    # --skip-configuration is already going to be deleted eventually, and it is meant to be for
+    # experimental purposes to make the deployments faster
+
+    # sorry for being too implicit below, but being exception free is something we don't want
+    # as we are assuming those values exist. In case they are gone, then it needs to raise an
+    # exception so that we can be aware of
+
+    resources_env_when_skipped = list(
+        filter(lambda e: e.scope.value == ".resources.env", question_schema_obj.envs_configuration)
+    )[0]
+
+    ray_cpus = list(filter(lambda e: e.name == "RAY_CPUS", resources_env_when_skipped.envs))[0].default
+    ray_memory = list(filter(lambda e: e.name == "RAY_MEMORY", resources_env_when_skipped.envs))[0].default.replace(
+        "G", ""
+    )
+
+    overrides = {
+        "RAY_HEAD_CPU_LIMIT": {"name": "RAY_HEAD_CPU_LIMIT", "value": ray_cpus},
+        "RAY_HEAD_MEMORY_LIMIT": {"name": "RAY_HEAD_MEMORY_LIMIT", "value": ray_memory},
+    }
+
+    ### This section is for backwards-compatibility - END ###
+
+    questions = question_schema_obj.questions
+    answers = []
+    for question in questions:
+        override = overrides.get(question.var)
+        if not override:
+            answers.append(
+                {
+                    "name": question.var,
+                    "value": question.default,
+                }
+            )
+        else:
+            answers.append(override)
+
+    return answers
 
 
 def download_syntho_charts_release(scripts_dir: str, deployment_id: str) -> bool:
@@ -566,12 +615,25 @@ def update_dc_deployment(
             deployment_status=None,
         )
 
-    is_success = update_release(scripts_dir, deployment_id, initial_version, current_version, new_version)
+    update_strategy = get_new_release_rollout_strategy(
+        deployment_dir, initial_version, current_version, new_version, "dc"
+    )
+    if update_strategy == UpdateStrategy.UNKNOWN:
+        return DeploymentResult(
+            succeeded=False,
+            deployment_id=deployment_id,
+            error=("Unsupported update strategy. Please reach out to support@syntho.ai for further support."),
+            deployment_status=None,
+        )
+
+    is_success = update_release(
+        scripts_dir, deployment_id, initial_version, current_version, new_version, update_strategy
+    )
     if not is_success:
         return DeploymentResult(
             succeeded=False,
             deployment_id=deployment_id,
-            error=("Updating release has been failed. " "Please reach out to support@syntho.ai for further support."),
+            error=("Updating release has been failed. Please reach out to support@syntho.ai for further support."),
             deployment_status=None,
         )
 
@@ -606,25 +668,87 @@ def compatibility_check(scripts_dir: str, deployment_id: str, current_version: s
 
 
 def update_release(
-    scripts_dir: str, deployment_id: str, initial_version: str, current_version: str, new_version: str
+    scripts_dir: str,
+    deployment_id: str,
+    initial_version: str,
+    current_version: str,
+    new_version: str,
+    update_strategy: UpdateStrategy,
 ) -> bool:
-    click.echo("Step 2: Rolling out new release;")
+    # initial step was 1
+    step = 1
+
     deployments_dir = f"{scripts_dir}/deployments"
     deployment_dir = f"{deployments_dir}/{deployment_id}"
+
+    if update_strategy == UpdateStrategy.WITH_CONFIGURATION_CHANGES:
+        step += 1
+        click.echo(f"Step {step}: (Changes Detected) Configuration;")
+        succeeded = reask_configuration_questions(deployment_id, deployment_dir, current_version, new_version)
+        if not succeeded:
+            return False
+
+    step += 1
+
+    click.echo(f"Step {step}: Rolling out new release;")
 
     result = run_script(
         scripts_dir,
         deployment_dir,
-        "update-release.sh",
+        update_strategy.script(),
         **{
             "DEPLOYMENT_TOOLING": "docker-compose",
-            "INITIAL_VERSION": initial_version,
             "CURRENT_VERSION": current_version,
             "NEW_VERSION": new_version,
+            **update_strategy.extra_params(),
         },
     )
 
     return result.succeeded
+
+
+def reask_configuration_questions(
+    deployment_id: str, deployment_dir: str, current_version: str, new_version: str
+) -> bool:
+    previous_answers = make_previous_answers_kv_map(deployment_dir, current_version)
+
+    new_configuration_questions_yaml_location = (
+        f"{deployment_dir}/temp-compatibility-check/syntho-{new_version}/dynamic-configuration/src/dc_questions.yaml"
+    )
+
+    with open(new_configuration_questions_yaml_location, "r") as f:
+        new_questions_config = yaml.safe_load(f)
+
+    new_question_schema_obj = parse_obj_as(QuestionSchema, new_questions_config)
+    new_all_envs = make_envs(new_question_schema_obj.envs_configuration)
+
+    new_all_envs, interrupted = proceed_with_questions(
+        deployment_dir,
+        new_all_envs,
+        new_question_schema_obj.questions,
+        new_question_schema_obj.entrypoint,
+        with_previous_answers=previous_answers,
+    )
+    if interrupted:
+        return False
+
+    temp_deployment_dir = f"{deployment_dir}/temp-compatibility-check/syntho-{new_version}/docker-compose/new_envs"
+    os.makedirs(temp_deployment_dir, exist_ok=True)
+    dump_envs(new_all_envs, temp_deployment_dir)
+    return True
+
+
+def make_previous_answers_kv_map(deployment_dir: str, current_version: str):
+    previous_answers_env_path = f"{deployment_dir}/syntho-charts-{current_version}/docker-compose/envs/.answers.env"
+    env_var_map = {}
+
+    with open(previous_answers_env_path, "r") as f:
+        for line in f:
+            line = line.strip()
+            key, value = line.split("=", 1)
+            env_var_map[key.strip()] = value.strip()
+
+    return env_var_map
 
 
 def set_version(deployment_id: str, deployments_dir: str, new_version: str):
