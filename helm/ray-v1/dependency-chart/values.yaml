@@ -4,6 +4,9 @@ kuberay-operator:
     tag: v1.2.2
     pullPolicy: IfNotPresent
 
+  imagePullSecrets:
+    - name: syntho-cr-secret
+
   nameOverride: "kuberay-operator"
   fullnameOverride: "kuberay-operator"
 
@@ -179,7 +182,7 @@ ray-cluster:
   fullnameOverride: "ray-cluster"
 
   imagePullSecrets:
-    - name: acr-auth
+    - name: syntho-cr-secret
 
   # common defined values shared between the head and worker
   common:

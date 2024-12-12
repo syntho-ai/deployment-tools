@@ -3,6 +3,8 @@ kuberay-operator:
     repository: {{ RAY_OPERATOR_IMG_REPO }}
     tag: {{ RAY_OPERATOR_IMG_TAG }}
     pullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: {{ IMAGE_PULL_SECRET }}
 
   nameOverride: "kuberay-operator"
   fullnameOverride: "kuberay-operator"
