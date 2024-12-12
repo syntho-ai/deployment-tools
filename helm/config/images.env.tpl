@@ -1,5 +1,5 @@
 IMAGE_REGISTRY_SERVER=syntho.azurecr.io
-RAY_OPERATOR_IMG_REPO=syntho.azurecr.io/syntho-ray-operator
+RAY_OPERATOR_IMG_REPO=syntho.azurecr.io/kuberay-operator
 RAY_OPERATOR_IMG_TAG=latest
 RAY_IMAGE_IMG_REPO=syntho.azurecr.io/syntho-ray
 RAY_IMAGE_IMG_TAG={{ SYNTHO_STACK_VERSION }}-cpu
