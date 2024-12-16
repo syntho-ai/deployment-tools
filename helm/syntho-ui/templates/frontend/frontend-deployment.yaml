@@ -84,11 +84,16 @@ spec:
           readinessProbe:
             tcpSocket:
               port: 3000
-            initialDelaySeconds: 240
-            timeoutSeconds: 30
-            periodSeconds: 60
-            failureThreshold: 3
-            successThreshold: 1
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          # livenessProbe:
+          #   httpGet:
+          #     path: /login
+          #     port: frontend-port
+          #   initialDelaySeconds: 50
+          #   timeoutSeconds: 10
+          #   periodSeconds: 10
+          #   failureThreshold: 1
           imagePullPolicy: Always
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
