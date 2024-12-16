@@ -1,6 +1,7 @@
 import os
 import sys
 from importlib import metadata
+from pathlib import Path
 from typing import Optional
 
 import click
@@ -13,6 +14,7 @@ from cli.releases import get_releases
 from cli.utilities import offline_ops as offline_ops_manager
 from cli.utilities import prepull_images as prepull_images_manager
 
+home = Path.home()
 syntho_cli_dir = os.path.dirname(os.path.abspath(__file__))
 scripts_dir = os.path.join(syntho_cli_dir, "scripts")
 
@@ -241,13 +243,20 @@ def list_releases():
 
 
 @k8s.command(name="deployment", help="Deploys the Syntho Stack into the given cluster")
-@click.option("--license-key", type=str, help="Specify the License Key that is provided by Syntho team", required=True)
+@click.option(
+    "--license-key",
+    type=str,
+    help="Specify the License Key that is provided by Syntho team",
+    required=True,
+    envvar="LICENSE_KEY",
+)
 @click.option(
     "--registry-user",
     type=str,
     help="Specify the docker image registry user that is provided by Syntho team",
     required=False,
     default="u",
+    envvar="REGISTRY_USER",
 )
 @click.option(
     "--registry-pwd",
@@ -255,6 +264,7 @@ def list_releases():
     help="Specify the docker image registry password that is provided by Syntho team",
     required=False,
     default="p",
+    envvar="REGISTRY_PWD",
 )
 @click.option(
     "--kubeconfig",
@@ -264,7 +274,8 @@ def list_releases():
         " stack will be deployed into. It can be both kubeconfig content, or a file path that"
         " points to a valid kubconfig content file"
     ),
-    required=True,
+    required=False,
+    default=f"{home}/.kube/config",
     callback=validate_kubeconfig,
 )
 @click.option("--version", type=str, help=("Specify a version for Syntho stack."), required=True)
