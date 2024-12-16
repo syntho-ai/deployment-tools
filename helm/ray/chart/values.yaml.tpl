@@ -222,7 +222,7 @@ ray-cluster:
     # Note: From KubeRay v0.6.0, users need to create the ServiceAccount by themselves if they specify the `serviceAccountName`
     # in the headGroupSpec. See https://github.com/ray-project/kuberay/pull/1128 for more details.
     serviceAccountName: ""
-    initContainer: []
+    initContainers: []
       # - name: init-busybox
       #   command: ["chmod", "-R", "777", "/tmp/ray-workflows", "/tmp/ray-data"]
       #   securityContext: {}
@@ -362,15 +362,18 @@ ray-cluster:
       - name: ray-data
         persistentVolumeClaim:
           claimName: ray-data-claim
-    volumeMounts:# - name: init-busybox
-      #   command: ["chmod", "-R", "777", "/tmp/ray-workflows", "/tmp/ray-data"]
-      #   securityContext: {}
-      #   image: busybox:1.28
-      #   volumeMounts:
-      #     - mountPath: /tmp/ray-workflows
-      #       name: ray-workflows
-      #     - mountPath: /tmp/ray-data
-      #       name: ray-data
+    volumeMounts:
+      - mountPath: /tmp/ray
+        name: log-volume
+      - mountPath: /tmp/ray-workflows
+        name: ray-workflows
+      - mountPath: /tmp/ray-data
+        name: ray-data
+    # sidecarContainers specifies additional containers to attach to the Ray pod.
+    # Follows standard K8s container spec.
+    sidecarContainers: []
+    # See docs/guidance/pod-command.md for more details about how to specify
+    # container command for worker Pod.
     command: []
     args: []
 
