@@ -249,22 +249,23 @@ users:
             result.output.strip(), self.expected_output_template_for_missing_param.format(missing=missing).strip()
         )
 
-    def test_deployment_without_kubeconfig(self):
-        result = self.runner.invoke(
-            syntho_cli.k8s_deployment,
-            [
-                "--license-key",
-                "my-license-key",
-                "--registry-user",
-                "syntho-user",
-                "--registry-pwd",
-                "syntho-pwd",
-                "--version",
-                "1.0.0",
-            ],
-        )
-
-        self.assert_missing_param(result, "kubeconfig")
+    # TODO: Remove test as default for kubeconfig has been setup (home/<user>/.kube/config)
+    # def test_deployment_without_kubeconfig(self):
+    #     result = self.runner.invoke(
+    #         syntho_cli.k8s_deployment,
+    #         [
+    #             "--license-key",
+    #             "my-license-key",
+    #             "--registry-user",
+    #             "syntho-user",
+    #             "--registry-pwd",
+    #             "syntho-pwd",
+    #             "--version",
+    #             "1.0.0",
+    #         ],
+    #     )
+    #     print(result.output.strip())
+    #     self.assert_missing_param(result, "kubeconfig")
 
     def test_deployment_without_license_key(self):
         result = self.runner.invoke(
