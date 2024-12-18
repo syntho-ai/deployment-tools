@@ -79,7 +79,7 @@ spec:
               - {{ . }}
             {{ end }}
           name: {{ .Values.core.name }}-worker
-          imagePullPolicy: Always
+          imagePullPolicy: {{ .Values.core.imagePullPolicy | default "IfNotPresent"}}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           resources:

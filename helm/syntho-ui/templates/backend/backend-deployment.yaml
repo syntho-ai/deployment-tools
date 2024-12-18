@@ -90,7 +90,7 @@ spec:
           name: {{ .Values.backend.name }}
           ports:
             - containerPort: {{ .Values.backend.port }}
-          imagePullPolicy: Always
+          imagePullPolicy: {{ .Values.backend.imagePullPolicy | default "IfNotPresent"}}
           resources:
             limits:
               cpu: "1000m"
@@ -224,7 +224,7 @@ spec:
         image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
         command: ["python"]
         args: ["manage.py", "subscriber"]
-        imagePullPolicy: Always
+        imagePullPolicy: {{ .Values.backend.imagePullPolicy | default "IfNotPresent"}}
         resources:
             limits:
               cpu: "1000m"

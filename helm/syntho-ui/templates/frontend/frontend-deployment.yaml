@@ -94,7 +94,7 @@ spec:
           #   timeoutSeconds: 10
           #   periodSeconds: 10
           #   failureThreshold: 1
-          imagePullPolicy: Always
+          imagePullPolicy: {{ .Values.frontend.imagePullPolicy | default "IfNotPresent"}}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
