@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest import TestCase, mock
 
 import yaml
@@ -250,22 +251,25 @@ users:
         )
 
     # TODO: Remove test as default for kubeconfig has been setup (home/<user>/.kube/config)
-    # def test_deployment_without_kubeconfig(self):
-    #     result = self.runner.invoke(
-    #         syntho_cli.k8s_deployment,
-    #         [
-    #             "--license-key",
-    #             "my-license-key",
-    #             "--registry-user",
-    #             "syntho-user",
-    #             "--registry-pwd",
-    #             "syntho-pwd",
-    #             "--version",
-    #             "1.0.0",
-    #         ],
-    #     )
-    #     print(result.output.strip())
-    #     self.assert_missing_param(result, "kubeconfig")
+    def test_deployment_without_kubeconfig(self):
+        result = self.runner.invoke(
+            syntho_cli.k8s_deployment,
+            [
+                "--license-key",
+                "my-license-key",
+                "--registry-user",
+                "syntho-user",
+                "--registry-pwd",
+                "syntho-pwd",
+            ],
+        )
+        home_folder = Path.home()
+        kubeconfig = Path(f"{home_folder}/.kube/config")
+        print(result.output)
+        if kubeconfig.is_file():
+            self.assert_missing_param(result, "version")
+        else:
+            self.assert_missing_param(result, "kubeconfig")
 
     def test_deployment_without_license_key(self):
         result = self.runner.invoke(
@@ -298,7 +302,7 @@ users:
                 self.sample_kubeconfig_content,
             ],
         )
-
+        print(result.output)
         self.assert_missing_param(result, "version")
 
     def test_deployment_without_registry_user(self):
