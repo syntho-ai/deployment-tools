@@ -86,15 +86,7 @@ spec:
               port: 3000
             initialDelaySeconds: 60
             periodSeconds: 10
-          # livenessProbe:
-          #   httpGet:
-          #     path: /login
-          #     port: frontend-port
-          #   initialDelaySeconds: 50
-          #   timeoutSeconds: 10
-          #   periodSeconds: 10
-          #   failureThreshold: 1
-          imagePullPolicy: {{ .Values.frontend.imagePullPolicy | default "IfNotPresent"}}
+          imagePullPolicy: {{ .Values.frontend.imagePullPolicy | default "IfNotPresent" }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

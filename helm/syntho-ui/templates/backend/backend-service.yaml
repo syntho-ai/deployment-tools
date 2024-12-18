@@ -17,5 +17,3 @@ spec:
       targetPort: {{ .Values.backend.service.port }}
   selector:
     app: {{ .Values.backend.name }}
-status:
-  loadBalancer: {}

@@ -4,18 +4,19 @@ kind: Deployment
 metadata:
   name: postgres
   labels:
-    io.kompose.service: postgres
+    {{- include "syntho-core.labels" . | nindent 4 }}
+    app: postgres
 spec:
   replicas: 1
   selector:
     matchLabels:
-      io.kompose.service: postgres
+      app: postgres
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        io.kompose.service: postgres
+        app: postgres
     spec:
       containers:
         - env:
@@ -28,6 +29,7 @@ spec:
           image: "{{ .Values.db.image.repository }}:{{ .Values.db.image.tag }}"
           name: postgres
           resources: {}
+          imagePullPolicy: {{ .Values.db.image.imagePullPolicy | default "IfNotPresent" }}
           ports:
             - containerPort: 5432
           volumeMounts:
@@ -38,14 +40,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      restartPolicy: Always
-      volumes:
-        - name: database-data-1
-          persistentVolumeClaim:
-            claimName: database-data-1
-      {{- if .Values.nodeSelector }}
-      nodeSelector: {{- .Values.nodeSelector | toYaml | nindent 8 }}
-      {{- end }}
+      restartPolicy: Always{{- include "syntho-core.labels" . | nindent 4 }}
       {{- if .Values.tolerations }}
       tolerations: {{- .Values.tolerations | toYaml | nindent 8 }}
       {{- end }}
