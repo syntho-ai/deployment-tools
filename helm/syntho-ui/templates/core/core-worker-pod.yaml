@@ -92,8 +92,8 @@ spec:
               ephemeral-storage: "3Gi"
               memory: "750Mi"
           readinessProbe:
-            initialDelaySeconds: 120
-            periodSeconds: 30
+            initialDelaySeconds: 50
+            periodSeconds: 10
             timeoutSeconds: 10
             exec:
               command:
@@ -101,8 +101,8 @@ spec:
               - "-c"
               - "celery -b redis://{{ .Values.core.redis.host}}:{{ .Values.core.redis.port }}/{{ .Values.core.redis.db }} inspect ping -d celery@$HOSTNAME"
           livenessProbe:
-            initialDelaySeconds: 90
-            periodSeconds: 30
+            initialDelaySeconds: 60
+            periodSeconds: 10
             timeoutSeconds: 10
             exec:
               command:

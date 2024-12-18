@@ -107,9 +107,9 @@ spec:
               httpHeaders:
               - name: Host
                 value: {{ .Values.frontend_url }}
-            initialDelaySeconds: 120
-            timeoutSeconds: 30
-            periodSeconds: 30
+            initialDelaySeconds: 50
+            timeoutSeconds: 10
+            periodSeconds: 10
             failureThreshold: 3
             successThreshold: 1
           livenessProbe:
@@ -119,9 +119,9 @@ spec:
               httpHeaders:
               - name: Host
                 value: {{ .Values.frontend_url }}
-            initialDelaySeconds: 240
-            timeoutSeconds: 30
-            periodSeconds: 30
+            initialDelaySeconds: 60
+            timeoutSeconds: 10
+            periodSeconds: 10
             failureThreshold: 3
             successThreshold: 1
       {{- with .Values.imagePullSecrets }}
