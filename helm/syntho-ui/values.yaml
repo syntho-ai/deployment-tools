@@ -113,7 +113,7 @@ frontend:
 db:
   image:
     repository: syntho.azurecr.io/postgres
-    tag: latest
+    tag: 14-bookworm
   storageClassName: "default"
   pvLabelKey: ""
   # Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
