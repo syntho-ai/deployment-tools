@@ -4,12 +4,12 @@ kind: Service
 metadata:
   name: postgres
   labels:
-    name: postgres
+    app: postgres
 spec:
   ports:
     - name: "5432"
       port: 5432
       targetPort: 5432
   selector:
-    name: postgres
+    app: postgres
 {{- end }}

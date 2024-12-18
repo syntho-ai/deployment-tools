@@ -40,7 +40,14 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      restartPolicy: Always{{- include "syntho-core.labels" . | nindent 4 }}
+      restartPolicy: Always
+      volumes:
+        - name: database-data-1
+          persistentVolumeClaim:
+            claimName: database-data-1
+      {{- if .Values.nodeSelector }}
+      nodeSelector: {{- .Values.nodeSelector | toYaml | nindent 8 }}
+      {{- end }}
       {{- if .Values.tolerations }}
       tolerations: {{- .Values.tolerations | toYaml | nindent 8 }}
       {{- end }}
