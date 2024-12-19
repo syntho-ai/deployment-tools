@@ -223,16 +223,16 @@ ray-cluster:
     # Note: From KubeRay v0.6.0, users need to create the ServiceAccount by themselves if they specify the `serviceAccountName`
     # in the headGroupSpec. See https://github.com/ray-project/kuberay/pull/1128 for more details.
     serviceAccountName: ""
-    initContainers: []
-      # - name: init-busybox
-      #   command: ["chmod", "-R", "777", "/tmp/ray-workflows", "/tmp/ray-data"]
-      #   securityContext: {}
-      #   image: busybox:1.28
-      #   volumeMounts:
-      #     - mountPath: /tmp/ray-workflows
-      #       name: ray-workflows
-      #     - mountPath: /tmp/ray-data
-      #       name: ray-data
+    initContainers:
+      - name: init-busybox
+        command: ["chmod", "-R", "777", "/tmp/ray-workflows", "/tmp/ray-data"]
+        securityContext: {}
+        image: busybox:1.28
+        volumeMounts:
+          - mountPath: /tmp/ray-workflows
+            name: ray-workflows
+          - mountPath: /tmp/ray-data
+            name: ray-data
     restartPolicy: ""
     rayStartParams:
       dashboard-host: '0.0.0.0'
