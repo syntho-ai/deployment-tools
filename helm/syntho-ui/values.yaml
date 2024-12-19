@@ -69,7 +69,7 @@ backend:
   # Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
   podDisruptionBudget: {}
   env:
-    SECURE_COOKIES: True
+    SECURE_COOKIES: "true"
 
 frontend:
   replicaCount: 1
