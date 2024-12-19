@@ -4,15 +4,12 @@ kind: Service
 metadata:
   name: postgres
   labels:
-    io.kompose.service: postgres
-  name: postgres
+    app: postgres
 spec:
   ports:
     - name: "5432"
       port: 5432
       targetPort: 5432
   selector:
-    io.kompose.service: postgres
-status:
-  loadBalancer: {}
+    app: postgres
 {{- end }}

@@ -29,7 +29,7 @@ core:
     host: redis-svc
     port: 6379
     db: 1
-  ray_address: ray-cluster-head-svc.syntho.svc.cluster.local
+  ray_address: ray-cluster-head-svc
   workers: 1
   # Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
   podDisruptionBudget: {}
@@ -64,6 +64,8 @@ backend:
   volumeMounts: []
   # Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
   podDisruptionBudget: {}
+  env:
+    SECURE_COOKIES: {{ TLS_ENABLED }}
 
 frontend:
   replicaCount: 1

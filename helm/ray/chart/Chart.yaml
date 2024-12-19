@@ -1,11 +1,13 @@
 apiVersion: v2
 description: A Helm chart for Kubernetes ray operator and cluster
-name: ray-cluster
-version: 1.13.0
+name: ray
+version: 1.14.0
 icon: https://github.com/ray-project/ray/raw/master/doc/source/images/ray_header_logo.png
 type: application
-maintainers:
-  - name: Syntho B.V.
-    email: info@syntho.ai
-  - name: Younes Moustaghfir
-    email: younes@syntho.ai
+dependencies:
+- name: kuberay-operator
+  version: "1.2.2"
+  repository: "@kuberay"
+- name: ray-cluster
+  version: "1.2.2"
+  repository: "@kuberay"

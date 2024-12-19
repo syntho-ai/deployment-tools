@@ -19,6 +19,7 @@ spec:
       initContainers:
       - name: init-redis
         image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+        imagePullPolicy: {{ .Values.redis.image.imagePullPolicy | default "IfNotPresent" }}
         command:
         - bash
         - "-c"
@@ -41,6 +42,7 @@ spec:
       containers:
       - name: redis
         image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+        imagePullPolicy: {{ .Values.redis.image.imagePullPolicy | default "IfNotPresent" }}
         ports:
         - containerPort: 6379
           name: redis

@@ -72,7 +72,7 @@ spec:
             {{- toYaml .Values.core.volumeMounts | default "" | nindent 12 }}
           ports:
             - containerPort: {{ .Values.core.port }}
-          imagePullPolicy: Always
+          imagePullPolicy: {{ .Values.core.imagePullPolicy | default "IfNotPresent"}}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           resources:
@@ -88,16 +88,16 @@ spec:
             httpGet:
               path: /api/v1/status
               port: {{ .Values.core.port }}
-            initialDelaySeconds: 120
-            periodSeconds: 30
+            initialDelaySeconds: 50
+            periodSeconds: 10
             successThreshold: 1
             failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /api/v1/status
               port: {{ .Values.core.port }}
-            initialDelaySeconds: 240
-            periodSeconds: 30
+            initialDelaySeconds: 60
+            periodSeconds: 10
             successThreshold: 1
             failureThreshold: 3
       {{- with .Values.imagePullSecrets }}

@@ -1,0 +1,9 @@
+dependencies:
+- name: kuberay-operator
+  repository: https://ray-project.github.io/kuberay-helm/
+  version: 1.2.2
+- name: ray-cluster
+  repository: https://ray-project.github.io/kuberay-helm/
+  version: 1.2.2
+digest: sha256:c5873ef78fcfdcbba500c18b01e270caff261783e6ee61e7f4be9181db0a42ce
+generated: "2024-12-05T15:56:36.670714398+01:00"
