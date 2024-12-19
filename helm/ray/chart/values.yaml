@@ -1,6 +1,6 @@
 kuberay-operator:
   image:
-    repository: quay.io/kuberay/operator
+    repository: syntho.azurecr.io/kuberay-operator
     tag: v1.2.2
     pullPolicy: IfNotPresent
 
