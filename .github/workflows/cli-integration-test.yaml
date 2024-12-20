@@ -31,7 +31,7 @@ jobs:
       working-directory: ./cli/tests/integration/
       env:
         CLUSTER_NAME: integration-tests
-        VERSION: 1.28.0
+        VERSION: 1.43.0
         LICENSE_KEY: ${{ secrets.LICENSE_KEY }}
         REGISTRY_USER: ${{ secrets.REGISTRY_USER }}
         REGISTRY_PWD: ${{ secrets.REGISTRY_PWD }}

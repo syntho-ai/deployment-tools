@@ -90,7 +90,7 @@ spec:
           name: {{ .Values.backend.name }}
           ports:
             - containerPort: {{ .Values.backend.port }}
-          imagePullPolicy: Always
+          imagePullPolicy: {{ .Values.backend.imagePullPolicy | default "IfNotPresent"}}
           resources:
             limits:
               cpu: "1000m"
@@ -107,9 +107,9 @@ spec:
               httpHeaders:
               - name: Host
                 value: {{ .Values.frontend_url }}
-            initialDelaySeconds: 120
-            timeoutSeconds: 30
-            periodSeconds: 30
+            initialDelaySeconds: 50
+            timeoutSeconds: 10
+            periodSeconds: 10
             failureThreshold: 3
             successThreshold: 1
           livenessProbe:
@@ -119,9 +119,9 @@ spec:
               httpHeaders:
               - name: Host
                 value: {{ .Values.frontend_url }}
-            initialDelaySeconds: 240
-            timeoutSeconds: 30
-            periodSeconds: 30
+            initialDelaySeconds: 60
+            timeoutSeconds: 10
+            periodSeconds: 10
             failureThreshold: 3
             successThreshold: 1
       {{- with .Values.imagePullSecrets }}
@@ -224,7 +224,7 @@ spec:
         image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
         command: ["python"]
         args: ["manage.py", "subscriber"]
-        imagePullPolicy: Always
+        imagePullPolicy: {{ .Values.backend.imagePullPolicy | default "IfNotPresent"}}
         resources:
             limits:
               cpu: "1000m"

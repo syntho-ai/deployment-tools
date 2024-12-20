@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest import TestCase, mock
 
 import yaml
@@ -195,6 +196,13 @@ class TestK8sStartDeploymentValidationErrors(TestCase):
     def setUp(self):
         self.runner = CliRunner()
 
+        self.expected_output_incorrect_kubeconfig = """
+Usage: deployment [OPTIONS]
+Try 'deployment --help' for help.
+
+Error: Invalid value for '--kubeconfig': KUBECONFIG is neither a valid YAML string nor a path to a valid YAML file: {home}/.kube/config
+        """  # noqa: E501
+
         self.expected_output_template_for_missing_param = """
 Usage: deployment [OPTIONS]
 Try 'deployment --help' for help.
@@ -249,6 +257,11 @@ users:
             result.output.strip(), self.expected_output_template_for_missing_param.format(missing=missing).strip()
         )
 
+    def assert_missing_kubeconfig(self, result, home):
+        self.assertEqual(result.exit_code, 2)
+        self.assertEqual(result.output.strip(), self.expected_output_incorrect_kubeconfig.format(home=home).strip())
+
+    # TODO: Remove test as default for kubeconfig has been setup (home/<user>/.kube/config)
     def test_deployment_without_kubeconfig(self):
         result = self.runner.invoke(
             syntho_cli.k8s_deployment,
@@ -259,12 +272,14 @@ users:
                 "syntho-user",
                 "--registry-pwd",
                 "syntho-pwd",
-                "--version",
-                "1.0.0",
             ],
         )
-
-        self.assert_missing_param(result, "kubeconfig")
+        home_folder = Path.home()
+        kubeconfig = Path(f"{home_folder}/.kube/config")
+        if kubeconfig.is_file():
+            self.assert_missing_param(result, "version")
+        else:
+            self.assert_missing_kubeconfig(result, home_folder)
 
     def test_deployment_without_license_key(self):
         result = self.runner.invoke(
@@ -297,7 +312,7 @@ users:
                 self.sample_kubeconfig_content,
             ],
         )
-
+        print(result.output)
         self.assert_missing_param(result, "version")
 
     def test_deployment_without_registry_user(self):

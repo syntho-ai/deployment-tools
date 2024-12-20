@@ -4,22 +4,19 @@ kind: Deployment
 metadata:
   name: database
   labels:
-    io.kompose.service: database
+    {{- include "syntho-core.labels" . | nindent 4 }}
+    app: database
 spec:
   replicas: 1
   selector:
     matchLabels:
-      io.kompose.service: database
+      app: database
   strategy:
     type: Recreate
   template:
     metadata:
-      annotations:
-        kompose.cmd: kompose convert -f azure-docker-compose.yaml
-        kompose.version: 1.26.0 (40646f47)
-      creationTimestamp: null
       labels:
-        io.kompose.service: database
+        app: database
     spec:
       containers:
         - env:
@@ -34,6 +31,7 @@ spec:
           ports:
             - containerPort: 5432
           resources: {}
+          imagePullPolicy: {{ .Values.db.image.imagePullPolicy | default "IfNotPresent" }}
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
               name: database-data-2

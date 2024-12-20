@@ -114,8 +114,8 @@ PV_LABEL_KEY="$PV_LABEL_KEY"
 
 
 generate_ray_values() {
-    local TEMPLATE_FILE="$CHARTS_DIR/ray/values.yaml.tpl"
-    local OUTPUT_FILE="$CHARTS_DIR/ray/values-generated.yaml"
+    local TEMPLATE_FILE="$CHARTS_DIR/ray/chart/values.yaml.tpl"
+    local OUTPUT_FILE="$CHARTS_DIR/ray/chart/values-generated.yaml"
 
     # Create a copy of the template file to work with
     cp "$TEMPLATE_FILE" "$OUTPUT_FILE"
@@ -135,8 +135,8 @@ generate_ray_values() {
 }
 
 deploy_ray() {
-    local VALUES_YAML="$CHARTS_DIR/ray/values-generated.yaml"
-    local RAY_CHARTS="$CHARTS_DIR/ray"
+    local VALUES_YAML="$CHARTS_DIR/ray/chart/values-generated.yaml"
+    local RAY_CHARTS="$CHARTS_DIR/ray/chart"
 
 
     if [[ "$DRY_RUN" == "true" ]]; then

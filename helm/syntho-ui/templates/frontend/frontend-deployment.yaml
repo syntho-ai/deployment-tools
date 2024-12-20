@@ -84,12 +84,9 @@ spec:
           readinessProbe:
             tcpSocket:
               port: 3000
-            initialDelaySeconds: 240
-            timeoutSeconds: 30
-            periodSeconds: 60
-            failureThreshold: 3
-            successThreshold: 1
-          imagePullPolicy: Always
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          imagePullPolicy: {{ .Values.frontend.imagePullPolicy | default "IfNotPresent" }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

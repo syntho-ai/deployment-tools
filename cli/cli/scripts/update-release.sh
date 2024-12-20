@@ -71,7 +71,7 @@ do_rollout_kubernetes() {
 }
 
 replace_versions_in_values_yaml() {
-    local RAY_DIR="${NEW_RELEASE_DIR}/helm/ray"
+    local RAY_DIR="${NEW_RELEASE_DIR}/helm/ray/chart"
     local RAY_VALUES_PATH="${RAY_DIR}/values-generated.yaml"
     if [ ! -e "$RAY_DIR/values-generated.yaml.bak" ]; then
         echo "it is the first time ray-cluster is being updated for version $NEW_VERSION"
@@ -91,7 +91,7 @@ replace_versions_in_values_yaml() {
 }
 
 helm_upgrade() {
-    local RAY_CHARTS_DIR="${NEW_RELEASE_DIR}/helm/ray"
+    local RAY_CHARTS_DIR="${NEW_RELEASE_DIR}/helm/ray/chart"
     local RAY_VALUES_YAML="${RAY_CHARTS_DIR}/values-generated.yaml"
     helm --kubeconfig $KUBECONFIG upgrade ray-cluster $RAY_CHARTS_DIR --values $RAY_VALUES_YAML --namespace syntho --wait --timeout 10m
 
