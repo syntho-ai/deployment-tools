@@ -37,18 +37,6 @@ spec:
               value: {{quote .Values.frontend.mode | default "production"}}
             - name: PORT
               value: {{quote .Values.frontend.port}}
-            - name: OPEN_API_URL
-              value: {{ .Values.backend.name }}.{{ .Release.Namespace }}.svc.cluster.local/api/playground/?format=openapi
-            - name: NEXT_PUBLIC_BACKEND_HOST
-              value: {{ .Values.backend.name }}.{{ .Release.Namespace }}.svc.cluster.local
-            - name: NEXT_PUBLIC_BACKEND_PROTOCOL
-              value: http
-            - name: NEXT_PUBLIC_BACKEND_WS_PROTOCOL
-              value: wss
-            - name: NEXT_PUBLIC_FRONTEND_HOST
-              value: {{ .Values.frontend_url }}{{ .Values.frontend_path }}
-            - name: NEXT_PUBLIC_FRONTEND_PROTOCOL
-              value: {{ .Values.frontend_protocol }}
             - name: FRONTEND_PATH
               value: {{ .Values.frontend_path }}
             - name: BACKEND_HOST
