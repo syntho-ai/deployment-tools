@@ -33,14 +33,14 @@ spec:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: core-secret
+                  name: {{ .Values.core.manualSecretName | default "core-secret" }}
                   key: core.database_url
             - name: PORT
               value: {{quote .Values.core.port }}
             - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: core-secret
+                  name: {{ .Values.core.manualSecretName | default "core-secret" }}
                   key: core.secret_key
             - name: WORKER_TIMEOUT
               value: "{{ .Values.core.worker_timeout | default "3000" }}"
@@ -51,7 +51,10 @@ spec:
             - name: RAY_ADDRESS
               value: {{quote .Values.core.ray_address }}
             - name: LICENSE_KEY_SIGNED
-              value: {{ .Values.SynthoLicense }}
+              valueFromn:
+                secretKeyRef:
+                  name: {{ .Values.core.manualSecretName | default "core-secret"}}
+                  key: license_key
             - name: MAX_WORKERS
               value: {{ quote .Values.core.workers }}
             - name: REDIS_HOST

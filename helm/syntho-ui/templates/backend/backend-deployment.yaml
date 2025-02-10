@@ -32,7 +32,7 @@ spec:
             - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: backend-secret
+                  name: {{ .Values.backend.manualSecretName | default "backend-secret" }}
                   key: backend.secret_key
             - name: DJANGO_PRODUCTION
               value: "True"
@@ -45,7 +45,7 @@ spec:
             - name: USER_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: backend-secret
+                  name: {{ .Values.backend.manualSecretName | default "backend-secret" }}
                   key: backend.user.password
             - name: USER_NAME
               value: {{quote .Values.backend.user.username | default "admin" }}
@@ -62,7 +62,7 @@ spec:
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: backend-secret
+                  name: {{ .Values.backend.manualSecretName | default "backend-secret" }}
                   key: backend.db.password
             - name: DATA_ACCESS
               value: {{.Values.backend.data_access | default "true" | quote }}
@@ -174,7 +174,7 @@ spec:
           - name: SECRET_KEY
             valueFrom:
                 secretKeyRef:
-                  name: backend-secret
+                  name: {{ .Values.backend.manualSecretName | default "backend-secret" }}
                   key: backend.secret_key
           - name: DJANGO_PRODUCTION
             value: "True"
@@ -187,7 +187,7 @@ spec:
           - name: USER_PASSWORD
             valueFrom:
                 secretKeyRef:
-                  name: backend-secret
+                  name: {{ .Values.backend.manualSecretName | default "backend-secret" }}
                   key: backend.user.password
           - name: USER_NAME
             value: {{quote .Values.backend.user.username | default "admin" }}
@@ -204,7 +204,7 @@ spec:
           - name: DB_PASSWORD
             valueFrom:
                 secretKeyRef:
-                  name: backend-secret
+                  name: {{ .Values.backend.manualSecretName | default "backend-secret" }}
                   key: backend.db.password
         {{- if or $.Values.backend.env $.Values.backend.envSecrets }}
           {{- range $key, $value := $.Values.backend.env }}
