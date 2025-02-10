@@ -38,7 +38,7 @@ core:
   # Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
   podDisruptionBudget: {}
   # If uncommented, disables the secret created by the Helm template, in order to change to a secret created differentlky
-  # manualSecretName: name-of-secret
+  # manualSecretName: core-secret
 
 backend:
   replicaCount: 1
@@ -73,7 +73,7 @@ backend:
   env:
     SECURE_COOKIES: "true"
   # If uncommented, this disables the secret created by the Helm chart, and allows you to point to the values of your own secret
-  # manualSecretName: name-of-secret
+  # manualSecretName: backend-secret
 
 frontend:
   replicaCount: 1
