@@ -1,3 +1,5 @@
+SynthoLicense: "{{ LICENSE_KEY }}"
+
 kuberay-operator:
   image:
     repository: {{ RAY_OPERATOR_IMG_REPO }}
@@ -188,7 +190,10 @@ ray-cluster:
     # Include Syntho License key here
     containerEnv:
     - name: LICENSE_KEY_SIGNED
-      value: "{{ LICENSE_KEY }}"
+      valueFrom:
+        secretKeyRef:
+          name: ray-secret
+          key: license_key
   head:
     # rayVersion determines the autoscaler's image version.
     # It should match the Ray version in the image of the containers.
