@@ -51,7 +51,7 @@ spec:
             - name: RAY_ADDRESS
               value: {{quote .Values.core.ray_address }}
             - name: LICENSE_KEY_SIGNED
-              valueFromn:
+              valueFrom:
                 secretKeyRef:
                   name: {{ .Values.core.manualSecretName | default "core-secret"}}
                   key: license_key
