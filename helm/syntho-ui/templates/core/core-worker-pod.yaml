@@ -89,11 +89,11 @@ spec:
             limits:
               cpu: "4000m"
               ephemeral-storage: "3Gi"
-              memory: "1000Mi"
+              memory: "2000Mi"
             requests:
               cpu: "1000m"
               ephemeral-storage: "3Gi"
-              memory: "750Mi"
+              memory: "1000Mi"
           readinessProbe:
             initialDelaySeconds: 50
             periodSeconds: 10
