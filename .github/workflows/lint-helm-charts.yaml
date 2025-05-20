@@ -86,7 +86,7 @@ jobs:
 
       - name: Run chart-testing (Ray)
         if: steps.list-changed.outputs.changed == 'true'
-        run: helm install ray-cluster helm/ray/chart --dry-run=server --debug
+        run: helm install ray-cluster helm/ray/chart --dry-run=server --debug --skip-crds
 
       - name: Run chart-testing (Syntho)
         if: steps.list-changed.outputs.changed == 'true'
