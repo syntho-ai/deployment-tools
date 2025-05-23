@@ -189,7 +189,21 @@ services:
           cpus: '${RAY_CPUS}'
           memory: ${RAY_MEMORY}
     command: >
-      ray start --head --port=6379 --dashboard-host 0.0.0.0 --block --disable-usage-stats --storage=/tmp
+      ray start --head --port=6379 --dashboard-host 0.0.0.0 --block --disable-usage-stats --storage=/tmp\
+
+  nginx:
+    image: nginx
+    restart: on-failure
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/certs:/etc/nginx/certs
+    depends_on:
+      frontend:
+        condition: service_healthy
 
 volumes:
   database-data:
