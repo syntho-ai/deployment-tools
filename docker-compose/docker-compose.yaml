@@ -134,7 +134,7 @@ services:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${FRONTEND_PORT}"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=2", "-O", "/dev/null", "http://0.0.0.0:3000"]
       interval: 10s
       timeout: 2s
       retries: 5
