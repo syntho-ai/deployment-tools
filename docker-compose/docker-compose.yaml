@@ -1,152 +1,12 @@
-version: '3'
+name: syntho
 
 services:
-  core:
-    image: ${CORE_IMAGE}
-    restart: on-failure
-    environment:
-      DATABASE_URL: "postgresql+asyncpg://${CORE_DATABASE_USER}:${CORE_DATABASE_PASSWORD}@${CORE_DATABASE_HOST}/${CORE_DATABASE_NAME}"
-      APP_ENV: ${CORE_APP_ENV}
-      SECRET_KEY: ${CORE_SECRET_KEY}
-      SECRET_KEY_2: ${CORE_SECRET_KEY}
-      CELERY_BROKER_URL: ${CORE_BROKER_URL}
-      CELERY_RESULT_BACKEND: ${CORE_RESULT_BACKEND}
-      RAY_ADDRESS: ${CORE_RAY_ADDRESS}
-      PORT: ${CORE_PORT}
-      LICENSE_KEY_SIGNED: ${LICENSE_KEY}
-      MAX_WORKERS: "${CORE_WORKERS:-1}"
-      REDIS_HOST: ${CORE_REDIS_HOST}
-      REDIS_PORT: ${CORE_REDIS_PORT}
-    # volumes:
-    # Additional volumes for Kerberos as an example
-    # Uncomment if volumes are required
-    #  - /krb/krb5.conf:/etc/krb5.conf
-    healthcheck:
-      test: wget --no-verbose --tries=1 -O /dev/null http://localhost:${CORE_PORT}/api/v1/status || exit 1
-      interval: 10s
-      timeout: 2s
-      retries: 5
-      start_period: 60s
-    depends_on:
-      redis:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
 
-  core_worker:
-    image: ${CORE_IMAGE}
-    restart: on-failure
-    command: celery -A app.celery worker --loglevel=info
+  database:
+    image: postgres:14.5
     environment:
-      DATABASE_URL: "postgresql+asyncpg://${CORE_DATABASE_USER}:${CORE_DATABASE_PASSWORD}@${CORE_DATABASE_HOST}/${CORE_DATABASE_NAME}"
-      APP_ENV: ${CORE_APP_ENV}
-      SECRET_KEY: ${CORE_SECRET_KEY}
-      SECRET_KEY_2: ${CORE_SECRET_KEY}
-      CELERY_BROKER_URL: ${CORE_BROKER_URL}
-      CELERY_RESULT_BACKEND: ${CORE_RESULT_BACKEND}
-      RAY_ADDRESS: ${CORE_RAY_ADDRESS}
-      LICENSE_KEY_SIGNED: ${LICENSE_KEY}
-      REDIS_HOST: ${CORE_REDIS_HOST}
-      REDIS_PORT: ${CORE_REDIS_PORT}
-    # volumes:
-    # Additional volumes for Kerberos as an example
-    # Uncomment if volumes are required
-    #  - /krb/krb5.conf:/etc/krb5.conf
-    depends_on:
-      redis:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-
-  backend:
-    image: ${BACKEND_IMAGE}
-    restart: on-failure
-    environment:
-      FRONTEND_URL: ${FRONTEND_PROTOCOL}://${FRONTEND_HOST}
-      SYNTHO_ENGINE_URL: http://core:${CORE_PORT}/api
-      SYNTHO_WEBSOCKET_URL: ws://core:${CORE_PORT}/websocket/
-      SECRET_KEY: $${BACKEND_SECRET_KEY}
-      SECURE_COOKIES: ${SECURED_COOKIES}
-      DJANGO_PRODUCTION: "True"
-      REDIS_HOST: ${BACKEND_REDIS_HOST}
-      REDIS_PORT: ${BACKEND_REDIS_PORT}
-      REDIS_DB_INDEX: ${BACKEND_REDIS_DB_INDEX}
-      DB_HOST: ${BACKEND_DB_HOST}
-      DB_NAME:  ${BACKEND_DB_NAME}
-      DB_USER: ${BACKEND_DB_USER}
-      DB_PASSWORD: ${BACKEND_DB_PASSWORD}
-      DB_PORT: ${BACKEND_DB_PORT}
-      USER_NAME: ${ADMIN_USERNAME}
-      USER_PASSWORD: ${ADMIN_PASSWORD}
-      USER_EMAIL: ${ADMIN_EMAIL}
-      DATA_ACCESS: ${BACKEND_DATA_ACCESS}
-      RAY_URL: http://${CORE_RAY_ADDRESS}:8265
-      EXTRA_ALLOWED_HOSTS: "backend ${FRONTEND_DOMAIN}"
-      WORKERS: "${BACKEND_WORKERS:-2}"
-    ports:
-      - "${BACKEND_PORT}:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: wget --no-verbose --tries=1 -O /dev/null http://backend:8000/api/docs/ || exit 1
-      interval: 30s
-      timeout: 2s
-      retries: 10
-      start_period: 60s
-
-  worker:
-    image: ${BACKEND_IMAGE}
-    restart: on-failure
-    entrypoint: [python, manage.py, subscriber]
-    environment:
-      FRONTEND_URL: ${FRONTEND_PROTOCOL}://${FRONTEND_HOST}
-      SYNTHO_ENGINE_URL: http://core:${CORE_PORT}/api
-      SYNTHO_WEBSOCKET_URL: ws://core:${CORE_PORT}/websocket/
-      SECRET_KEY: $${BACKEND_SECRET_KEY}
-      DJANGO_PRODUCTION: "True"
-      REDIS_HOST: ${BACKEND_REDIS_HOST}
-      REDIS_PORT: ${BACKEND_REDIS_PORT}
-      REDIS_DB_INDEX: ${BACKEND_REDIS_DB_INDEX}
-      DB_HOST: ${BACKEND_DB_HOST}
-      DB_NAME:  ${BACKEND_DB_NAME}
-      DB_USER: ${BACKEND_DB_USER}
-      DB_PASSWORD: ${BACKEND_DB_PASSWORD}
-      DB_PORT: ${BACKEND_DB_PORT}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  frontend:
-    image: ${FRONTEND_IMAGE}
-    environment:
-        NODE_ENV: development
-        PORT: ${FRONTEND_PORT}
-        OPEN_API_URL: http://backend:8000/api/playground/?format=openapi
-        BACKEND_HOST: backend:8000
-    ports:
-      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
-    depends_on:
-      backend:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=2", "-O", "/dev/null", "http://0.0.0.0:3000"]
-      interval: 10s
-      timeout: 2s
-      retries: 5
-      start_period: 60s
-
-  postgres:
-    image: ${POSTGRES_IMAGE}
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=syntho
-      - POSTGRES_PASSWORD=!2ImY6&A!*i3
+      - POSTGRES_USER=${DB_USER:-syntho}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_MULTIPLE_DATABASES="syntho-core","syntho-backend"
     volumes:
       - database-data:/var/lib/postgresql/data/
@@ -157,25 +17,24 @@ services:
       timeout: 1s
       retries: 30
 
-  redis:
-    image: ${REDIS_IMAGE}
+  queue:
+    image: redis:7.2-rc2
     healthcheck:
       test: ["CMD", "redis-cli","ping"]
 
-  head:
-    image: ${RAY_IMAGE}
+  core:
+    image: syntho.azurecr.io/syntho-ray:${APPLICATION_VERSION}
     restart: always
-    container_name: ray-head
     shm_size: 12gb
+    env_file:
+      - path: .env
+        required: true
+      - path: ./core/.env
+        required: false
     ports:
-      - 8265:8265
-    environment:
-        RAY_SCHEDULER_SPREAD_THRESHOLD: 0.0
-        LICENSE_KEY_SIGNED: ${LICENSE_KEY}
-    # volumes:
-    # Additional volumes for Kerberos as an example
-    # Uncomment if volumes are required
-    #  - /krb/krb5.conf:/etc/krb5.conf
+      - "8265:8265"
+    volumes:
+      - data-storage:/app/data
     ulimits:
       nofile:
         soft: 65536
@@ -183,18 +42,106 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '${RAY_CPUS}'
-          memory: ${RAY_MEMORY}
+          cpus: "${RAY_CPUS:-8}"
+          memory: ${RAY_MEMORY:-32G}
         reservations:
-          cpus: '${RAY_CPUS}'
-          memory: ${RAY_MEMORY}
-    command: >
-      ray start --head --port=6379 --dashboard-host 0.0.0.0 --block --disable-usage-stats --storage=/tmp
+          cpus: "${RAY_CPUS:-8}"
+          memory: ${RAY_MEMORY:-32G}
+
+  core-api:
+    image: syntho.azurecr.io/syntho-core-api:${APPLICATION_VERSION}
+    restart: on-failure
+    env_file:
+      - path: .env
+        required: true
+      - path: ./core-api/.env
+        required: false
+    volumes:
+      - data-storage:/app/data
+    healthcheck:
+      test: wget --no-verbose --tries=1 -O /dev/null http://core-api:8080/api/v1/status || exit 1
+      interval: 10s
+      timeout: 2s
+      retries: 5
+      start_period: 60s
+    depends_on:
+      queue:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+
+  core-api-worker:
+    image: syntho.azurecr.io/syntho-core-api:${APPLICATION_VERSION}
+    restart: on-failure
+    command: celery -A app.celery worker --loglevel=info
+    env_file:
+      - path: .env
+        required: true
+      - path: ./core-api/.env
+        required: false
+    volumes:
+      - data-storage:/app/data
+    depends_on:
+      - database
+      - queue
+
+  backend:
+    image: syntho.azurecr.io/syntho-core-backend:${APPLICATION_VERSION}
+    restart: on-failure
+    env_file:
+      - path: .env
+        required: true
+      - path: ./backend/.env
+        required: false
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: wget --no-verbose --tries=1 -O /dev/null http://backend:8000/api/docs/ || exit 1
+      interval: 30s
+      timeout: 2s
+      retries: 10
+      start_period: 60s
+
+  backend-worker:
+    image: syntho.azurecr.io/syntho-core-backend:${APPLICATION_VERSION}
+    restart: on-failure
+    entrypoint: [python, manage.py, subscriber]
+    env_file:
+      - path: .env
+        required: true
+      - path: ./backend/.env
+        required: false
+    depends_on:
+      database:
+        condition: service_healthy
+      queue:
+        condition: service_healthy
+
+  frontend:
+    image: syntho.azurecr.io/syntho-core-frontend:${APPLICATION_VERSION}
+    env_file:
+      - path: .env
+        required: true
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=2", "-O", "/dev/null", "http://0.0.0.0:${FRONTEND_PORT:-3000}"]
+      interval: 10s
+      timeout: 2s
+      retries: 5
+      start_period: 60s
 
 volumes:
   database-data:
     external: false
+  data-storage:
 
 networks:
   default:
-      name: syntho
+    name: syntho

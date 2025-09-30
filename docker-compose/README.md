@@ -1,39 +1,75 @@
-# One node deployment setup for Docker Compose
+# Docker Compose deployment of Syntho Application
+
+This folder contains a `docker compose` file that can be used to deploy the Syntho
+Application using Docker Compose.
+For more information on how to use Syntho with Docker Compose, please refer to
+the [Syntho documentation](https://docs.syntho.ai/deploy-syntho/deploy-syntho-using-docker).
 
 ## Prerequisites
 
-- Installation of Docker engine
-- Installation of Docker compose
-- Ports 3000 and 8000 exposed in firewall/network
-  - Port 3000 for accessing the UI
-  - Port 8000 for accessing the Backend API
+- Docker and Docker Compose installed on the machine
+- Access to the Syntho Container Registry
+- License key from Syntho
+- Minimum 32GB of RAM and 8 CPUs on the machine
 
-## Steps for minimal setup
+## Configuring the application
 
-- Clone repository to machine
-- Use `docker login` to log into the Syntho Container Registry, or `docker load` to load images from files. See Syntho Documentation under `Deploy Syntho` -> `Introduction` -> `Access Docker images`
-- Copy over `example.env` to `.env` using command `cp example.env .env`
-- Adjust the following variables in `.env` for a minimal setup:
-  - `LICENSE_KEY`: The license key provided by Syntho.
-  - `ADMIN_USERNAME`, `ADMIN_EMAIL` and `ADMIN_PASSWORD`: the credentials for the admin account that can be used once the application is setup. The email and password will be needed to login.
+Adjust the following variables in the `.env` file as described below:
 
-The `.env` file contains the image tag latest for all images, which is a rolling tag. Please adjust the following image tags with the tags provided by the Syntho Team in order to pin them to a certain version:
-  - `RAY_IMAGE`
-  - `CORE_IMAGE`
-  - `BACKEND_IMAGE`
-  - `FRONTEND_IMAGE`
+- `APPLICATION_VERSION`: The version of the Syntho Application to deploy. Consult Syntho
+  documentation for the latest version.
+- `LICENSE_KEY`: The license key provided by Syntho.
+- `SECRET_KEY`: The secret key provided by Syntho.
+- `USER_EMAIL` and `USER_PASSWORD`: The credentials for the initial admin account. This
+  needs to be defined by the user.
 
-In order to access the Backend API correctly, the domain should be set. If the application is being accessed on the same machine that deploys it, `localhost` should be fine for this domain. If you're using a different machine on your network, the IP address or hostname should be used for the following variables:
+> Note: Is necessary to restart the application after changing the `.env` file.
 
-- `FRONTEND_HOST`: this should include the port as well. If port 3000 is used for the frontend, and it can be accessed on the same machine, the value would be `localhost:3000`. If another machine on the same network needs to access the frontend, the value will be `<IP-of-deployed-machine>:3000`
-- `FRONTEND_DOMAIN`: will be either `localhost` or the IP of the machine running the Syntho Application
+### Optional configuration
 
-After the adjustment of these variables, the `docker compose` file should be ready for deployment. Additional variables can be adjusted as well, which are described in the Syntho documentation under `Deploy Syntho` -> `Deploy Syntho using Docker` -> `Deploy Syntho Application`
+#### Domain and port configuration
 
-### [Optional] Set Docker limits for Ray image
+In case the application needs to run under a specific domain or IP other than `localhost`,
+the changes described below need to be made.
 
-In this example, we've set a limit of 12 CPUs and 100G for the AI cluster part (Ray). This limit can be increased or decreased by adjusting the variables `RAY_CPUS` and `RAY_MEMORY` in `.env`
+Change the following variables in `.env` to the right domain or IP address:
 
-## Deployment
+- `FRONTEND_DOMAIN`: will be either `localhost`, the IP or domain of the machine running
+  the Syntho Application
 
-Once the variables have been adjusted in `.env`, this should provide a minimal working version of the Syntho Application. The command `docker compose up -d` can be used to spawn the application. After some time, you should be able to go to the application using the following URL: <hostname/ip-of-machine>:3000. If you're accessing the application from the same machine, localhost can be used ([localhost:3000](localhost:3000)).
+Furthermore, if the application is using a secure domain (https), the following variable
+needs to be set:
+
+- `FRONTEND_PROTOCOL`: should be set to `https`
+- `SECURE_COOKIES`: should be set to `True`
+
+Finally, if the application needs to run under a specific port other than `3000`, change
+the following variable in `.env`:
+
+- `FRONTEND_PORT`: will be either `3000`, the port of the machine running the Syntho
+  Application.
+- `BACKEND_PORT`: will be either `8000`, the port of the machine running the Syntho
+  Application.
+
+#### AI engine resources configuration
+
+The following variables can be added to the `.env` file if needed:
+
+- `RAY_MEMORY`: it defaults to `32G` which is the minimum amount of memory required to run
+  the application.
+- `RAY_CPUS`: it defaults to `8` which is the minimum number of CPUs required to run the
+  application.
+
+## Running the application
+
+Run the following command to start the application:
+
+```shell
+docker compose up -d
+```
+
+Open the application in a browser using the URL
+`FRONTEND_PROTOCOL://FRONTEND_DOMAIN:FRONTEND_PORT`.
+
+Default to [localhost:3000](http://localhost:3000)
+
