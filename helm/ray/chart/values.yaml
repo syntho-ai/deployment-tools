@@ -6,8 +6,8 @@ SynthoLicense: <license-key>
 
 kuberay-operator:
   image:
-    repository: syntho.azurecr.io/kuberay-operator
-    tag: v1.2.2
+    repository: syntho.azurecr.io/syntho-ray-operator
+    tag: 1.4.0
     pullPolicy: IfNotPresent
 
   imagePullSecrets:
