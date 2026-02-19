@@ -3,7 +3,7 @@ name: syntho
 services:
 
   database:
-    image: postgres:14.5
+    image: syntho.azurecr.io/postgres:14-bookworm
     environment:
       - POSTGRES_USER=${DB_USER:-syntho}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
