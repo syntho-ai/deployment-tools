@@ -24,39 +24,64 @@ spec:
       containers:
         - image: "{{ .Values.core.image.repository }}:{{ .Values.core.image.tag }}"
           env:
-            - name: APP_ENV
-              value: {{ .Values.core.app_env | default "prod" }}
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.core.manualSecretName | default "core-secret" }}
-                  key: core.database_url
-            - name: PORT
+            - name: SERVICE_PORT
               value: {{quote .Values.core.port }}
+            - name: SERVICE_WORKERS
+              value: {{ quote .Values.core.workers }}
+            - name: SERVICE_WORKER_TIMEOUT
+              value: "{{ .Values.core.worker_timeout | default "3000" }}"
+            - name: CORE_ADDRESS
+              value: {{quote .Values.core.ray_address }}
+            - name: REDIS_HOST
+              value: {{ quote .Values.core.redis.host}}
+            - name: REDIS_PORT
+              value: {{ quote .Values.core.redis.port }}
             - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.core.manualSecretName | default "core-secret" }}
                   key: core.secret_key
-            - name: WORKER_TIMEOUT
-              value: "{{ .Values.core.worker_timeout | default "3000" }}"
-            - name: CELERY_BROKER_URL
-              value:  "redis://{{ .Values.core.redis.host}}:{{ .Values.core.redis.port }}/{{ .Values.core.redis.db }}"
-            - name: CELERY_RESULT_BACKEND
-              value:  "redis://{{ .Values.core.redis.host}}:{{ .Values.core.redis.port }}/{{ .Values.core.redis.db }}"
-            - name: RAY_ADDRESS
-              value: {{quote .Values.core.ray_address }}
+            - name: DB_HOST
+              value: {{ quote .Values.core.db.host}}
+            - name: DB_PORT
+              value: {{ quote .Values.core.db.port }}
+            - name: DB_NAME
+              value: {{ quote .Values.core.db.name }}
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.core.manualSecretName | default "core-secret" }}
+                  key: core.db_user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.core.manualSecretName | default "core-secret" }}
+                  key: core.db_password
             - name: LICENSE_KEY_SIGNED
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.core.manualSecretName | default "core-secret"}}
                   key: license_key
+            # deprecated
+            - name: APP_ENV
+              value: {{ .Values.core.app_env | default "prod" }}
+            - name: PORT
+              value: {{quote .Values.core.port }}
             - name: MAX_WORKERS
               value: {{ quote .Values.core.workers }}
-            - name: REDIS_HOST
-              value: {{ quote .Values.core.redis.host}}
-            - name: REDIS_PORT
-              value: {{ quote .Values.core.redis.port }}
+            - name: WORKER_TIMEOUT
+              value: "{{ .Values.core.worker_timeout | default "3000" }}"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.core.manualSecretName | default "core-secret" }}
+                  key: core.database_url
+            - name: RAY_ADDRESS
+              value: {{quote .Values.core.ray_address }}
+            - name: CELERY_BROKER_URL
+              value:  "redis://{{ .Values.core.redis.host}}:{{ .Values.core.redis.port }}/{{ .Values.core.redis.db }}"
+            - name: CELERY_RESULT_BACKEND
+              value:  "redis://{{ .Values.core.redis.host}}:{{ .Values.core.redis.port }}/{{ .Values.core.redis.db }}"
           {{- if or $.Values.core.env $.Values.core.envSecrets }}
             {{- range $key, $value := $.Values.core.env }}
             - name: {{ $key }}

@@ -6,8 +6,8 @@ SynthoLicense: <license-key>
 
 kuberay-operator:
   image:
-    repository: syntho.azurecr.io/kuberay-operator
-    tag: v1.2.2
+    repository: syntho.azurecr.io/syntho-ray-operator
+    tag: 1.4.0
     pullPolicy: IfNotPresent
 
   imagePullSecrets:
@@ -245,7 +245,6 @@ ray-cluster:
     restartPolicy: ""
     rayStartParams:
       dashboard-host: '0.0.0.0'
-      storage: "/tmp/ray-workflows"
     # containerEnv specifies environment variables for the Ray container,
     # Follows standard K8s container env schema.
     containerEnv: []
@@ -325,8 +324,7 @@ ray-cluster:
     labels: {}
     serviceAccountName: ""
     restartPolicy: ""
-    rayStartParams:
-      storage: "/tmp/ray-workflows"
+    rayStartParams: {}
     # containerEnv specifies environment variables for the Ray container,
     # Follows standard K8s container env schema.
     containerEnv: []
@@ -400,8 +398,7 @@ ray-cluster:
       labels: {}
       serviceAccountName: ""
       restartPolicy: ""
-      rayStartParams:
-        storage: "/tmp/ray-workflows"
+      rayStartParams: {}
       # containerEnv specifies environment variables for the Ray container,
       # Follows standard K8s container env schema.
       containerEnv: []
