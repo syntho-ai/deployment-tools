@@ -240,7 +240,6 @@ ray-cluster:
     restartPolicy: ""
     rayStartParams:
       dashboard-host: '0.0.0.0'
-      storage: "/tmp/ray-workflows"
     # containerEnv specifies environment variables for the Ray container,
     # Follows standard K8s container env schema.
     containerEnv: []
@@ -320,8 +319,7 @@ ray-cluster:
     labels: {}
     serviceAccountName: ""
     restartPolicy: ""
-    rayStartParams:
-      storage: "/tmp/ray-workflows"
+    rayStartParams: {}
     # containerEnv specifies environment variables for the Ray container,
     # Follows standard K8s container env schema.
     containerEnv: []
@@ -395,8 +393,7 @@ ray-cluster:
       labels: {}
       serviceAccountName: ""
       restartPolicy: ""
-      rayStartParams:
-        storage: "/tmp/ray-workflows"
+      rayStartParams: {}
       # containerEnv specifies environment variables for the Ray container,
       # Follows standard K8s container env schema.
       containerEnv: []

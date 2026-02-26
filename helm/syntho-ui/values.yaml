@@ -34,6 +34,7 @@ core:
     port: 6379
     db: 1
   ray_address: ray-cluster-head-svc
+  core_address: ray-cluster-head-svc
   workers: 1
   # Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
   podDisruptionBudget: {}
@@ -126,7 +127,7 @@ db:
 redis:
   replicaCount: 1
   image:
-    repository: redis
+    repository: syntho.azurecr.io/redis
     tag: 7.2-rc2
   storageClassName: "default"
   pvLabelKey: ""
@@ -150,7 +151,6 @@ serviceAccount:
 podAnnotations: {}
 
 podSecurityContext: {}
-  # fsGroup: 2000
 
 securityContext: {}
   # capabilities:

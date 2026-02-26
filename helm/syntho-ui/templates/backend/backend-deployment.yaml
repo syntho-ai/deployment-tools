@@ -23,19 +23,38 @@ spec:
       containers:
         - image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
           env:
+            - name: SERVICE_WORKERS
+              value: {{quote .Values.backend.workers }}
             - name: FRONTEND_URL
               value: {{ .Values.frontend_protocol }}://{{ .Values.frontend_url }}
-            - name: SYNTHO_ENGINE_URL
-              value: http://{{ .Values.core.name }}-service:{{ .Values.core.service.port }}/api
-            - name: SYNTHO_WEBSOCKET_URL
-              value: ws://{{ .Values.core.name }}-service:{{ .Values.core.service.port }}/websocket/
+            - name: CORE_API_URL
+              value: http://{{ .Values.core.name }}-service:{{ .Values.core.service.port }}/
+            - name: RAY_URL
+              value: "http://{{ .Values.core.ray_address }}:8265"
             - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.backend.manualSecretName | default "backend-secret" }}
                   key: backend.secret_key
+            - name: DATA_ACCESS
+              value: {{.Values.backend.data_access | default "true" | quote }}
+            - name: EXTRA_ALLOWED_HOSTS
+              value: {{quote .Values.frontend_url }}
             - name: DJANGO_PRODUCTION
               value: "True"
+            - name: DB_HOST
+              value: {{quote .Values.backend.db.host }}
+            - name: DB_PORT
+              value: {{quote .Values.backend.db.port | default "5432" }}
+            - name: DB_NAME
+              value: {{quote .Values.backend.db.name }}
+            - name: DB_USER
+              value: {{quote .Values.backend.db.user }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backend.manualSecretName | default "backend-secret" }}
+                  key: backend.db.password
             - name: REDIS_HOST
               value: {{quote .Values.backend.redis.host }}
             - name: REDIS_PORT
@@ -51,27 +70,13 @@ spec:
               value: {{quote .Values.backend.user.username | default "admin" }}
             - name: USER_EMAIL
               value: {{quote .Values.backend.user.email | default "admin@company.com" }}
-            - name: DB_HOST
-              value: {{quote .Values.backend.db.host }}
-            - name: DB_PORT
-              value: {{quote .Values.backend.db.port | default "5432" }}
-            - name: DB_NAME
-              value: {{quote .Values.backend.db.name }}
-            - name: DB_USER
-              value: {{quote .Values.backend.db.user }}
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.backend.manualSecretName | default "backend-secret" }}
-                  key: backend.db.password
-            - name: DATA_ACCESS
-              value: {{.Values.backend.data_access | default "true" | quote }}
-            - name: RAY_URL
-              value: "http://{{ .Values.core.ray_address }}:8265"
+            # seems deprecated, but kept for compatibility
+            - name: SYNTHO_ENGINE_URL
+              value: http://{{ .Values.core.name }}-service:{{ .Values.core.service.port }}/api
             - name: WORKERS
               value: {{quote .Values.backend.workers }}
-            - name: EXTRA_ALLOWED_HOSTS
-              value: "{{ .Values.frontend_url }} {{ .Values.backend.name }}.{{ .Release.Namespace }}.svc.cluster.local"
+            - name: SYNTHO_WEBSOCKET_URL
+              value: ws://{{ .Values.core.name }}-service:{{ .Values.core.service.port }}/websocket/
           {{- if or $.Values.backend.env $.Values.backend.envSecrets }}
             {{- range $key, $value := $.Values.backend.env }}
             - name: {{ $key }}
@@ -167,15 +172,8 @@ spec:
         env:
           - name: FRONTEND_URL
             value: {{ .Values.frontend_protocol }}://{{ .Values.frontend_url }}
-          - name: SYNTHO_ENGINE_URL
+          - name: CORE_API_URL
             value: http://{{ .Values.core.name }}-service:{{ .Values.core.service.port }}/api
-          - name: SYNTHO_WEBSOCKET_URL
-            value: ws://{{ .Values.core.name }}-service:{{ .Values.core.service.port }}/websocket/
-          - name: SECRET_KEY
-            valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.backend.manualSecretName | default "backend-secret" }}
-                  key: backend.secret_key
           - name: DJANGO_PRODUCTION
             value: "True"
           - name: REDIS_HOST
@@ -184,15 +182,6 @@ spec:
             value: {{quote .Values.backend.redis.port }}
           - name: REDIS_DB_INDEX
             value: {{quote .Values.backend.redis.db }}
-          - name: USER_PASSWORD
-            valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.backend.manualSecretName | default "backend-secret" }}
-                  key: backend.user.password
-          - name: USER_NAME
-            value: {{quote .Values.backend.user.username | default "admin" }}
-          - name: USER_EMAIL
-            value: {{quote .Values.backend.user.email | default "admin@company.com" }}
           - name: DB_HOST
             value: {{quote .Values.backend.db.host }}
           - name: DB_PORT
@@ -206,6 +195,26 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.backend.manualSecretName | default "backend-secret" }}
                   key: backend.db.password
+          # these values are not used in the worker, but kept for compatibility
+          - name: USER_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.backend.manualSecretName | default "backend-secret" }}
+                key: backend.user.password
+          - name: USER_NAME
+            value: {{quote .Values.backend.user.username | default "admin" }}
+          - name: USER_EMAIL
+            value: {{quote .Values.backend.user.email | default "admin@company.com" }}
+          # deprecated but kept for compatibility
+          - name: SYNTHO_ENGINE_URL
+            value: http://{{ .Values.core.name }}-service:{{ .Values.core.service.port }}/api
+          - name: SYNTHO_WEBSOCKET_URL
+            value: ws://{{ .Values.core.name }}-service:{{ .Values.core.service.port }}/websocket/
+          - name: SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.backend.manualSecretName | default "backend-secret" }}
+                key: backend.secret_key
         {{- if or $.Values.backend.env $.Values.backend.envSecrets }}
           {{- range $key, $value := $.Values.backend.env }}
           - name: {{ $key }}

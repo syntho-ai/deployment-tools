@@ -1,6 +1,6 @@
 IMAGE_REGISTRY_SERVER=syntho.azurecr.io
 RAY_IMAGE_IMG_REPO=syntho.azurecr.io/syntho-ray
-RAY_IMAGE_IMG_TAG={{ SYNTHO_STACK_VERSION }}-cpu
+RAY_IMAGE_IMG_TAG={{ SYNTHO_STACK_VERSION }}
 SYNTHO_UI_CORE_IMG_REPO=syntho.azurecr.io/syntho-core-api
 SYNTHO_UI_CORE_IMG_TAG={{ SYNTHO_STACK_VERSION }}
 SYNTHO_UI_BACKEND_IMG_REPO=syntho.azurecr.io/syntho-core-backend
