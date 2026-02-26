@@ -17,8 +17,8 @@ jobs:
       - name: Check differences between .env and .env.tpl
         run: |
          export DIFF_LINES=$(
-            ENV1=.env.tpl                                                                                                                                                                               ENV1=.env.tpl
-            ENV2=example.env
+            ENV1=.env.tpl
+            ENV2=.env
             diff --suppress-common-lines -y \
               <(grep -v -E '^#|^$' ${ENV1} | cut -d= -f1 | sort) \
               <(grep -v -E '^#|^$' ${ENV2} | cut -d= -f1 | sort) | wc -l
