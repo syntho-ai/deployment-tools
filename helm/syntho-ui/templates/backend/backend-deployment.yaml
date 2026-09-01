@@ -173,7 +173,7 @@ spec:
           - name: FRONTEND_URL
             value: {{ .Values.frontend_protocol }}://{{ .Values.frontend_url }}
           - name: CORE_API_URL
-            value: http://{{ .Values.core.name }}-service:{{ .Values.core.service.port }}/api
+            value: http://{{ .Values.core.name }}-service:{{ .Values.core.service.port }}/
           - name: DJANGO_PRODUCTION
             value: "True"
           - name: REDIS_HOST
