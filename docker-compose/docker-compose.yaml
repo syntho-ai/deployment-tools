@@ -73,7 +73,7 @@ services:
   core-api-worker:
     image: syntho.azurecr.io/syntho-core-api:${APPLICATION_VERSION}
     restart: on-failure
-    command: celery -A app.celery worker --loglevel=info
+    command: celery -A app.celery worker --loglevel=info --beat -s /tmp/celerybeat-schedule
     env_file:
       - path: .env
         required: true

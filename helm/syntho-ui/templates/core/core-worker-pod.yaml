@@ -102,10 +102,7 @@ spec:
           volumeMounts:
             {{- toYaml .Values.core.volumeMounts | default "" | nindent 12 }}
           command: ["celery"]
-          args:
-            {{  range .Values.core.celery_args }}
-              - {{ . }}
-            {{ end }}
+          args: ["-A", "app.celery", "worker", "--loglevel=info", "--beat", "-s", "/tmp/celerybeat-schedule"]
           name: {{ .Values.core.name }}-worker
           imagePullPolicy: {{ .Values.core.imagePullPolicy | default "IfNotPresent"}}
           securityContext:
@@ -114,11 +111,11 @@ spec:
             limits:
               cpu: "4000m"
               ephemeral-storage: "3Gi"
-              memory: "2000Mi"
+              memory: "3000Mi"
             requests:
               cpu: "1000m"
               ephemeral-storage: "3Gi"
-              memory: "1000Mi"
+              memory: "2000Mi"
           readinessProbe:
             initialDelaySeconds: 50
             periodSeconds: 10
