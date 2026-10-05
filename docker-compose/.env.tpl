@@ -20,6 +20,14 @@ FRONTEND_PORT=3000
 RAY_CPUS={{ RAY_CPUS }}
 RAY_MEMORY={{ RAY_MEMORY }}
 
+# Redis memory budget and container resources (allow headroom for AOF rewrites)
+REDIS_MAXMEMORY={{ REDIS_MAXMEMORY }}
+REDIS_MEMORY_LIMIT={{ REDIS_MEMORY_LIMIT }}
+REDIS_MEMORY_REQUEST=512m
+REDIS_CPU_LIMIT=1
+REDIS_CPU_REQUEST=0.1
+REDIS_START_PERIOD=30m
+
 # If TLS is used, set protocol to https and secured_cookies to True
 FRONTEND_PROTOCOL=http
 SECURED_COOKIES="False"

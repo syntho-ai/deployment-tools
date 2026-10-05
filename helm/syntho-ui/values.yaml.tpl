@@ -121,6 +121,32 @@ redis:
     tag: {{ REDIS_IMG_TAG }}
   storageClassName: "{{ STORAGE_CLASS_NAME }}"
   pvLabelKey: "{{ PV_LABEL_KEY }}"
+  maxmemory: {{ REDIS_MAXMEMORY }}
+  persistence:
+    size: {{ REDIS_DATA_STORAGE_SIZE }}
+    storageClassName: null
+    appendonly: true
+    appendfsync: {{ REDIS_APPENDFSYNC }}
+    noAppendfsyncOnRewrite: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: {{ REDIS_MEMORY_LIMIT }}
+  startupProbe:
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 180
+  readinessProbe:
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  livenessProbe:
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 5
   # Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
   podDisruptionBudget: {}
 

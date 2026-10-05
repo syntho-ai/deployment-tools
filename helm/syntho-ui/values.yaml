@@ -130,6 +130,32 @@ redis:
     tag: 7.2-rc2
   storageClassName: "default"
   pvLabelKey: ""
+  maxmemory: 512mb
+  persistence:
+    size: 1Gi
+    storageClassName: null
+    appendonly: true
+    appendfsync: everysec
+    noAppendfsyncOnRewrite: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 2Gi
+  startupProbe:
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 180
+  readinessProbe:
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  livenessProbe:
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 5
   # Ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
   podDisruptionBudget: {}
 

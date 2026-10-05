@@ -448,7 +448,7 @@ questions:
       value: "any"
       conditions:
         - when: "any"
-          question_id: ui_admin_login_email
+          question_id: redis_maxmemory
           action: proceed
           expose:
             - name: HALF_OF_RAY_HEAD_MEMORY_LIMIT
@@ -460,6 +460,90 @@ questions:
             - name: RAY_HEAD_MEMORY_LIMIT
               func: concatenate
               args: ["$RAY_HEAD_MEMORY_LIMIT", "G"]
+
+  - id: redis_maxmemory
+    question: "Redis data memory budget (e.g., 512mb; leave container headroom for AOF rewrites, not workload-sized):"
+    var: REDIS_MAXMEMORY
+    default: "512mb"
+    validation:
+      - func: regex
+        args: ["^[1-9][0-9]*(mb|gb)$", "$REDIS_MAXMEMORY"]
+        success: noerror
+        err_msg: "Enter a positive Redis memory size, e.g., 512mb or 1gb."
+    post_processing: []
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: redis_memory_limit
+          action: proceed
+          expose:
+            - name: REDIS_MAXMEMORY
+              func: returnasis
+              args: ["$REDIS_MAXMEMORY"]
+
+  - id: redis_memory_limit
+    question: "Redis container memory limit (e.g., 2Gi; must exceed the data budget with rewrite headroom and be at least the 512Mi request):"
+    var: REDIS_MEMORY_LIMIT
+    default: "2Gi"
+    validation:
+      - func: regex
+        args: ["^[1-9][0-9]*(Mi|Gi)$", "$REDIS_MEMORY_LIMIT"]
+        success: noerror
+        err_msg: "Enter a positive Kubernetes memory size, e.g., 2048Mi or 2Gi."
+    post_processing: []
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: redis_data_storage_size
+          action: proceed
+          expose:
+            - name: REDIS_MEMORY_LIMIT
+              func: returnasis
+              args: ["$REDIS_MEMORY_LIMIT"]
+
+  - id: redis_data_storage_size
+    question: "Redis data PVC size (default 1Gi for legacy compatibility, not workload-sized; fresh installs can choose 10Gi or a measured size; existing templates require separate expansion and alignment):"
+    var: REDIS_DATA_STORAGE_SIZE
+    default: "1Gi"
+    validation:
+      - func: regex
+        args: ["^[1-9][0-9]*Gi$", "$REDIS_DATA_STORAGE_SIZE"]
+        success: noerror
+        err_msg: "Enter a positive volume size in Gi, e.g., 1Gi or 10Gi."
+    post_processing: []
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: redis_appendfsync
+          action: proceed
+          expose:
+            - name: REDIS_DATA_STORAGE_SIZE
+              func: returnasis
+              args: ["$REDIS_DATA_STORAGE_SIZE"]
+
+  - id: redis_appendfsync
+    question: "Redis AOF fsync policy (everysec may lose about one second on crash; always has higher write latency):"
+    var: REDIS_APPENDFSYNC
+    default: "everysec"
+    validation:
+      - func: onlythesevalues
+        args: ["$REDIS_APPENDFSYNC", "everysec,always"]
+        success: noerror
+        err_msg: "Enter everysec or always."
+    post_processing: []
+    next:
+      value: "any"
+      conditions:
+        - when: "any"
+          question_id: ui_admin_login_email
+          action: proceed
+          expose:
+            - name: REDIS_APPENDFSYNC
+              func: returnasis
+              args: ["$REDIS_APPENDFSYNC"]
 
   - id: ui_admin_login_email
     question: "Login E-mail (default: admin@company.com):"
@@ -531,6 +615,14 @@ envs_configuration:
         default: "2G"
       - name: RAY_HEAD_MEMORY_LIMIT
         default: "4G"
+      - name: REDIS_MAXMEMORY
+        default: "512mb"
+      - name: REDIS_MEMORY_LIMIT
+        default: "2Gi"
+      - name: REDIS_DATA_STORAGE_SIZE
+        default: "1Gi"
+      - name: REDIS_APPENDFSYNC
+        default: "everysec"
   - scope: .auth.env
     envs:
       - name: UI_ADMIN_LOGIN_EMAIL

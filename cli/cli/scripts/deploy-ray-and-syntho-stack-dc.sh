@@ -22,6 +22,8 @@ fi
 source $DEPLOYMENT_DIR/.pre.deployment.ops.env --source-only
 DC_DIR="$DC_DIR"
 source $DEPLOYMENT_DIR/.resources.env --source-only
+REDIS_MAXMEMORY="${REDIS_MAXMEMORY:-512mb}"
+REDIS_MEMORY_LIMIT="${REDIS_MEMORY_LIMIT:-2g}"
 SHARED="$DEPLOYMENT_DIR/shared"
 mkdir -p "$SHARED"
 SYNTHO_CLI_PROCESS_DIR="$SHARED/process"

@@ -1,3 +1,10 @@
+{{- if ne (toString .Values.redis.replicaCount) "1" }}
+{{- fail "redis.replicaCount must be 1: only a single primary is supported, not Redis HA" }}
+{{- end }}
+{{- $storageClassName := .Values.redis.storageClassName }}
+{{- if ne .Values.redis.persistence.storageClassName nil }}
+{{- $storageClassName = .Values.redis.persistence.storageClassName }}
+{{- end }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -13,6 +20,8 @@ spec:
       app: redis
   template:
     metadata:
+      annotations:
+        checksum/redis-config: {{ include (print $.Template.BasePath "/redis/redis-config.yaml") . | sha256sum }}
       labels:
         app: redis
     spec:
@@ -49,6 +58,20 @@ spec:
         command:
           - redis-server
           - "/etc/redis-config.conf"
+        resources:
+          {{- toYaml .Values.redis.resources | nindent 10 }}
+        startupProbe:
+          exec:
+            command: ["sh", "-c", "[ \"$(redis-cli ping)\" = PONG ]"]
+          {{- toYaml .Values.redis.startupProbe | nindent 10 }}
+        readinessProbe:
+          exec:
+            command: ["sh", "-c", "[ \"$(redis-cli ping)\" = PONG ]"]
+          {{- toYaml .Values.redis.readinessProbe | nindent 10 }}
+        livenessProbe:
+          exec:
+            command: ["sh", "-c", "[ \"$(redis-cli ping)\" = PONG ]"]
+          {{- toYaml .Values.redis.livenessProbe | nindent 10 }}
         volumeMounts:
         - name: redis-data
           mountPath: /data
@@ -79,12 +102,12 @@ spec:
       resources:
         requests:
           storage: 1Gi
-      {{- if and (or (not .Values.redis.storageClassName) (eq .Values.redis.storageClassName "")) (not (or (not .Values.redis.pvLabelKey) (eq .Values.redis.pvLabelKey ""))) }}
+      {{- if and (not $storageClassName) .Values.redis.pvLabelKey }}
       selector:
         matchLabels:
           pv-label-key: {{ .Values.redis.pvLabelKey }}
       {{- else }}
-      storageClassName: {{ .Values.redis.storageClassName | default "default" }}
+      storageClassName: {{ $storageClassName | default "default" }}
       {{- end }}
   - metadata:
       name: redis-data
@@ -92,11 +115,11 @@ spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: 1Gi
-      {{- if and (or (not .Values.redis.storageClassName) (eq .Values.redis.storageClassName "")) (not (or (not .Values.redis.pvLabelKey) (eq .Values.redis.pvLabelKey ""))) }}
+          storage: {{ .Values.redis.persistence.size }}
+      {{- if and (not $storageClassName) .Values.redis.pvLabelKey }}
       selector:
         matchLabels:
           pv-label-key: {{ .Values.redis.pvLabelKey }}
       {{- else }}
-      storageClassName: {{ .Values.redis.storageClassName | default "default" }}
+      storageClassName: {{ $storageClassName | default "default" }}
       {{- end }}
