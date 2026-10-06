@@ -110,7 +110,7 @@ deployment-tools
 
 ### Prerequisites
 
-* Install `Python 11.*` or higher and make sure it is the default one
+* Install `Python 3.11.*` or higher and make sure it is the default one
 
 ### Installation
 
