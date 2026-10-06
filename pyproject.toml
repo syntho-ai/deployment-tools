@@ -4,7 +4,6 @@ version = "1.27.3"
 description = "Syntho deployment tools repository"
 authors = [
     "Syntho B.V. <info@syntho.ai>",
-    "Younes Moustaghfir <younes@syntho.ai>",
 ]
 license = "MIT License"
 readme = "README.md"

@@ -1,5 +1,5 @@
-# Ray Helm chart and CRDs
+# Ray Helm chart
 
-This folder contains the Ray Helm chart necessary for the deployment of the Syntho application, under `chart/` and a separate folder for the necessary CRDs, under `crds/`.
+Refer to the official Syntho documentation for detailed instructions on deploying Ray using Helm:
 
-Check the README in the `charts/` folder for more information.
+[Deploy Ray using Helm](https://docs.syntho.ai/deploy-syntho/deploy-syntho-using-kubernetes#deploy)
