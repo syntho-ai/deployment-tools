@@ -1,9 +1,7 @@
 [tool.commitizen]
 name = "cz_conventional_commits"
 version = "1.27.3"
-tag_format = "syntho-cli-$version"
+tag_format = "deployment-tools-$version"
 version_files = [
-    "cli/pyproject.toml:version",
-    "pyproject.toml:version",
-    "dynamic-configuration/pyproject.toml:version"
+    "pyproject.toml:version"
 ]

@@ -62,7 +62,7 @@ The following variables can be added to the `.env` file if needed:
 
 #### Redis resources and persistence
 
-The queue stores AOF data in `queue-data:/data`, separate from application `data-storage`.
+The queue stores AOF (Append Only File) data in `queue-data:/data`, separate from application `data-storage`.
 It always uses AOF, `appendfsync everysec`, fsync during rewrites, and `noeviction`.
 Set these optional `.env` variables (also included in the environment sample):
 
@@ -75,13 +75,12 @@ Set these optional `.env` variables (also included in the environment sample):
 | `REDIS_CPU_REQUEST` | `0.1` | CPU reservation in cores (100m) |
 | `REDIS_START_PERIOD` | `30m` | Healthcheck startup grace for AOF loading |
 
-These are starting defaults, not workload sizing. The wizard asks for the data budget
-and memory limit; reservations and CPU settings can be adjusted in the generated `.env`.
+These are starting defaults, not workload sizing. Reservations and CPU settings can be adjusted in the generated `.env`.
 Keep reservations at or below limits. Allow additional host RAM and disk space for
 AOF rewrites. Health checks require `PONG`, not just a successful redis-cli exit code;
 increase startup grace if the dataset needs longer to load. Compose health checks
 mark health status; they do not themselves restart unhealthy containers. The queue
-uses `restart: unless-stopped` to recover after process exits or Docker daemon
+uses `restart: unless-stopped` to recover after the process exits or Docker daemon
 restarts, unless intentionally stopped; Redis reloads AOF from the retained volume.
 
 Recreate the queue container to apply command/resource changes, reusing the volume.

@@ -30,7 +30,7 @@
 <h3 align="center">Syntho Deployment Tools</h3>
 
   <p align="center">
-    Monorepo containing all deployment related tools: Deployment CLI, Helm Charts, Docker Compose files
+    Monorepo containing deployment tools: Helm Charts and Docker Compose files
     <br />
     <a href="https://docs.syntho.ai/"><strong>Explore the docs »</strong></a>
     <br />
@@ -50,14 +50,6 @@
         <li><a href="#project-overview">Project Overview</a></li>
       </ul>
     </li>
-    <li>
-      <a href="#syntho-cli">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#releasing">Releasing</a><li>
     <li><a href="#contact">Contact</a></li>
   </ol>
 </details>
@@ -154,15 +146,12 @@ A few things have been implemented for this project:
 - Pre-commit hooks in order to check your files
 - A VScode workspace file to correctly create VSCode workspaces
 - The Docker Compose file and Helm charts to deploy the Syntho Application with
-- The source code of the Syntho CLI (The deployment CLI for the Syntho Application)
 
 ### Project overview
 
 ```
 deployment-tools
 │   README.md
-|
-└───cli
 |
 └───docker-compose
 │   └───config
@@ -174,36 +163,6 @@ deployment-tools
 │   └───syntho-ui
 
 ```
-## Syntho CLI
-
-### Prerequisites
-
-* Install `Python 11.*` or higher and make sure it is the default one
-
-### Installation
-
-1. Clone the repo
-   ```sh
-   git clone https://github.com/syntho-ai/deployment-tools.git
-   ```
-2. Install [Poetry](https://python-poetry.org/docs/#installing-with-the-official-installer)
-   ```sh
-   curl -sSL https://install.python-poetry.org | python3 -
-   ```
-3. Install Python packages in root
-   ```sh
-   poetry install --no-root
-   ```
-4. Run pre-commit install:
-    ```sh
-    pre-commit install
-    ```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## Releasing
-
-This project uses [commitizen](https://commitizen-tools.github.io/commitizen/) to bump the version and create a new release. For every commit on main, we check whether a release can be created by seeing in any commits were made that either increase the patch, minor or major version. If that's the case, a Github release will be created with the new version and the changelog. After that, the Syntho CLI wheel will be uploaded to PyPI.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
