@@ -126,7 +126,7 @@ redis:
     size: {{ REDIS_DATA_STORAGE_SIZE }}
     storageClassName: null
     appendonly: true
-    appendfsync: {{ REDIS_APPENDFSYNC }}
+    appendfsync: "{{ REDIS_APPENDFSYNC }}"
     noAppendfsyncOnRewrite: false
   resources:
     requests:
