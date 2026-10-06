@@ -10,10 +10,7 @@
 <h3 align="center">Syntho Deployment Tools</h3>
 
   <p align="center">
-    Monorepo containing deployment tools: Helm Charts and Docker Compose files
-    <br />
-    <a href="https://docs.syntho.ai/"><strong>Explore the docs »</strong></a>
-    <br />
+    Official Helm Charts and Docker Compose files for deploying Syntho's product.
   </p>
 </div>
 
