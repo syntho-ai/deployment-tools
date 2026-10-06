@@ -491,6 +491,10 @@ questions:
         args: ["^[1-9][0-9]*(Mi|Gi)$", "$REDIS_MEMORY_LIMIT"]
         success: noerror
         err_msg: "Enter a positive Kubernetes memory size, e.g., 2048Mi or 2Gi."
+      - func: redis_memory_limit
+        args: ["$REDIS_MEMORY_LIMIT", "$REDIS_MAXMEMORY"]
+        success: noerror
+        err_msg: "Redis container memory limit must be at least 512Mi and greater than REDIS_MAXMEMORY; leave additional headroom for AOF rewrites."
     post_processing: []
     next:
       value: "any"

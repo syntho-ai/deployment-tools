@@ -197,7 +197,7 @@ class TestProceedWithQuestions(TestCase):
         )
 
         mock_find_question_by_id.assert_called_with(self.questions, "1")
-        mock_ask_question.assert_called_with(self.deployment_dir, self.questions[0])
+        mock_ask_question.assert_called_with(self.deployment_dir, self.questions[0], {})
         mock_next_question.assert_called_with(
             self.deployment_dir, self.questions, self.questions[0], {"name": "ENV1", "value": "answered1"}
         )
@@ -226,7 +226,7 @@ class TestProceedWithQuestions(TestCase):
         )
 
         mock_find_question_by_id.assert_called_with(self.questions, "1")
-        mock_ask_question.assert_called_with(self.deployment_dir, self.questions[0])
+        mock_ask_question.assert_called_with(self.deployment_dir, self.questions[0], {})
         mock_next_question.assert_called_with(
             self.deployment_dir, self.questions, self.questions[0], {"name": "ENV1", "value": "answered1"}
         )
@@ -268,7 +268,10 @@ class TestProceedWithQuestions(TestCase):
         )
         self.assertEqual(
             mock_ask_question.call_args_list,
-            [mock.call(self.deployment_dir, self.questions[0]), mock.call(self.deployment_dir, self.questions[1])],
+            [
+                mock.call(self.deployment_dir, self.questions[0], {}),
+                mock.call(self.deployment_dir, self.questions[1], {"ENV1": "answered1"}),
+            ],
         )
         self.assertEqual(
             mock_next_question.call_args_list,

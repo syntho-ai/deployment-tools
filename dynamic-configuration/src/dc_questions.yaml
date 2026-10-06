@@ -95,6 +95,10 @@ questions:
         args: ["^[1-9][0-9]*[mMgG]$", "$REDIS_MEMORY_LIMIT"]
         success: noerror
         err_msg: "Enter a positive container memory size, e.g., 2048m or 2g."
+      - func: redis_memory_limit
+        args: ["$REDIS_MEMORY_LIMIT", "$REDIS_MAXMEMORY"]
+        success: noerror
+        err_msg: "Redis container memory limit must be at least 512m and greater than REDIS_MAXMEMORY; leave additional headroom for AOF rewrites."
     post_processing: []
     next:
       value: "any"

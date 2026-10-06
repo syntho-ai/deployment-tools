@@ -1,4 +1,5 @@
 import importlib
+import re
 
 import click
 
@@ -60,7 +61,9 @@ def proceed_with_questions(deployment_dir, all_envs, questions, entrypoint_id):
             break
 
         question_obj = find_question_by_id(questions, next_question_id)
-        answer_ctx, interrupted = ask_question(deployment_dir, question_obj)
+        answer_ctx, interrupted = ask_question(
+            deployment_dir, question_obj, make_exposed_mapping(scope_envs + all_exposed)
+        )
         if interrupted:
             return all_envs, True
 
@@ -73,12 +76,13 @@ def proceed_with_questions(deployment_dir, all_envs, questions, entrypoint_id):
     return envs, False
 
 
-def ask_question(deployment_dir, question_obj):
+def ask_question(deployment_dir, question_obj, previous_answers=None):
     """
     Ask a question to the user and validate the response.
 
     :param deployment_dir: The deployment directory.
     :param question_obj: The question object containing the question details.
+    :param previous_answers: Previously answered or exposed variables for cross-question validation.
     :return: A dictionary containing the name and value of the answered environment variable,
         and a boolean indicating if the process was interrupted.
     """
@@ -103,8 +107,13 @@ def ask_question(deployment_dir, question_obj):
             func = validation.func.value
             args = validation.args
             replaced_args = []
+            answers = {**(previous_answers or {}), env: val}
             for arg in args:
-                arg = arg.replace(f"${env}", str(val))
+                arg = re.sub(
+                    r"\$([A-Za-z_][A-Za-z0-9_]*)",
+                    lambda match, answers=answers: str(answers.get(match.group(1), match.group(0))),
+                    arg,
+                )
                 replaced_args.append(arg)
 
             success_criteria = validation.success.value

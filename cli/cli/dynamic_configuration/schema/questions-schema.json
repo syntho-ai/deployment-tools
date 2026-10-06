@@ -239,7 +239,8 @@
         "regex",
         "lowercase",
         "kubectlget",
-        "onlythesevalues"
+        "onlythesevalues",
+        "redis_memory_limit"
       ],
       "title": "ValidationFuncEnum",
       "type": "string"

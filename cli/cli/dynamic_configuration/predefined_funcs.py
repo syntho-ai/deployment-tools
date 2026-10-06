@@ -4,6 +4,23 @@ from typing import Any, Tuple
 from cli.utils import run_script
 
 
+def redis_memory_limit(deployment_dir, limit: str, maxmemory: str) -> bool:
+    def memory_bytes(value: str) -> int:
+        match = re.fullmatch(r"([1-9][0-9]*)(Mi|Gi|[mMgG]|mb|gb)", value)
+        if match is None:
+            raise ValueError(f"Invalid memory size: {value}")
+        amount, unit = match.groups()
+        # Redis mb/gb and Compose m/g use binary units, like Kubernetes Mi/Gi.
+        return int(amount) * 1024 ** (2 if unit.lower().startswith("m") else 3)
+
+    limit_bytes = memory_bytes(limit)
+    if limit_bytes < 512 * 1024**2:
+        raise ValueError("Redis container memory limit must be at least 512Mi.")
+    if limit_bytes <= memory_bytes(maxmemory):
+        raise ValueError("Redis container memory limit must exceed REDIS_MAXMEMORY.")
+    return True
+
+
 def regex(deployment_dir, pattern, text) -> bool:
     """
     Check if the provided text matches the given regex pattern.

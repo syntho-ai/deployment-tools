@@ -43,6 +43,7 @@ class ValidationFuncEnum(str, Enum):
     lowercase = "lowercase"
     kubectlget = "kubectlget"
     onlythesevalues = "onlythesevalues"
+    redis_memory_limit = "redis_memory_limit"
 
 
 class ValidationSuccessEnum(str, Enum):
