@@ -1,3 +1,6 @@
+{{- if not (has .Values.redis.persistence.appendfsync (list "always" "everysec" "no")) }}
+{{- fail "redis.persistence.appendfsync must be always, everysec, or no" }}
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -6,15 +9,20 @@ metadata:
     app: redis
 data:
   master.conf: |
-    maxmemory 400mb
-    maxmemory-policy allkeys-lru
+    maxmemory {{ .Values.redis.maxmemory }}
+    maxmemory-policy noeviction
     maxclients 20000
-    appendonly no
+    appendonly {{ ternary "yes" "no" .Values.redis.persistence.appendonly }}
+    appendfsync {{ .Values.redis.persistence.appendfsync }}
+    no-appendfsync-on-rewrite {{ ternary "yes" "no" .Values.redis.persistence.noAppendfsyncOnRewrite }}
     dbfilename dump.rdb
     dir /data
   slave.conf: |
     slaveof redis-ss-0.redis-ss.redis 6379
-    maxmemory 400mb
-    maxmemory-policy allkeys-lru
+    maxmemory {{ .Values.redis.maxmemory }}
+    maxmemory-policy noeviction
     maxclients 20000
+    appendonly {{ ternary "yes" "no" .Values.redis.persistence.appendonly }}
+    appendfsync {{ .Values.redis.persistence.appendfsync }}
+    no-appendfsync-on-rewrite {{ ternary "yes" "no" .Values.redis.persistence.noAppendfsyncOnRewrite }}
     dir /data

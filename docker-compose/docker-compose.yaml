@@ -19,8 +19,37 @@ services:
 
   queue:
     image: syntho.azurecr.io/redis:7.2-rc2
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --dir
+      - /data
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+      - --no-appendfsync-on-rewrite
+      - "no"
+      - --maxmemory
+      - ${REDIS_MAXMEMORY:-512mb}
+      - --maxmemory-policy
+      - noeviction
+    volumes:
+      - queue-data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: "${REDIS_CPU_LIMIT:-1}"
+          memory: ${REDIS_MEMORY_LIMIT:-2g}
+        reservations:
+          cpus: "${REDIS_CPU_REQUEST:-0.1}"
+          memory: ${REDIS_MEMORY_REQUEST:-512m}
     healthcheck:
-      test: ["CMD", "redis-cli","ping"]
+      test: ["CMD-SHELL", "[ \"$$(redis-cli ping)\" = PONG ]"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: ${REDIS_START_PERIOD:-30m}
 
   core:
     image: syntho.azurecr.io/syntho-ray:${APPLICATION_VERSION}
@@ -73,7 +102,7 @@ services:
   core-api-worker:
     image: syntho.azurecr.io/syntho-core-api:${APPLICATION_VERSION}
     restart: on-failure
-    command: celery -A app.celery worker --loglevel=info
+    command: celery -A app.celery worker --loglevel=info --beat -s /tmp/celerybeat-schedule
     env_file:
       - path: .env
         required: true
@@ -141,6 +170,7 @@ volumes:
   database-data:
     external: false
   data-storage:
+  queue-data:
 
 networks:
   default:

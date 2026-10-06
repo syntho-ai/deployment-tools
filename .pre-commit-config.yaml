@@ -16,7 +16,7 @@ repos:
     rev: '1.8.0'
     hooks:
       - id: poetry-check
-        args: ["-C", "./cli"]
+        args: ["-C", "."]
 
   # Run the Ruff formatter.
   - repo: https://github.com/astral-sh/ruff-pre-commit
