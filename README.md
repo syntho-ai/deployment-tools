@@ -49,34 +49,6 @@ _The Helm chart documentation can be found in the Syntho [Documentation](https:/
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-<!-- GETTING STARTED -->
-## Getting Started
-
-A few things have been implemented for this project:
-
-- Pre-commit hooks in order to check your files
-- A VScode workspace file to correctly create VSCode workspaces
-- The Docker Compose file and Helm charts to deploy the Syntho Application with
-
-### Project overview
-
-```
-deployment-tools
-│   README.md
-|
-└───docker-compose
-│   └───config
-│   └───postgres
-|
-└───helm
-│   └───config
-│   └───ray
-│   └───syntho-ui
-
-```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 <!-- CONTACT -->
 ## Contact
 
