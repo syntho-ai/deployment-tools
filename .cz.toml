@@ -1,7 +1,0 @@
-[tool.commitizen]
-name = "cz_conventional_commits"
-version = "1.27.3"
-tag_format = "deployment-tools-$version"
-version_files = [
-    "pyproject.toml:version"
-]

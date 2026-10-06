@@ -16,3 +16,4 @@
 
 *kubeconfig
 *.flake8
+.envrc
