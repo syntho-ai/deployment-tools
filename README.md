@@ -17,26 +17,6 @@
   </p>
 </div>
 
-
-
-<!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li><a href="#usage">Usage</a></li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#project-overview">Project Overview</a></li>
-      </ul>
-    </li>
-    <li><a href="#contact">Contact</a></li>
-  </ol>
-</details>
-
-
-## Usage
-
 ### Docker Compose
 
 _The Docker Compose documentation can be found in the Syntho [Documentation](https://docs.syntho.ai/deploy-syntho/deploy-syntho-using-docker)_
