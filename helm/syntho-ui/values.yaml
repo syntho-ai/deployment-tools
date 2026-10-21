@@ -173,6 +173,19 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+# Authentication to Databricks through workload identity federation. Core API and its worker exchange a projected
+# token of the ServiceAccount above for short-lived Databricks OAuth tokens. Configure the Ray head with the same
+# ServiceAccount and token (see the Ray chart values). See the Databricks page of the Syntho documentation.
+databricks:
+  workloadIdentity:
+    enabled: false
+    # Audience of the projected token. Must match the audience of the Databricks federation policy.
+    audience: ""
+    # Application ID of the Databricks service principal. Optional when every Databricks connection sets it.
+    clientId: ""
+    # Lifetime of the projected token. Kubernetes rotates it before it expires.
+    expirationSeconds: 3600
+
 podAnnotations: {}
 
 podSecurityContext: {}

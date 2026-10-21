@@ -231,6 +231,29 @@ ray-cluster:
     labels: {}
     # Note: From KubeRay v0.6.0, users need to create the ServiceAccount by themselves if they specify the `serviceAccountName`
     # in the headGroupSpec. See https://github.com/ray-project/kuberay/pull/1128 for more details.
+    #
+    # Databricks workload identity federation: Syntho exchanges a projected token of this ServiceAccount for
+    # short-lived Databricks OAuth tokens. Use the same ServiceAccount, audience and client ID as in the Syntho chart
+    # (`databricks.workloadIdentity`), and add to the head (and to enabled worker groups):
+    #   serviceAccountName: syntho
+    #   containerEnv:
+    #     - name: DATABRICKS_OIDC_TOKEN_FILE
+    #       value: /var/run/secrets/syntho/databricks/token
+    #     - name: DATABRICKS_CLIENT_ID
+    #       value: <service principal application ID>
+    #   volumes:
+    #     - name: databricks-token
+    #       projected:
+    #         sources:
+    #           - serviceAccountToken:
+    #               path: token
+    #               audience: <federation policy audience>
+    #               expirationSeconds: 3600
+    #   volumeMounts:
+    #     - name: databricks-token
+    #       mountPath: /var/run/secrets/syntho/databricks
+    #       readOnly: true
+    # Helm replaces lists: keep the default volumes and volumeMounts below when adding these.
     serviceAccountName: ""
     initContainers:
       - name: init-busybox
