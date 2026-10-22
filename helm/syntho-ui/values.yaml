@@ -174,8 +174,23 @@ serviceAccount:
   # Annotations to add to the service account
   annotations: {}
   # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # If not set and create is true, a name is generated using the fullname template.
+  # With Databricks workload identity, set a fixed name such as "syntho": it is part of the federation policy subject,
+  # and the Ray head uses the same service account.
   name: ""
+
+# Authentication to Databricks through workload identity federation. Core API and its worker exchange a projected
+# token of the ServiceAccount above for short-lived Databricks OAuth tokens. Configure the Ray head with the same
+# ServiceAccount and token. See https://docs.syntho.ai/setup-workspaces/create-a-workspace/connect-to-a-database/databricks#kubernetes-helm
+databricks:
+  workloadIdentity:
+    enabled: false
+    # Audience of the projected token. Must match the audience of the Databricks federation policy.
+    audience: ""
+    # Application ID of the Databricks service principal. Optional when every Databricks connection sets it.
+    clientId: ""
+    # Lifetime of the projected token. Kubernetes rotates it before it expires.
+    expirationSeconds: 3600
 
 podAnnotations: {}
 

@@ -231,6 +231,9 @@ ray-cluster:
     labels: {}
     # Note: From KubeRay v0.6.0, users need to create the ServiceAccount by themselves if they specify the `serviceAccountName`
     # in the headGroupSpec. See https://github.com/ray-project/kuberay/pull/1128 for more details.
+    #
+    # Databricks workload identity federation needs a ServiceAccount, environment variables and a token volume on the
+    # head. Set them in your own values file, not here: see https://docs.syntho.ai/setup-workspaces/create-a-workspace/connect-to-a-database/databricks#kubernetes-helm
     serviceAccountName: ""
     initContainers:
       - name: init-busybox

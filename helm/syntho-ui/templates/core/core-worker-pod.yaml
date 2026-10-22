@@ -19,6 +19,7 @@ spec:
       labels:
         app: {{ .Values.core.name }}-worker
     spec:
+      serviceAccountName: {{ include "syntho-core.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -99,8 +100,11 @@ spec:
                   key: {{ $key | quote }}
             {{- end }}
           {{- end }}
+          {{- if .Values.databricks.workloadIdentity.enabled }}
+            {{- include "syntho-core.databricksEnv" . | trim | nindent 12 }}
+          {{- end }}
           volumeMounts:
-            {{- toYaml .Values.core.volumeMounts | default "" | nindent 12 }}
+            {{- include "syntho-core.coreVolumeMounts" . | nindent 12 }}
           command: ["celery"]
           args: ["-A", "app.celery", "worker", "--loglevel=info", "--beat", "-s", "/tmp/celerybeat-schedule"]
           name: {{ .Values.core.name }}-worker
@@ -139,7 +143,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        {{- toYaml .Values.core.volumes | default "" | nindent 8 }}
+        {{- include "syntho-core.coreVolumes" . | nindent 8 }}
       restartPolicy: Always
       {{- if .Values.nodeSelector }}
       nodeSelector: {{- .Values.nodeSelector | toYaml | nindent 8 }}
