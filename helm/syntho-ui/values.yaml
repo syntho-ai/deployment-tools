@@ -170,7 +170,9 @@ serviceAccount:
   # Annotations to add to the service account
   annotations: {}
   # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # If not set and create is true, a name is generated using the fullname template.
+  # With Databricks workload identity, set a fixed name such as "syntho": it is part of the federation policy subject,
+  # and the Ray head uses the same service account.
   name: ""
 
 # Authentication to Databricks through workload identity federation. Core API and its worker exchange a projected
