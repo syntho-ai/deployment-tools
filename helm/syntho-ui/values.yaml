@@ -175,7 +175,7 @@ serviceAccount:
 
 # Authentication to Databricks through workload identity federation. Core API and its worker exchange a projected
 # token of the ServiceAccount above for short-lived Databricks OAuth tokens. Configure the Ray head with the same
-# ServiceAccount and token (see the Ray chart values). See the Databricks page of the Syntho documentation.
+# ServiceAccount and token. See https://docs.syntho.ai/setup-workspaces/create-a-workspace/connect-to-a-database/databricks#kubernetes-helm
 databricks:
   workloadIdentity:
     enabled: false
