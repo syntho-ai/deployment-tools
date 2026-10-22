@@ -3,6 +3,7 @@
 # Declare variables to be passed into your templates.
 
 frontend_path:
+# Host name where users reach Syntho, with the port when it isn't the default for frontend_protocol (for example localhost:3000).
 frontend_url: syntho.company.com
 frontend_protocol: http
 
@@ -48,7 +49,10 @@ backend:
   name: backend
   port: 8000
   workers: 1
-  secret_key: ix!57KPgpcyu!&2mMn69pB#R8zLhxLXAexnNoF!XZvqHB9G4JG%QLmFnE8Rx^3bMF#EG7rAxnWK*7LzKWF8S62qbTC
+  # Django SECRET_KEY, used to sign sessions. When empty, the chart generates one on install and keeps it on upgrades.
+  # Set it when the chart is rendered without cluster access (for example by Argo CD), where the existing key can't be
+  # looked up and a new one would be generated on every sync.
+  secretKey: ""
   redis:
     host: redis-svc
     port: 6379
