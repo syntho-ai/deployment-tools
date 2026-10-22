@@ -39,7 +39,7 @@ spec:
             - name: DATA_ACCESS
               value: {{.Values.backend.data_access | default "true" | quote }}
             - name: EXTRA_ALLOWED_HOSTS
-              value: {{quote .Values.frontend_url }}
+              value: {{ regexReplaceAll ":[0-9]+$" .Values.frontend_url "" | quote }}
             - name: DJANGO_PRODUCTION
               value: "True"
             - name: DB_HOST
@@ -111,7 +111,7 @@ spec:
               port: 8000
               httpHeaders:
               - name: Host
-                value: {{ .Values.frontend_url }}
+                value: {{ .Values.frontend_url | quote }}
             initialDelaySeconds: 50
             timeoutSeconds: 10
             periodSeconds: 10
@@ -123,7 +123,7 @@ spec:
               port: 8000
               httpHeaders:
               - name: Host
-                value: {{ .Values.frontend_url }}
+                value: {{ .Values.frontend_url | quote }}
             initialDelaySeconds: 60
             timeoutSeconds: 10
             periodSeconds: 10
